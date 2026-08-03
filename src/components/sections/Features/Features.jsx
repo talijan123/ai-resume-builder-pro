@@ -1,9 +1,67 @@
+import Section from "../../ui/Section/Section";
+import SectionTitle from "../../ui/SectionTitle/SectionTitle";
+import SectionSubtitle from "../../ui/SectionSubtitle/SectionSubtitle";
+
+import FeatureCard from "./FeatureCard";
+
+import { features } from "./featuresData";
+
 export default function Features() {
   return (
-    <section className="h-screen flex items-center justify-center">
-      <h1 className="text-6xl font-black">
-        Features Section
-      </h1>
-    </section>
+    <Section id="features">
+
+      <div className="text-center">
+
+        <p
+          className="
+            text-sm
+            font-semibold
+            uppercase
+            tracking-[0.3em]
+
+            text-blue-600
+          "
+        >
+          FEATURES
+        </p>
+
+        <SectionTitle>
+          Everything You Need to Build
+          <br />
+          the Perfect Resume
+        </SectionTitle>
+
+        <SectionSubtitle>
+          ResumeForge AI combines modern design,
+          artificial intelligence, and ATS optimization
+          into one simple platform.
+        </SectionSubtitle>
+
+      </div>
+
+      {/* Cards */}
+
+      <div
+        className="
+          mt-20
+
+          grid
+
+          gap-8
+
+          md:grid-cols-2
+
+          xl:grid-cols-3
+        "
+      >
+        {features.map((feature) => (
+          <FeatureCard
+            key={feature.title}
+            {...feature}
+          />
+        ))}
+      </div>
+
+    </Section>
   );
 }

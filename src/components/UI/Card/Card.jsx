@@ -7,9 +7,16 @@ export default function Card({
       className={`
         rounded-3xl
         border
-        border-slate-800
-        bg-slate-900
-        shadow-xl
+        border-slate-200
+        bg-white
+        shadow-sm
+
+        transition-all
+        duration-300
+
+        hover:-translate-y-1
+        hover:shadow-xl
+
         ${className}
       `}
     >

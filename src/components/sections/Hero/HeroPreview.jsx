@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import ResumeCard from "./ResumeCard";
+
+import ResumePreview from "./Resume/ResumePreview";
 
 export default function HeroPreview() {
   return (
@@ -15,84 +16,27 @@ export default function HeroPreview() {
         justify-center
       "
     >
-      {/* Blue Glow */}
+      {/* Background Glow */}
 
       <div
         className="
           absolute
 
-          h-[500px]
-          w-[500px]
+          h-[600px]
+          w-[600px]
 
           rounded-full
 
-          bg-blue-600/20
+          bg-blue-500/10
 
-          blur-[120px]
+          blur-[160px]
         "
       />
 
-      {/* Resume Card */}
+      {/* Resume Showcase */}
 
-      <ResumeCard />
+      <ResumePreview />
 
-      {/* Floating Badge */}
-
-      <div
-        className="
-          absolute
-
-          -top-6
-          -left-8
-
-          rounded-full
-
-          border
-          border-blue-500/20
-
-          bg-slate-900/80
-
-          px-5
-          py-3
-
-          text-sm
-          font-medium
-
-          text-white
-
-          backdrop-blur-xl
-        "
-      >
-        🤖 AI Powered
-      </div>
-
-      <div
-        className="
-          absolute
-
-          bottom-10
-          -right-8
-
-          rounded-full
-
-          border
-          border-green-500/20
-
-          bg-slate-900/80
-
-          px-5
-          py-3
-
-          text-sm
-          font-medium
-
-          text-green-400
-
-          backdrop-blur-xl
-        "
-      >
-        ✅ ATS 98%
-      </div>
     </motion.div>
   );
 }

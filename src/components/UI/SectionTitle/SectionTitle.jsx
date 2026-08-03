@@ -1,36 +1,27 @@
-export default function SectionTitle({
-  badge,
-  title,
-  description,
-}) {
+export default function SectionTitle({ children }) {
   return (
-    <div className="max-w-3xl">
+    <h2
+      className="
+        mx-auto
+        mt-4
 
-      {badge}
+        max-w-4xl
 
-      <h2
-        className="
-          mt-6
-          text-5xl
-          font-black
-          tracking-tight
-          text-white
-        "
-      >
-        {title}
-      </h2>
+        text-center
 
-      <p
-        className="
-          mt-6
-          text-lg
-          leading-8
-          text-slate-400
-        "
-      >
-        {description}
-      </p>
+        text-4xl
+        font-black
 
-    </div>
+        leading-tight
+        tracking-[-0.03em]
+
+        text-slate-900
+
+        sm:text-5xl
+        lg:text-6xl
+      "
+    >
+      {children}
+    </h2>
   );
 }
