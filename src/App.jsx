@@ -1,9 +1,9 @@
-import Navbar from "./components/Navbar/Navbar";
-import Hero from "./components/Hero/Hero";
-import Features from "./components/Features/Features";
-import HowItWorks from "./components/HowItWorks/HowItWorks";
-import Pricing from "./components/Pricing/Pricing";
-import Footer from "./components/Footer/Footer";
+import Navbar from "./components/layout/Navbar/Navbar";
+import Hero from "./components/sections/Hero/Hero";
+import Features from "./components/sections/Features/Features";
+import HowItWorks from "./components/sections/HowItWorks/HowItWorks";
+import Pricing from "./components/sections/Pricing/Pricing";
+import Footer from "./components/layout/Footer/Footer";
 
 export default function App() {
   return (

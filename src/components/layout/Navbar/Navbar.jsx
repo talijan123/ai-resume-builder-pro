@@ -1,5 +1,5 @@
-import Container from "../UI/Container";
-import Button from "../UI/Button";
+import Container from "../../UI/Container/Container";
+import Button from "../../UI/Button/Button";
 
 const links = [
   "Features",
