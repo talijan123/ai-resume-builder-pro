@@ -1,62 +1,175 @@
+import { useState } from "react";
+import { Link } from "react-scroll";
+import { HiBars3, HiXMark } from "react-icons/hi2";
+
 import Container from "../../UI/Container/Container";
 import Button from "../../UI/Button/Button";
 
 const links = [
-  "Features",
-  "How It Works",
-  "Pricing",
-  "Contact",
+  {
+    name: "Features",
+    to: "features",
+  },
+  {
+    name: "How It Works",
+    to: "how-it-works",
+  },
+  {
+    name: "Templates",
+    to: "templates",
+  },
+  {
+    name: "Pricing",
+    to: "pricing",
+  },
 ];
 
 export default function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800">
+    <header
+      className="
+        fixed
+        top-0
+        left-0
+        z-50
+
+        w-full
+
+        border-b
+        border-slate-800/70
+
+        bg-slate-950/80
+
+        backdrop-blur-xl
+      "
+    >
       <Container>
-        <div className="h-20 flex items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
 
           {/* Logo */}
 
-          <div className="flex items-center gap-3">
+          <Link
+            to="hero"
+            smooth
+            duration={600}
+            offset={-80}
+            className="flex cursor-pointer items-center gap-3"
+          >
+            <div
+              className="
+                flex
+                h-11
+                w-11
+                items-center
+                justify-center
 
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black">
+                rounded-xl
+
+                bg-gradient-to-br
+                from-blue-500
+                to-indigo-600
+
+                font-black
+                text-white
+
+                shadow-lg
+                shadow-blue-500/30
+              "
+            >
               RF
             </div>
 
             <div>
 
-              <h1 className="text-xl font-black text-white">
+              <h1
+                className="
+                  text-xl
+                  font-black
+
+                  text-white
+                "
+              >
                 ResumeForge
               </h1>
 
-              <p className="text-xs text-slate-400">
+              <p
+                className="
+                  text-xs
+
+                  text-slate-400
+                "
+              >
                 AI Resume Builder
               </p>
 
             </div>
+          </Link>
 
-          </div>
+          {/* Desktop Navigation */}
 
-          {/* Nav */}
-
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden items-center gap-8 lg:flex">
 
             {links.map((link) => (
-              <a
-                key={link}
-                href="#"
-                className="text-slate-300 hover:text-white transition"
+              <Link
+                key={link.name}
+                to={link.to}
+                smooth
+                spy
+                duration={600}
+                offset={-80}
+                activeClass="text-white after:w-full"
+                className="
+                  relative
+
+                  cursor-pointer
+
+                  font-medium
+
+                  text-slate-300
+
+                  transition-all
+                  duration-300
+
+                  hover:text-white
+
+                  after:absolute
+                  after:-bottom-2
+                  after:left-0
+
+                  after:h-[2px]
+                  after:w-0
+
+                  after:bg-blue-500
+
+                  after:transition-all
+                  after:duration-300
+
+                  hover:after:w-full
+                "
               >
-                {link}
-              </a>
+                {link.name}
+              </Link>
             ))}
 
           </nav>
 
-          {/* Right */}
+          {/* Desktop Right */}
 
-          <div className="flex items-center gap-4">
+          <div className="hidden items-center gap-4 lg:flex">
 
-            <button className="text-slate-300 hover:text-white transition">
+            <button
+              className="
+                font-medium
+
+                text-slate-300
+
+                transition
+
+                hover:text-white
+              "
+            >
               Login
             </button>
 
@@ -66,8 +179,98 @@ export default function Navbar() {
 
           </div>
 
+          {/* Mobile Menu Button */}
+
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="
+              text-white
+
+              lg:hidden
+            "
+          >
+            {menuOpen ? (
+              <HiXMark size={28} />
+            ) : (
+              <HiBars3 size={28} />
+            )}
+          </button>
+
         </div>
       </Container>
+
+      {/* Mobile Menu */}
+
+      {menuOpen && (
+        <div
+          className="
+            border-t
+            border-slate-800
+
+            bg-slate-950
+
+            lg:hidden
+          "
+        >
+          <Container>
+
+            <div className="flex flex-col py-6">
+
+              {links.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.to}
+                  smooth
+                  duration={600}
+                  offset={-80}
+                  onClick={() => setMenuOpen(false)}
+                  className="
+                    cursor-pointer
+
+                    border-b
+                    border-slate-800
+
+                    py-4
+
+                    text-slate-300
+
+                    transition
+
+                    hover:text-white
+                  "
+                >
+                  {link.name}
+                </Link>
+              ))}
+
+              <button
+                className="
+                  mt-6
+
+                  rounded-xl
+
+                  border
+                  border-slate-700
+
+                  py-3
+
+                  text-slate-300
+                "
+              >
+                Login
+              </button>
+
+              <div className="mt-4">
+                <Button>
+                  Get Started
+                </Button>
+              </div>
+
+            </div>
+
+          </Container>
+        </div>
+      )}
     </header>
   );
 }
