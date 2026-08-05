@@ -8,7 +8,7 @@ import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Dashboard from "../pages/Dashboard";
-import Builder from "../pages/Builder";
+import ResumeBuilder from "../pages/ResumeBuilder";
 import Templates from "../pages/Templates";
 import Settings from "../pages/Settings";
 import NotFound from "../pages/NotFound";
@@ -44,7 +44,11 @@ export default function AppRoutes() {
         />
         <Route
           path="/builder"
-          element={<Builder />}
+          element={
+            <ProtectedRoute>
+              <ResumeBuilder />
+            </ProtectedRoute>
+            }
         />
 
         <Route

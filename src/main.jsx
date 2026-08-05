@@ -6,11 +6,14 @@ import "./index.css";
 import AppRoutes from "./router/AppRoutes";
 
 import { AuthProvider } from "./context/AuthContext";
+import { ResumeProvider } from "./context/ResumeContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider>
-      <AppRoutes />
+      <ResumeProvider>
+        <AppRoutes />
+      </ResumeProvider>
     </AuthProvider>
   </React.StrictMode>
 );

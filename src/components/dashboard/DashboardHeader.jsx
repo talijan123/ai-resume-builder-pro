@@ -5,6 +5,7 @@ import {
 } from "react-icons/hi2";
 
 import { useAuth } from "../../context/AuthContext";
+import UserDropdown from "./UserDropdown";
 
 export default function DashboardHeader() {
   const { user } = useAuth();
@@ -195,57 +196,7 @@ export default function DashboardHeader() {
 
           {/* Avatar */}
 
-          <div className="flex items-center gap-3">
-
-            <div className="hidden text-right md:block">
-
-              <p
-                className="
-                  font-semibold
-
-                  text-slate-900
-                "
-              >
-                {fullName}
-              </p>
-
-              <p
-                className="
-                  text-sm
-
-                  text-slate-500
-                "
-              >
-                {user?.email}
-              </p>
-
-            </div>
-
-            <div
-              className="
-                flex
-
-                h-11
-                w-11
-
-                items-center
-                justify-center
-
-                rounded-full
-
-                bg-gradient-to-r
-                from-blue-600
-                to-indigo-600
-
-                font-bold
-
-                text-white
-              "
-            >
-              {avatar}
-            </div>
-
-          </div>
+         <UserDropdown />
 
         </div>
 
