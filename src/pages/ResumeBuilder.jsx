@@ -3,6 +3,7 @@ import BuilderSidebar from "../components/builder/BuilderSidebar";
 import BuilderContent from "../components/builder/BuilderContent";
 import ResumePreview from "../components/builder/ResumePreview";
 
+
 export default function ResumeBuilder() {
   return (
     <div className="min-h-screen bg-slate-100">
@@ -10,39 +11,41 @@ export default function ResumeBuilder() {
 
       <BuilderHeader />
 
-      {/* Main Builder */}
+      {/* Main */}
 
-      <main
+      <div
         className="
           mx-auto
-
-          flex
-
-          max-w-[1700px]
-
-          gap-6
-
-          p-6
+          max-w-[1800px]
+          px-6
+          py-8
         "
       >
-        {/* Sidebar */}
+        <div
+          className="
+            grid
+            gap-8
 
-        <aside className="w-72 shrink-0">
-          <BuilderSidebar />
-        </aside>
+            xl:grid-cols-[300px_1fr_650px]
+          "
+        >
+          {/* Left Sidebar */}
 
-        {/* Form Area */}
+          
+            <BuilderSidebar />
 
-        <section className="min-w-0 flex-1">
+            
+         
+
+          {/* Builder */}
+
           <BuilderContent />
-        </section>
 
-        {/* Live Preview */}
+          {/* Resume Preview */}
 
-        <aside className="hidden w-[430px] shrink-0 xl:block">
           <ResumePreview />
-        </aside>
-      </main>
+        </div>
+      </div>
     </div>
   );
 }

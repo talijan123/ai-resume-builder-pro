@@ -6,10 +6,12 @@ import {
   HiFolder,
   HiTrophy,
   HiCheckCircle,
+  HiExclamationTriangle,
 } from "react-icons/hi2";
 
 import { useResume } from "../../context/ResumeContext";
 import { calculateResumeCompletion } from "../../utils/resumeCompletion";
+import calculateATSScore from "../../utils/ats/calculateATSScore";
 
 const sections = [
   {
@@ -56,6 +58,35 @@ export default function BuilderSidebar() {
     completedSections,
   } = calculateResumeCompletion(resumeData);
 
+  const ats = calculateATSScore(resumeData);
+
+  function getATSColor(score) {
+    if (score >= 90)
+      return {
+        text: "text-green-600",
+        bg: "from-green-500 to-emerald-500",
+      };
+
+    if (score >= 75)
+      return {
+        text: "text-blue-600",
+        bg: "from-blue-500 to-indigo-500",
+      };
+
+    if (score >= 60)
+      return {
+        text: "text-yellow-600",
+        bg: "from-yellow-500 to-orange-500",
+      };
+
+    return {
+      text: "text-red-600",
+      bg: "from-red-500 to-pink-500",
+    };
+  }
+
+  const color = getATSColor(ats.score);
+
   return (
     <div
       className="
@@ -63,33 +94,30 @@ export default function BuilderSidebar() {
         top-24
 
         rounded-3xl
-
         border
         border-slate-200
-
         bg-white
 
-        p-6
-
         shadow-sm
+        overflow-hidden
       "
     >
-      {/* Heading */}
+      {/* Header */}
 
-      <div className="mb-8">
+      <div className="p-6 border-b border-slate-200">
         <h2 className="text-xl font-black text-slate-900">
           Resume Sections
         </h2>
 
         <p className="mt-2 text-sm text-slate-500">
           Complete every section to build a
-          professional resume.
+          professional ATS-friendly resume.
         </p>
       </div>
 
       {/* Navigation */}
 
-      <div className="space-y-3">
+      <div className="p-4 space-y-2">
         {sections.map((section) => {
           const Icon = section.icon;
 
@@ -97,9 +125,7 @@ export default function BuilderSidebar() {
             activeSection === section.id;
 
           const completed =
-            completedSections.includes(
-              section.id
-            );
+            completedSections.includes(section.id);
 
           return (
             <button
@@ -115,21 +141,20 @@ export default function BuilderSidebar() {
 
                 rounded-2xl
 
-                px-5
-                py-4
+                px-4
+                py-3
 
                 transition-all
-                duration-300
 
                 ${
                   active
                     ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                    : "hover:bg-slate-100 text-slate-700"
+                    : "text-slate-700 hover:bg-slate-100"
                 }
               `}
             >
-              <div className="flex items-center gap-4">
-                <Icon size={22} />
+              <div className="flex items-center gap-3">
+                <Icon size={20} />
 
                 <span className="font-medium">
                   {section.title}
@@ -138,12 +163,12 @@ export default function BuilderSidebar() {
 
               {completed && (
                 <HiCheckCircle
+                  size={20}
                   className={
                     active
                       ? "text-white"
                       : "text-green-600"
                   }
-                  size={20}
                 />
               )}
             </button>
@@ -151,21 +176,11 @@ export default function BuilderSidebar() {
         })}
       </div>
 
-      {/* Progress */}
+      {/* Resume Completion */}
 
-      <div
-        className="
-          mt-10
-
-          rounded-2xl
-
-          bg-slate-50
-
-          p-5
-        "
-      >
-        <div className="flex justify-between">
-          <span className="text-sm font-medium text-slate-500">
+      <div className="border-t border-slate-200 p-6">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold text-slate-700">
             Resume Completion
           </span>
 
@@ -174,29 +189,14 @@ export default function BuilderSidebar() {
           </span>
         </div>
 
-        <div
-          className="
-            mt-4
-
-            h-3
-
-            overflow-hidden
-
-            rounded-full
-
-            bg-slate-200
-          "
-        >
+        <div className="mt-3 h-3 rounded-full bg-slate-200 overflow-hidden">
           <div
             className="
               h-full
-
               rounded-full
-
               bg-gradient-to-r
               from-blue-600
               to-indigo-600
-
               transition-all
               duration-500
             "
@@ -205,11 +205,65 @@ export default function BuilderSidebar() {
             }}
           />
         </div>
+      </div>
 
-        <p className="mt-4 text-sm leading-6 text-slate-500">
-          Complete every section to unlock
-          your best ATS score.
-        </p>
+      {/* ATS Score */}
+
+      <div className="border-t border-slate-200 p-6">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold text-slate-700">
+            ATS Score
+          </span>
+
+          <span
+            className={`text-2xl font-black ${color.text}`}
+          >
+            {ats.score}/100
+          </span>
+        </div>
+
+        <div className="mt-3 h-3 rounded-full bg-slate-200 overflow-hidden">
+          <div
+            className={`h-full rounded-full bg-gradient-to-r ${color.bg}`}
+            style={{
+              width: `${ats.score}%`,
+            }}
+          />
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {ats.suggestions.length > 0 ? (
+            ats.suggestions
+              .slice(0, 3)
+              .map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-3"
+                >
+                  <HiExclamationTriangle
+                    className="mt-0.5 text-yellow-500"
+                    size={18}
+                  />
+
+                  <p className="text-sm text-slate-600 leading-6">
+                    {item}
+                  </p>
+                </div>
+              ))
+          ) : (
+            <div className="flex items-center gap-3">
+              <HiCheckCircle
+                className="text-green-600"
+                size={18}
+              />
+
+              <p className="text-sm text-green-700">
+                Excellent! Your resume is
+                ATS-friendly.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

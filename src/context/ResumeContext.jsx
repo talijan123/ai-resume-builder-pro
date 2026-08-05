@@ -186,6 +186,94 @@ export function ResumeProvider({ children }) {
             ),
         }));
     }
+    /* -------------------------------- */
+    /* Projects */
+    /* -------------------------------- */
+
+    function addProject(project) {
+        setResumeData((prev) => ({
+            ...prev,
+
+            projects: [
+                ...prev.projects,
+                {
+                    id: crypto.randomUUID(),
+                    ...project,
+                },
+            ],
+        }));
+    }
+
+    function updateProject(id, updatedProject) {
+        setResumeData((prev) => ({
+            ...prev,
+
+            projects: prev.projects.map((project) =>
+                project.id === id
+                    ? {
+                        ...project,
+                        ...updatedProject,
+                    }
+                    : project
+            ),
+        }));
+    }
+
+    function deleteProject(id) {
+        setResumeData((prev) => ({
+            ...prev,
+
+            projects: prev.projects.filter(
+                (project) => project.id !== id
+            ),
+        }));
+    }
+
+    /* -------------------------------- */
+    /* Certifications */
+    /* -------------------------------- */
+
+    function addCertification(certification) {
+        setResumeData((prev) => ({
+            ...prev,
+
+            certifications: [
+                ...prev.certifications,
+                {
+                    id: crypto.randomUUID(),
+                    ...certification,
+                },
+            ],
+        }));
+    }
+
+    function updateCertification(
+        id,
+        updatedCertification
+    ) {
+        setResumeData((prev) => ({
+            ...prev,
+
+            certifications: prev.certifications.map((cert) =>
+                cert.id === id
+                    ? {
+                        ...cert,
+                        ...updatedCertification,
+                    }
+                    : cert
+            ),
+        }));
+    }
+
+    function deleteCertification(id) {
+        setResumeData((prev) => ({
+            ...prev,
+
+            certifications: prev.certifications.filter(
+                (cert) => cert.id !== id
+            ),
+        }));
+    }
 
     /* -------------------------------- */
     /* Reset */
@@ -219,6 +307,14 @@ export function ResumeProvider({ children }) {
                 addSkill,
                 updateSkill,
                 deleteSkill,
+
+                addProject,
+                updateProject,
+                deleteProject,
+
+                addCertification,
+                updateCertification,
+                deleteCertification,
 
                 resetResume,
             }}

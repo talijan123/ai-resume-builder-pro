@@ -14,11 +14,13 @@ import PersonalInfoForm from "./sections/PersonalInfoForm";
 import ExperienceForm from "./sections/ExperienceForm";
 import EducationForm from "./sections/EducationForm";
 import SkillsForm from "./sections/SkillsForm";
+import ProjectsForm from "./sections/ProjectsForm";
+import CertificationsForm from "./sections/CertificationsForm";
+
 
 // Upcoming Forms
 // import EducationForm from "./sections/EducationForm";
 // import SkillsForm from "./sections/SkillsForm";
-// import ProjectsForm from "./sections/ProjectsForm";
 // import CertificationsForm from "./sections/CertificationsForm";
 
 const sections = {
@@ -87,18 +89,12 @@ export default function BuilderContent() {
 
             case "projects":
                 return (
-                    <Placeholder
-                        title="Projects Form"
-                        description="Projects section will be built next."
-                    />
+                    <ProjectsForm />
                 );
 
             case "certifications":
                 return (
-                    <Placeholder
-                        title="Certificates Form"
-                        description="Certificates section will be built next."
-                    />
+                    <CertificationsForm />
                 );
 
             default:
