@@ -1,337 +1,466 @@
 import {
-    createContext,
-    useContext,
-    useState,
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
 } from "react";
 
-const ResumeContext = createContext();
+const ResumeContext = createContext(null);
+
+/* =========================================================
+   Initial Resume Data
+========================================================= */
 
 const initialResumeData = {
-    personalInfo: {
-        fullName: "",
-        jobTitle: "",
-        email: "",
-        phone: "",
-        location: "",
-        website: "",
-        linkedin: "",
-        github: "",
-        summary: "",
-    },
+  template: "modern",
 
-    experience: [],
+  personalInfo: {
+    fullName: "",
+    jobTitle: "",
+    email: "",
+    phone: "",
+    location: "",
+    website: "",
+    linkedin: "",
+    github: "",
+    summary: "",
+  },
 
-    education: [],
-
-    skills: [],
-
-    projects: [],
-
-    certifications: [],
+  experience: [],
+  education: [],
+  skills: [],
+  projects: [],
+  certifications: [],
 };
 
-export function ResumeProvider({ children }) {
-    const [resumeData, setResumeData] =
-        useState(initialResumeData);
+/* =========================================================
+   Resume Provider
+========================================================= */
 
-    const [activeSection, setActiveSection] =
-        useState("personal");
+export function ResumeProvider({ children, initialData }) {
+  /*
+   * If initialData is provided, it is mainly useful for
+   * template previews.
+   *
+   * Otherwise the builder starts with empty resume data.
+   */
+  const [resumeData, setResumeData] = useState(() => ({
+    ...initialResumeData,
+    ...(initialData || {}),
 
-    /* -------------------------------- */
-    /* Personal Information */
-    /* -------------------------------- */
+    personalInfo: {
+      ...initialResumeData.personalInfo,
+      ...(initialData?.personalInfo || {}),
+    },
 
-    function updatePersonalInfo(field, value) {
-        setResumeData((prev) => ({
-            ...prev,
+    experience: initialData?.experience || [],
+    education: initialData?.education || [],
+    skills: initialData?.skills || [],
+    projects: initialData?.projects || [],
+    certifications: initialData?.certifications || [],
+  }));
 
-            personalInfo: {
-                ...prev.personalInfo,
+  /* =======================================================
+     Active Section
+  ======================================================= */
 
-                [field]: value,
-            },
-        }));
-    }
+  const [activeSection, setActiveSection] =
+    useState("personal");
 
-    /* -------------------------------- */
-    /* Experience */
-    /* -------------------------------- */
+  /* =======================================================
+     Template
+  ======================================================= */
 
-    function addExperience(experience) {
-        setResumeData((prev) => ({
-            ...prev,
+  const setTemplate = useCallback((template) => {
+    setResumeData((prev) => ({
+      ...prev,
+      template,
+    }));
+  }, []);
 
-            experience: [
-                ...prev.experience,
-                {
-                    id: crypto.randomUUID(),
-                    ...experience,
-                },
-            ],
-        }));
-    }
+  /* =======================================================
+     Personal Information
+  ======================================================= */
 
-    function updateExperience(
-        id,
-        updatedExperience
-    ) {
-        setResumeData((prev) => ({
-            ...prev,
+  const updatePersonalInfo = useCallback(
+    (field, value) => {
+      setResumeData((prev) => ({
+        ...prev,
 
-            experience: prev.experience.map((exp) =>
-                exp.id === id
-                    ? {
-                        ...exp,
-                        ...updatedExperience,
-                    }
-                    : exp
-            ),
-        }));
-    }
+        personalInfo: {
+          ...prev.personalInfo,
+          [field]: value,
+        },
+      }));
+    },
+    []
+  );
 
-    function deleteExperience(id) {
-        setResumeData((prev) => ({
-            ...prev,
+  /* =======================================================
+     Experience
+  ======================================================= */
 
-            experience: prev.experience.filter(
-                (exp) => exp.id !== id
-            ),
-        }));
-    }
+  const addExperience = useCallback((experience) => {
+    setResumeData((prev) => ({
+      ...prev,
 
-    /* -------------------------------- */
-    /* Education */
-    /* -------------------------------- */
+      experience: [
+        ...prev.experience,
 
-    function addEducation(education) {
-        setResumeData((prev) => ({
-            ...prev,
+        {
+          id: crypto.randomUUID(),
+          ...experience,
+        },
+      ],
+    }));
+  }, []);
 
-            education: [
-                ...prev.education,
-                {
-                    id: crypto.randomUUID(),
-                    ...education,
-                },
-            ],
-        }));
-    }
+  const updateExperience = useCallback(
+    (id, updatedExperience) => {
+      setResumeData((prev) => ({
+        ...prev,
 
-    function updateEducation(
-        id,
-        updatedEducation
-    ) {
-        setResumeData((prev) => ({
-            ...prev,
+        experience: prev.experience.map((exp) =>
+          exp.id === id
+            ? {
+                ...exp,
+                ...updatedExperience,
+              }
+            : exp
+        ),
+      }));
+    },
+    []
+  );
 
-            education: prev.education.map((edu) =>
-                edu.id === id
-                    ? {
-                        ...edu,
-                        ...updatedEducation,
-                    }
-                    : edu
-            ),
-        }));
-    }
+  const deleteExperience = useCallback((id) => {
+    setResumeData((prev) => ({
+      ...prev,
 
-    function deleteEducation(id) {
-        setResumeData((prev) => ({
-            ...prev,
+      experience: prev.experience.filter(
+        (exp) => exp.id !== id
+      ),
+    }));
+  }, []);
 
-            education: prev.education.filter(
-                (edu) => edu.id !== id
-            ),
-        }));
-    }
-    /* -------------------------------- */
-    /* Skills */
-    /* -------------------------------- */
+  /* =======================================================
+     Education
+  ======================================================= */
 
-    function addSkill(skill) {
-        setResumeData((prev) => ({
-            ...prev,
+  const addEducation = useCallback((education) => {
+    setResumeData((prev) => ({
+      ...prev,
 
-            skills: [
-                ...prev.skills,
-                {
-                    id: crypto.randomUUID(),
-                    ...skill,
-                },
-            ],
-        }));
-    }
+      education: [
+        ...prev.education,
 
-    function updateSkill(id, updatedSkill) {
-        setResumeData((prev) => ({
-            ...prev,
+        {
+          id: crypto.randomUUID(),
+          ...education,
+        },
+      ],
+    }));
+  }, []);
 
-            skills: prev.skills.map((skill) =>
-                skill.id === id
-                    ? {
-                        ...skill,
-                        ...updatedSkill,
-                    }
-                    : skill
-            ),
-        }));
-    }
+  const updateEducation = useCallback(
+    (id, updatedEducation) => {
+      setResumeData((prev) => ({
+        ...prev,
 
-    function deleteSkill(id) {
-        setResumeData((prev) => ({
-            ...prev,
+        education: prev.education.map((edu) =>
+          edu.id === id
+            ? {
+                ...edu,
+                ...updatedEducation,
+              }
+            : edu
+        ),
+      }));
+    },
+    []
+  );
 
-            skills: prev.skills.filter(
-                (skill) => skill.id !== id
-            ),
-        }));
-    }
-    /* -------------------------------- */
-    /* Projects */
-    /* -------------------------------- */
+  const deleteEducation = useCallback((id) => {
+    setResumeData((prev) => ({
+      ...prev,
 
-    function addProject(project) {
-        setResumeData((prev) => ({
-            ...prev,
+      education: prev.education.filter(
+        (edu) => edu.id !== id
+      ),
+    }));
+  }, []);
 
-            projects: [
-                ...prev.projects,
-                {
-                    id: crypto.randomUUID(),
-                    ...project,
-                },
-            ],
-        }));
-    }
+  /* =======================================================
+     Skills
+  ======================================================= */
 
-    function updateProject(id, updatedProject) {
-        setResumeData((prev) => ({
-            ...prev,
+  const addSkill = useCallback((skill) => {
+    setResumeData((prev) => ({
+      ...prev,
 
-            projects: prev.projects.map((project) =>
-                project.id === id
-                    ? {
-                        ...project,
-                        ...updatedProject,
-                    }
-                    : project
-            ),
-        }));
-    }
+      skills: [
+        ...prev.skills,
 
-    function deleteProject(id) {
-        setResumeData((prev) => ({
-            ...prev,
+        {
+          id: crypto.randomUUID(),
+          ...skill,
+        },
+      ],
+    }));
+  }, []);
 
-            projects: prev.projects.filter(
-                (project) => project.id !== id
-            ),
-        }));
-    }
+  const updateSkill = useCallback(
+    (id, updatedSkill) => {
+      setResumeData((prev) => ({
+        ...prev,
 
-    /* -------------------------------- */
-    /* Certifications */
-    /* -------------------------------- */
+        skills: prev.skills.map((skill) =>
+          skill.id === id
+            ? {
+                ...skill,
+                ...updatedSkill,
+              }
+            : skill
+        ),
+      }));
+    },
+    []
+  );
 
-    function addCertification(certification) {
-        setResumeData((prev) => ({
-            ...prev,
+  const deleteSkill = useCallback((id) => {
+    setResumeData((prev) => ({
+      ...prev,
 
-            certifications: [
-                ...prev.certifications,
-                {
-                    id: crypto.randomUUID(),
-                    ...certification,
-                },
-            ],
-        }));
-    }
+      skills: prev.skills.filter(
+        (skill) => skill.id !== id
+      ),
+    }));
+  }, []);
 
-    function updateCertification(
-        id,
-        updatedCertification
-    ) {
-        setResumeData((prev) => ({
-            ...prev,
+  /* =======================================================
+     Projects
+  ======================================================= */
 
-            certifications: prev.certifications.map((cert) =>
-                cert.id === id
-                    ? {
-                        ...cert,
-                        ...updatedCertification,
-                    }
-                    : cert
-            ),
-        }));
-    }
+  const addProject = useCallback((project) => {
+    setResumeData((prev) => ({
+      ...prev,
 
-    function deleteCertification(id) {
-        setResumeData((prev) => ({
-            ...prev,
+      projects: [
+        ...prev.projects,
 
-            certifications: prev.certifications.filter(
-                (cert) => cert.id !== id
-            ),
-        }));
-    }
+        {
+          id: crypto.randomUUID(),
+          ...project,
+        },
+      ],
+    }));
+  }, []);
 
-    /* -------------------------------- */
-    /* Reset */
-    /* -------------------------------- */
+  const updateProject = useCallback(
+    (id, updatedProject) => {
+      setResumeData((prev) => ({
+        ...prev,
 
-    function resetResume() {
-        setResumeData(initialResumeData);
+        projects: prev.projects.map((project) =>
+          project.id === id
+            ? {
+                ...project,
+                ...updatedProject,
+              }
+            : project
+        ),
+      }));
+    },
+    []
+  );
 
-        setActiveSection("personal");
-    }
+  const deleteProject = useCallback((id) => {
+    setResumeData((prev) => ({
+      ...prev,
 
-    return (
-        <ResumeContext.Provider
-            value={{
-                resumeData,
-                setResumeData,
+      projects: prev.projects.filter(
+        (project) => project.id !== id
+      ),
+    }));
+  }, []);
 
-                activeSection,
-                setActiveSection,
+  /* =======================================================
+     Certifications
+  ======================================================= */
 
-                updatePersonalInfo,
+  const addCertification = useCallback(
+    (certification) => {
+      setResumeData((prev) => ({
+        ...prev,
 
-                addExperience,
-                updateExperience,
-                deleteExperience,
+        certifications: [
+          ...prev.certifications,
 
-                addEducation,
-                updateEducation,
-                deleteEducation,
+          {
+            id: crypto.randomUUID(),
+            ...certification,
+          },
+        ],
+      }));
+    },
+    []
+  );
 
-                addSkill,
-                updateSkill,
-                deleteSkill,
+  const updateCertification = useCallback(
+    (id, updatedCertification) => {
+      setResumeData((prev) => ({
+        ...prev,
 
-                addProject,
-                updateProject,
-                deleteProject,
+        certifications: prev.certifications.map(
+          (cert) =>
+            cert.id === id
+              ? {
+                  ...cert,
+                  ...updatedCertification,
+                }
+              : cert
+        ),
+      }));
+    },
+    []
+  );
 
-                addCertification,
-                updateCertification,
-                deleteCertification,
+  const deleteCertification = useCallback((id) => {
+    setResumeData((prev) => ({
+      ...prev,
 
-                resetResume,
-            }}
-        >
-            {children}
-        </ResumeContext.Provider>
-    );
+      certifications: prev.certifications.filter(
+        (cert) => cert.id !== id
+      ),
+    }));
+  }, []);
+
+  /* =======================================================
+     Reset Resume
+  ======================================================= */
+
+  const resetResume = useCallback(() => {
+    setResumeData({
+      ...initialResumeData,
+
+      personalInfo: {
+        ...initialResumeData.personalInfo,
+      },
+
+      experience: [],
+      education: [],
+      skills: [],
+      projects: [],
+      certifications: [],
+    });
+
+    setActiveSection("personal");
+  }, []);
+
+  /* =======================================================
+     Context Value
+  ======================================================= */
+
+  const value = useMemo(
+    () => ({
+      resumeData,
+
+      setResumeData,
+
+      /* Active Section */
+      activeSection,
+      setActiveSection,
+
+      /* Template */
+      setTemplate,
+
+      /* Personal Information */
+      updatePersonalInfo,
+
+      /* Experience */
+      addExperience,
+      updateExperience,
+      deleteExperience,
+
+      /* Education */
+      addEducation,
+      updateEducation,
+      deleteEducation,
+
+      /* Skills */
+      addSkill,
+      updateSkill,
+      deleteSkill,
+
+      /* Projects */
+      addProject,
+      updateProject,
+      deleteProject,
+
+      /* Certifications */
+      addCertification,
+      updateCertification,
+      deleteCertification,
+
+      /* Reset */
+      resetResume,
+    }),
+    [
+      resumeData,
+      activeSection,
+
+      setTemplate,
+
+      updatePersonalInfo,
+
+      addExperience,
+      updateExperience,
+      deleteExperience,
+
+      addEducation,
+      updateEducation,
+      deleteEducation,
+
+      addSkill,
+      updateSkill,
+      deleteSkill,
+
+      addProject,
+      updateProject,
+      deleteProject,
+
+      addCertification,
+      updateCertification,
+      deleteCertification,
+
+      resetResume,
+    ]
+  );
+
+  /* =======================================================
+     Provider
+  ======================================================= */
+
+  return (
+    <ResumeContext.Provider value={value}>
+      {children}
+    </ResumeContext.Provider>
+  );
 }
 
+/* =========================================================
+   useResume Hook
+========================================================= */
+
 export function useResume() {
-    const context = useContext(ResumeContext);
+  const context = useContext(ResumeContext);
 
-    if (!context) {
-        throw new Error(
-            "useResume must be used inside ResumeProvider."
-        );
-    }
+  if (!context) {
+    throw new Error(
+      "useResume must be used inside ResumeProvider."
+    );
+  }
 
-    return context;
+  return context;
 }

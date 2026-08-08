@@ -7,7 +7,6 @@ import RecentResumes from "../components/dashboard/RecentResumes";
 export default function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-50">
-
       {/* Header */}
 
       <DashboardHeader />
@@ -18,11 +17,9 @@ export default function Dashboard() {
         className="
           mx-auto
           max-w-7xl
-
+          space-y-8
           px-6
           py-10
-
-          space-y-8
         "
       >
         {/* Welcome */}

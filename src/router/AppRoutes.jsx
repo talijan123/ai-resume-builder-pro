@@ -11,13 +11,19 @@ import Dashboard from "../pages/Dashboard";
 import ResumeBuilder from "../pages/ResumeBuilder";
 import Templates from "../pages/Templates";
 import Settings from "../pages/Settings";
+import MyResumes from "../pages/MyResumes";
 import NotFound from "../pages/NotFound";
+
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+
+        {/* =========================
+            Public Routes
+        ========================== */}
 
         <Route
           path="/"
@@ -34,6 +40,10 @@ export default function AppRoutes() {
           element={<Register />}
         />
 
+        {/* =========================
+            Protected Routes
+        ========================== */}
+
         <Route
           path="/dashboard"
           element={
@@ -42,24 +52,59 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        {/* Create New Resume */}
+
         <Route
           path="/builder"
           element={
             <ProtectedRoute>
               <ResumeBuilder />
             </ProtectedRoute>
-            }
+          }
         />
+
+        {/* Edit Existing Resume */}
+
+        <Route
+          path="/builder/:id"
+          element={
+            <ProtectedRoute>
+              <ResumeBuilder />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* My Resumes */}
+
+        <Route
+          path="/my-resumes"
+          element={
+            <ProtectedRoute>
+              <MyResumes />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Templates */}
 
         <Route
           path="/templates"
           element={<Templates />}
         />
 
+        {/* Settings */}
+
         <Route
           path="/settings"
-          element={<Settings />}
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
         />
+
+        {/* 404 */}
 
         <Route
           path="*"
