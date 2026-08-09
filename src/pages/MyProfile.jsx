@@ -10,13 +10,14 @@ export default function MyProfile() {
   } = useProfile();
 
   const [saved, setSaved] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(
+    profileData?.profile?.photo || ""
+  );
 
   const fileInputRef = useRef(null);
 
-  const {
-    profile = {},
-    contact = {},
-  } = profileData || {};
+  const profile = profileData?.profile || {};
+  const contact = profileData?.contact || {};
 
   /* =========================================================
      PROFILE COMPLETION
@@ -46,7 +47,7 @@ export default function MyProfile() {
   }, [profile, contact]);
 
   /* =========================================================
-     HANDLERS
+     PROFILE CHANGE
   ========================================================= */
 
   const handleProfileChange = (field, value) => {
@@ -54,40 +55,49 @@ export default function MyProfile() {
     setSaved(false);
   };
 
+  /* =========================================================
+     CONTACT CHANGE
+  ========================================================= */
+
   const handleContactChange = (field, value) => {
     updateContact(field, value);
     setSaved(false);
   };
 
   /* =========================================================
-     IMAGE UPLOAD
+     PHOTO UPLOAD
   ========================================================= */
 
-  const handleImageUpload = (event) => {
+  const handlePhotoUpload = (event) => {
     const file = event.target.files?.[0];
 
     if (!file) {
       return;
     }
 
-    /* Only allow images */
+    /* Only allow image files */
 
     if (!file.type.startsWith("image/")) {
       alert("Please select a valid image file.");
       return;
     }
 
-    /* Maximum file size: 5MB */
+    /* Limit file size to 5MB */
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Please choose an image smaller than 5MB.");
+      alert("Image size must be less than 5MB.");
       return;
     }
 
     const reader = new FileReader();
 
     reader.onload = () => {
-      updateProfile("photo", reader.result);
+      const imageData = reader.result;
+
+      setPhotoPreview(imageData);
+
+      updateProfile("photo", imageData);
+
       setSaved(false);
     };
 
@@ -95,10 +105,12 @@ export default function MyProfile() {
   };
 
   /* =========================================================
-     REMOVE IMAGE
+     REMOVE PHOTO
   ========================================================= */
 
   const handleRemovePhoto = () => {
+    setPhotoPreview("");
+
     updateProfile("photo", "");
 
     if (fileInputRef.current) {
@@ -106,14 +118,6 @@ export default function MyProfile() {
     }
 
     setSaved(false);
-  };
-
-  /* =========================================================
-     OPEN FILE SELECTOR
-  ========================================================= */
-
-  const handleChoosePhoto = () => {
-    fileInputRef.current?.click();
   };
 
   /* =========================================================
@@ -137,29 +141,36 @@ export default function MyProfile() {
       "Are you sure you want to reset your profile?"
     );
 
-    if (confirmed) {
-      resetProfile();
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-
-      setSaved(false);
+    if (!confirmed) {
+      return;
     }
+
+    resetProfile();
+
+    setPhotoPreview("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    setSaved(false);
   };
 
   return (
     <div className="min-h-screen bg-slate-50">
+
       {/* =====================================================
           HEADER
       ===================================================== */}
 
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
 
-          {/* Left */}
+          {/* LEFT */}
 
           <div className="flex items-center gap-4">
+
             <button
               type="button"
               onClick={() => window.history.back()}
@@ -173,6 +184,7 @@ export default function MyProfile() {
                 border
                 border-slate-200
                 bg-white
+                text-lg
                 text-slate-700
                 transition
                 hover:bg-slate-100
@@ -190,11 +202,13 @@ export default function MyProfile() {
                 Manage your personal and professional information.
               </p>
             </div>
+
           </div>
 
-          {/* Right */}
+          {/* RIGHT */}
 
           <div className="flex items-center gap-3">
+
             <button
               type="button"
               onClick={handleReset}
@@ -239,8 +253,11 @@ export default function MyProfile() {
             >
               {saved ? "✓ Saved" : "Save Profile"}
             </button>
+
           </div>
+
         </div>
+
       </header>
 
       {/* =====================================================
@@ -248,6 +265,7 @@ export default function MyProfile() {
       ===================================================== */}
 
       <main className="mx-auto max-w-[1400px] px-6 py-8">
+
         <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
 
           {/* =================================================
@@ -256,160 +274,77 @@ export default function MyProfile() {
 
           <aside className="space-y-6">
 
-            {/* =================================================
-                PROFILE CARD
-            ================================================= */}
+            {/* PROFILE CARD */}
 
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
               <div className="text-center">
 
-                {/* =================================================
-                    PROFILE PHOTO
-                ================================================= */}
+                {/* PHOTO */}
 
                 <div className="relative mx-auto h-28 w-28">
 
-                  {/* Photo / Initials */}
-
-                  <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-lg">
-
-                    {profile.photo ? (
-                      <img
-                        src={profile.photo}
-                        alt={
-                          profile.fullName ||
-                          "Profile"
-                        }
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      profile.fullName
-                        ? getInitials(
-                            profile.fullName
-                          )
-                        : "YN"
-                    )}
-                  </div>
-
-                  {/* Camera Button */}
-
-                  <button
-                    type="button"
-                    onClick={handleChoosePhoto}
-                    title="Upload profile photo"
-                    className="
-                      absolute
-                      bottom-0
-                      right-0
+                  {photoPreview ? (
+                    <img
+                      src={photoPreview}
+                      alt="Profile"
+                      className="
+                        h-28
+                        w-28
+                        rounded-full
+                        object-cover
+                        shadow-lg
+                        ring-4
+                        ring-white
+                      "
+                    />
+                  ) : (
+                    <div className="
                       flex
-                      h-9
-                      w-9
+                      h-28
+                      w-28
                       items-center
                       justify-center
                       rounded-full
-                      border-4
-                      border-white
-                      bg-blue-600
-                      text-sm
+                      bg-gradient-to-br
+                      from-blue-600
+                      to-indigo-600
+                      text-3xl
+                      font-black
                       text-white
-                      shadow-md
-                      transition
-                      hover:bg-blue-700
-                    "
-                  >
-                    📷
-                  </button>
-                </div>
-
-                {/* Hidden File Input */}
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-
-                {/* Upload Controls */}
-
-                <div className="mt-4 flex items-center justify-center gap-2">
-
-                  <button
-                    type="button"
-                    onClick={handleChoosePhoto}
-                    className="
-                      rounded-lg
-                      border
-                      border-slate-200
-                      bg-white
-                      px-3
-                      py-2
-                      text-xs
-                      font-bold
-                      text-slate-700
-                      transition
-                      hover:bg-slate-50
-                    "
-                  >
-                    {profile.photo
-                      ? "Change Photo"
-                      : "Upload Photo"}
-                  </button>
-
-                  {profile.photo && (
-                    <button
-                      type="button"
-                      onClick={handleRemovePhoto}
-                      className="
-                        rounded-lg
-                        px-3
-                        py-2
-                        text-xs
-                        font-bold
-                        text-red-500
-                        transition
-                        hover:bg-red-50
-                      "
-                    >
-                      Remove
-                    </button>
+                      shadow-lg
+                    ">
+                      {profile.fullName
+                        ? getInitials(profile.fullName)
+                        : "YN"}
+                    </div>
                   )}
+
                 </div>
-
-                <p className="mt-2 text-[11px] text-slate-400">
-                  JPG, PNG, WEBP or GIF · Max 5MB
-                </p>
-
-                {/* Name */}
 
                 <h2 className="mt-5 text-xl font-black text-slate-900">
-                  {profile.fullName ||
-                    "Your Name"}
+                  {profile.fullName || "Your Name"}
                 </h2>
-
-                {/* Title */}
 
                 <p className="mt-1 text-sm font-semibold text-blue-600">
                   {profile.professionalTitle ||
                     "Professional Title"}
                 </p>
 
-                {/* Location */}
-
                 {profile.location && (
                   <p className="mt-2 text-xs text-slate-500">
                     📍 {profile.location}
                   </p>
                 )}
+
               </div>
 
-              {/* Completion */}
+              {/* COMPLETION */}
 
               <div className="mt-7">
 
                 <div className="mb-2 flex items-center justify-between">
+
                   <span className="text-xs font-bold text-slate-600">
                     Profile Completion
                   </span>
@@ -417,9 +352,11 @@ export default function MyProfile() {
                   <span className="text-xs font-black text-blue-600">
                     {completion}%
                   </span>
+
                 </div>
 
                 <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+
                   <div
                     className="
                       h-full
@@ -434,13 +371,14 @@ export default function MyProfile() {
                       width: `${completion}%`,
                     }}
                   />
+
                 </div>
+
               </div>
+
             </section>
 
-            {/* =================================================
-                PROFILE TIPS
-            ================================================= */}
+            {/* PROFILE TIPS */}
 
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
@@ -452,12 +390,12 @@ export default function MyProfile() {
 
                 <Tip
                   title="Add a professional photo"
-                  text="Use a clear and professional profile photo for your resume and profile."
+                  text="Use a clear and professional profile photo."
                 />
 
                 <Tip
                   title="Complete your profile"
-                  text="A complete profile makes your resume creation faster."
+                  text="A complete profile makes resume creation much faster."
                 />
 
                 <Tip
@@ -469,8 +407,11 @@ export default function MyProfile() {
                   title="Write a strong summary"
                   text="Keep your professional summary clear and focused."
                 />
+
               </div>
+
             </section>
+
           </aside>
 
           {/* =================================================
@@ -480,13 +421,128 @@ export default function MyProfile() {
           <div className="space-y-8">
 
             {/* =================================================
-                PERSONAL INFORMATION
+                PHOTO
             ================================================= */}
 
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
               <SectionHeader
                 number="01"
+                title="Profile Photo"
+                description="Upload a professional photo for your profile."
+              />
+
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+
+                {/* PHOTO */}
+
+                <div className="shrink-0">
+
+                  {photoPreview ? (
+                    <img
+                      src={photoPreview}
+                      alt="Profile preview"
+                      className="
+                        h-28
+                        w-28
+                        rounded-2xl
+                        object-cover
+                        ring-1
+                        ring-slate-200
+                      "
+                    />
+                  ) : (
+                    <div className="
+                      flex
+                      h-28
+                      w-28
+                      items-center
+                      justify-center
+                      rounded-2xl
+                      bg-slate-100
+                      text-3xl
+                      font-black
+                      text-slate-400
+                    ">
+                      👤
+                    </div>
+                  )}
+
+                </div>
+
+                {/* UPLOAD */}
+
+                <div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      fileInputRef.current?.click()
+                    }
+                    className="
+                      rounded-xl
+                      bg-blue-600
+                      px-5
+                      py-2.5
+                      text-sm
+                      font-bold
+                      text-white
+                      transition
+                      hover:bg-blue-700
+                    "
+                  >
+                    Upload Image
+                  </button>
+
+                  {photoPreview && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="
+                        ml-3
+                        rounded-xl
+                        border
+                        border-red-200
+                        bg-white
+                        px-5
+                        py-2.5
+                        text-sm
+                        font-bold
+                        text-red-600
+                        transition
+                        hover:bg-red-50
+                      "
+                    >
+                      Remove
+                    </button>
+                  )}
+
+                  <p className="mt-3 text-xs text-slate-400">
+                    JPG, PNG or WebP. Maximum size: 5MB.
+                  </p>
+
+                </div>
+
+              </div>
+
+            </section>
+
+            {/* =================================================
+                PERSONAL INFORMATION
+            ================================================= */}
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+              <SectionHeader
+                number="02"
                 title="Personal Information"
                 description="Basic information that identifies you."
               />
@@ -519,9 +575,7 @@ export default function MyProfile() {
 
                 <Input
                   label="Years of Experience"
-                  value={
-                    profile.yearsOfExperience
-                  }
+                  value={profile.yearsOfExperience}
                   onChange={(value) =>
                     handleProfileChange(
                       "yearsOfExperience",
@@ -533,9 +587,7 @@ export default function MyProfile() {
 
                 <Input
                   label="Desired Job Title"
-                  value={
-                    profile.desiredJobTitle
-                  }
+                  value={profile.desiredJobTitle}
                   onChange={(value) =>
                     handleProfileChange(
                       "desiredJobTitle",
@@ -544,19 +596,21 @@ export default function MyProfile() {
                   }
                   placeholder="Frontend Developer"
                 />
+
               </div>
+
             </section>
 
             {/* =================================================
-                CONTACT INFORMATION
+                CONTACT
             ================================================= */}
 
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
               <SectionHeader
-                number="02"
+                number="03"
                 title="Contact Information"
-                description="Add the contact details employers can use to reach you."
+                description="Add the contact details employers can use."
               />
 
               <div className="grid gap-5 md:grid-cols-2">
@@ -621,17 +675,19 @@ export default function MyProfile() {
                   }
                   placeholder="https://github.com/username"
                 />
+
               </div>
+
             </section>
 
             {/* =================================================
-                PROFESSIONAL INFORMATION
+                PROFESSIONAL
             ================================================= */}
 
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
               <SectionHeader
-                number="03"
+                number="04"
                 title="Professional Information"
                 description="Tell employers who you are and what you do."
               />
@@ -640,9 +696,7 @@ export default function MyProfile() {
 
                 <Input
                   label="Professional Title"
-                  value={
-                    profile.professionalTitle
-                  }
+                  value={profile.professionalTitle}
                   onChange={(value) =>
                     handleProfileChange(
                       "professionalTitle",
@@ -664,24 +718,28 @@ export default function MyProfile() {
                   rows={7}
                   placeholder="Write a short professional summary about your experience, skills, strengths, and career goals."
                 />
+
               </div>
+
             </section>
 
             {/* =================================================
-                SAVE AREA
+                SAVE
             ================================================= */}
 
             <section className="flex flex-col items-center justify-between gap-4 rounded-3xl border border-blue-100 bg-blue-50 p-6 sm:flex-row">
 
               <div>
+
                 <h3 className="font-black text-slate-900">
                   Keep your profile updated
                 </h3>
 
                 <p className="mt-1 text-sm text-slate-600">
-                  Your profile information can be reused when
-                  creating resumes and cover letters.
+                  Your profile information can be reused
+                  when creating resumes and cover letters.
                 </p>
+
               </div>
 
               <button
@@ -707,10 +765,15 @@ export default function MyProfile() {
                   ? "✓ Profile Saved"
                   : "Save Changes"}
               </button>
+
             </section>
+
           </div>
+
         </div>
+
       </main>
+
     </div>
   );
 }
@@ -729,18 +792,31 @@ function SectionHeader({
 
       <div className="flex items-center gap-3">
 
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-xs font-black text-white">
+        <span className="
+          flex
+          h-8
+          w-8
+          items-center
+          justify-center
+          rounded-lg
+          bg-blue-600
+          text-xs
+          font-black
+          text-white
+        ">
           {number}
         </span>
 
         <h2 className="text-lg font-black text-slate-900">
           {title}
         </h2>
+
       </div>
 
       <p className="mt-2 pl-11 text-sm text-slate-500">
         {description}
       </p>
+
     </div>
   );
 }
@@ -788,6 +864,7 @@ function Input({
           focus:ring-blue-100
         "
       />
+
     </label>
   );
 }
@@ -837,6 +914,7 @@ function Textarea({
           focus:ring-blue-100
         "
       />
+
     </label>
   );
 }
@@ -856,6 +934,7 @@ function Tip({ title, text }) {
       <p className="mt-1 text-xs leading-5 text-slate-500">
         {text}
       </p>
+
     </div>
   );
 }

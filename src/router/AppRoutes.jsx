@@ -19,6 +19,7 @@ import NotFound from "../pages/NotFound";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 import { ProfileProvider } from "../context/ProfileContext";
+import { SettingsProvider } from "../context/SettingsContext";
 
 export default function AppRoutes() {
   return (
@@ -136,7 +137,9 @@ export default function AppRoutes() {
           path="/settings"
           element={
             <ProtectedRoute>
-              <Settings />
+              <SettingsProvider>
+                <Settings />
+              </SettingsProvider>
             </ProtectedRoute>
           }
         />
