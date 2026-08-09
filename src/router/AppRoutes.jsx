@@ -12,18 +12,21 @@ import ResumeBuilder from "../pages/ResumeBuilder";
 import Templates from "../pages/Templates";
 import Settings from "../pages/Settings";
 import MyResumes from "../pages/MyResumes";
+import CoverLetter from "../pages/CoverLetter";
+import MyProfile from "../pages/MyProfile";
 import NotFound from "../pages/NotFound";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute";
+
+import { ProfileProvider } from "../context/ProfileContext";
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* =========================
-            Public Routes
-        ========================== */}
+        {/* =====================================================
+            PUBLIC ROUTES
+        ====================================================== */}
 
         <Route
           path="/"
@@ -40,9 +43,14 @@ export default function AppRoutes() {
           element={<Register />}
         />
 
-        {/* =========================
-            Protected Routes
-        ========================== */}
+        <Route
+          path="/templates"
+          element={<Templates />}
+        />
+
+        {/* =====================================================
+            PROTECTED ROUTES
+        ====================================================== */}
 
         <Route
           path="/dashboard"
@@ -52,6 +60,10 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        {/* =====================================================
+            RESUME BUILDER
+        ====================================================== */}
 
         {/* Create New Resume */}
 
@@ -75,7 +87,9 @@ export default function AppRoutes() {
           }
         />
 
-        {/* My Resumes */}
+        {/* =====================================================
+            MY RESUMES
+        ====================================================== */}
 
         <Route
           path="/my-resumes"
@@ -86,14 +100,37 @@ export default function AppRoutes() {
           }
         />
 
-        {/* Templates */}
+        {/* =====================================================
+            COVER LETTER
+        ====================================================== */}
 
         <Route
-          path="/templates"
-          element={<Templates />}
+          path="/cover-letter"
+          element={
+            <ProtectedRoute>
+              <CoverLetter />
+            </ProtectedRoute>
+          }
         />
 
-        {/* Settings */}
+        {/* =====================================================
+            MY PROFILE
+        ====================================================== */}
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfileProvider>
+                <MyProfile />
+              </ProfileProvider>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =====================================================
+            SETTINGS
+        ====================================================== */}
 
         <Route
           path="/settings"
@@ -104,13 +141,14 @@ export default function AppRoutes() {
           }
         />
 
-        {/* 404 */}
+        {/* =====================================================
+            404
+        ====================================================== */}
 
         <Route
           path="*"
           element={<NotFound />}
         />
-
       </Routes>
     </BrowserRouter>
   );
