@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { HiCheck } from "react-icons/hi2";
 
 export default function PricingCard({
+  id,
   name,
   monthlyPrice,
   yearlyPrice,
@@ -13,10 +14,19 @@ export default function PricingCard({
   buttonStyle,
   features,
   featured,
+  onSelectPlan,
 }) {
+  /* =====================================================
+     CURRENT PRICE
+  ===================================================== */
+
   const currentPrice = yearly
     ? yearlyPrice
     : monthlyPrice;
+
+  /* =====================================================
+     BUTTON STYLES
+  ===================================================== */
 
   const buttonClasses = {
     primary:
@@ -27,6 +37,40 @@ export default function PricingCard({
 
     dark:
       "bg-slate-900 text-white hover:bg-slate-800",
+  };
+
+  /* =====================================================
+     PLAN OBJECT
+  ===================================================== */
+
+  const plan = {
+    id,
+    name,
+    monthlyPrice,
+    yearlyPrice,
+    yearlyTotal,
+    description,
+    badge,
+    buttonText,
+    buttonStyle,
+    features,
+    featured,
+  };
+
+  /* =====================================================
+     HANDLE PLAN SELECTION
+  ===================================================== */
+
+  const handleSelectPlan = () => {
+    if (typeof onSelectPlan !== "function") {
+      console.error(
+        "PricingCard: onSelectPlan handler is missing."
+      );
+
+      return;
+    }
+
+    onSelectPlan(plan);
   };
 
   return (
@@ -40,12 +84,18 @@ export default function PricingCard({
       }}
       className={`
         relative
+
         flex
         flex-col
+
         rounded-3xl
+
         border
+
         p-8
+
         shadow-lg
+
         transition-all
         duration-300
 
@@ -56,7 +106,9 @@ export default function PricingCard({
         }
       `}
     >
-      {/* Badge */}
+      {/* =================================================
+          BADGE
+      ================================================= */}
 
       {badge && (
         <div
@@ -79,6 +131,7 @@ export default function PricingCard({
             tracking-wider
 
             text-white
+
             shadow-lg
           "
         >
@@ -86,7 +139,9 @@ export default function PricingCard({
         </div>
       )}
 
-      {/* Plan */}
+      {/* =================================================
+          PLAN
+      ================================================= */}
 
       <div className="text-center">
         <h3
@@ -110,14 +165,14 @@ export default function PricingCard({
         </p>
       </div>
 
-      {/* Price */}
+      {/* =================================================
+          PRICE
+      ================================================= */}
 
       <div className="mt-8 text-center">
-
         <AnimatePresence mode="wait">
-
           <motion.div
-            key={currentPrice}
+            key={`${id}-${currentPrice}-${yearly}`}
             initial={{
               opacity: 0,
               y: 15,
@@ -144,20 +199,23 @@ export default function PricingCard({
               ${currentPrice}
             </span>
 
-            <span
-              className="
-                ml-1
-                text-lg
-                text-slate-500
-              "
-            >
-              /month
-            </span>
+            {currentPrice > 0 && (
+              <span
+                className="
+                  ml-1
+                  text-lg
+                  text-slate-500
+                "
+              >
+                /month
+              </span>
+            )}
           </motion.div>
-
         </AnimatePresence>
 
-        {/* Save Badge */}
+        {/* =================================================
+            SAVE BADGE
+        ================================================= */}
 
         {yearly && currentPrice > 0 && (
           <motion.div
@@ -194,7 +252,9 @@ export default function PricingCard({
           </motion.div>
         )}
 
-        {/* Annual Billing */}
+        {/* =================================================
+            ANNUAL BILLING
+        ================================================= */}
 
         {yearly && yearlyTotal > 0 && (
           <motion.p
@@ -218,62 +278,74 @@ export default function PricingCard({
             </span>
           </motion.p>
         )}
-
       </div>
 
-      {/* Divider */}
+      {/* =================================================
+          DIVIDER
+      ================================================= */}
 
       <div
         className="
           my-8
+
           h-px
+
           bg-slate-200
         "
       />
 
-      {/* Features */}
+      {/* =================================================
+          FEATURES
+      ================================================= */}
 
       <div className="flex-1 space-y-4">
-
-        {features.map((feature) => (
-          <div
-            key={feature}
-            className="
-              flex
-              items-start
-              gap-3
-            "
-          >
+        {Array.isArray(features) &&
+          features.map((feature) => (
             <div
+              key={feature}
               className="
-                mt-1
-                rounded-full
-                bg-green-100
-                p-1
+                flex
+                items-start
+                gap-3
               "
             >
-              <HiCheck
-                size={16}
-                className="text-green-600"
-              />
+              <div
+                className="
+                  mt-1
+
+                  rounded-full
+
+                  bg-green-100
+
+                  p-1
+                "
+              >
+                <HiCheck
+                  size={16}
+                  className="text-green-600"
+                />
+              </div>
+
+              <span
+                className="
+                  leading-7
+
+                  text-slate-700
+                "
+              >
+                {feature}
+              </span>
             </div>
-
-            <span
-              className="
-                leading-7
-                text-slate-700
-              "
-            >
-              {feature}
-            </span>
-          </div>
-        ))}
-
+          ))}
       </div>
 
-      {/* Button */}
+      {/* =================================================
+          BUTTON
+      ================================================= */}
 
       <motion.button
+        type="button"
+        onClick={handleSelectPlan}
         whileHover={{
           scale: 1.03,
         }}
@@ -282,8 +354,11 @@ export default function PricingCard({
         }}
         className={`
           mt-10
+
           w-full
+
           rounded-2xl
+
           py-4
 
           font-semibold
@@ -291,12 +366,11 @@ export default function PricingCard({
           transition-all
           duration-300
 
-          ${buttonClasses[buttonStyle]}
+          ${buttonClasses[buttonStyle] || buttonClasses.primary}
         `}
       >
         {buttonText}
       </motion.button>
-
     </motion.div>
   );
 }

@@ -20,6 +20,7 @@ import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 import { ProfileProvider } from "../context/ProfileContext";
 import { SettingsProvider } from "../context/SettingsContext";
+import { CoverLetterProvider } from "../context/CoverLetterContext";
 
 export default function AppRoutes() {
   return (
@@ -109,7 +110,9 @@ export default function AppRoutes() {
           path="/cover-letter"
           element={
             <ProtectedRoute>
-              <CoverLetter />
+              <CoverLetterProvider>
+                <CoverLetter />
+              </CoverLetterProvider>
             </ProtectedRoute>
           }
         />

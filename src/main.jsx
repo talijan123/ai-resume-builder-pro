@@ -7,12 +7,17 @@ import AppRoutes from "./router/AppRoutes";
 
 import { AuthProvider } from "./context/AuthContext";
 import { ResumeProvider } from "./context/ResumeContext";
+import { PricingProvider } from "./context/PricingContext";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(
   <React.StrictMode>
     <AuthProvider>
       <ResumeProvider>
-        <AppRoutes />
+        <PricingProvider>
+          <AppRoutes />
+        </PricingProvider>
       </ResumeProvider>
     </AuthProvider>
   </React.StrictMode>

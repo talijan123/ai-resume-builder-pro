@@ -1,10 +1,67 @@
 import { motion } from "framer-motion";
-import {
-  HiArrowRight,
-  HiPlay,
-} from "react-icons/hi2";
+import { HiArrowRight, HiPlay } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
+
+import { useAuth } from "../../../context/AuthContext";
 
 export default function HeroContent() {
+  const navigate = useNavigate();
+
+  const { user, loading } = useAuth();
+
+  /* =========================================================
+     BUILD RESUME
+  ========================================================= */
+
+  const handleBuildResume = () => {
+    // Wait until Supabase finishes checking authentication
+    if (loading) {
+      return;
+    }
+
+    // Logged-in user → Dashboard
+    if (user) {
+      navigate("/dashboard");
+      return;
+    }
+
+    // Guest user → Login
+    navigate("/login");
+  };
+
+  /* =========================================================
+     WATCH DEMO
+  ========================================================= */
+
+  const handleWatchDemo = () => {
+    const demoSection = document.getElementById("live-demo");
+
+    if (!demoSection) {
+      console.warn(
+        'Demo section with id="live-demo" was not found.'
+      );
+
+      return;
+    }
+
+    /*
+      Navbar is fixed at the top,
+      so we subtract its height from
+      the final scroll position.
+    */
+
+    const navbarOffset = 80;
+
+    const sectionPosition =
+      demoSection.getBoundingClientRect().top +
+      window.scrollY;
+
+    window.scrollTo({
+      top: sectionPosition - navbarOffset,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -50 }}
@@ -12,7 +69,9 @@ export default function HeroContent() {
       transition={{ duration: 0.8 }}
       className="max-w-2xl"
     >
-      {/* Announcement Badge */}
+      {/* =====================================================
+          ANNOUNCEMENT BADGE
+      ===================================================== */}
 
       <motion.div
         initial={{ opacity: 0, y: -15 }}
@@ -22,35 +81,25 @@ export default function HeroContent() {
           inline-flex
           items-center
           gap-3
-
           rounded-full
-
           border
           border-blue-200
-
           bg-white/80
-
           px-5
           py-2.5
-
           backdrop-blur-xl
-
           shadow-sm
         "
       >
         <span className="relative flex h-3 w-3">
-
           <span
             className="
               absolute
               inline-flex
               h-full
               w-full
-
               animate-ping
-
               rounded-full
-
               bg-emerald-400
             "
           />
@@ -61,21 +110,16 @@ export default function HeroContent() {
               inline-flex
               h-3
               w-3
-
               rounded-full
-
               bg-emerald-500
             "
           />
-
         </span>
 
         <span
           className="
             text-sm
-
             font-semibold
-
             text-slate-700
           "
         >
@@ -83,7 +127,9 @@ export default function HeroContent() {
         </span>
       </motion.div>
 
-      {/* Heading */}
+      {/* =====================================================
+          HEADING
+      ===================================================== */}
 
       <motion.h1
         initial={{ opacity: 0, y: 25 }}
@@ -91,16 +137,11 @@ export default function HeroContent() {
         transition={{ delay: 0.3 }}
         className="
           mt-8
-
           text-5xl
           font-black
-
           leading-[0.9]
-
           tracking-[-0.05em]
-
           text-slate-900
-
           lg:text-7xl
         "
       >
@@ -113,15 +154,11 @@ export default function HeroContent() {
         <span
           className="
             block
-
             bg-gradient-to-r
-
             from-blue-600
             via-indigo-500
             to-cyan-500
-
             bg-clip-text
-
             text-transparent
           "
         >
@@ -129,7 +166,9 @@ export default function HeroContent() {
         </span>
       </motion.h1>
 
-      {/* Paragraph */}
+      {/* =====================================================
+          DESCRIPTION
+      ===================================================== */}
 
       <motion.p
         initial={{ opacity: 0 }}
@@ -137,13 +176,9 @@ export default function HeroContent() {
         transition={{ delay: 0.45 }}
         className="
           mt-8
-
           max-w-xl
-
           text-xl
-
           leading-9
-
           text-slate-600
         "
       >
@@ -152,7 +187,9 @@ export default function HeroContent() {
         AI-powered workspace built for modern job seekers.
       </motion.p>
 
-      {/* Stats */}
+      {/* =====================================================
+          STATS
+      ===================================================== */}
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -160,10 +197,8 @@ export default function HeroContent() {
         transition={{ delay: 0.55 }}
         className="
           mt-10
-
           flex
           flex-wrap
-
           gap-10
         "
       >
@@ -196,10 +231,11 @@ export default function HeroContent() {
             User Rating
           </p>
         </div>
-
       </motion.div>
 
-      {/* Buttons */}
+      {/* =====================================================
+          BUTTONS
+      ===================================================== */}
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -207,91 +243,98 @@ export default function HeroContent() {
         transition={{ delay: 0.65 }}
         className="
           mt-12
-
           flex
           flex-wrap
-
           gap-5
         "
       >
+        {/* ===================================================
+            BUILD MY RESUME
+        =================================================== */}
+
         <button
+          type="button"
+          onClick={handleBuildResume}
+          disabled={loading}
           className="
             group
-
             flex
             items-center
             gap-2
-
             rounded-full
-
             bg-gradient-to-r
-
             from-blue-600
             to-indigo-600
-
             px-8
             py-4
-
             font-semibold
-
             text-white
-
             shadow-xl
             shadow-blue-500/30
-
             transition-all
             duration-300
-
             hover:-translate-y-1
             hover:scale-[1.03]
+            disabled:cursor-not-allowed
+            disabled:opacity-60
           "
         >
-          Build My Resume
+          {loading
+            ? "Checking..."
+            : user
+              ? "Go to Dashboard"
+              : "Build My Resume"}
 
           <HiArrowRight
             className="
               transition-transform
               duration-300
-
               group-hover:translate-x-1
             "
             size={20}
           />
         </button>
 
+        {/* ===================================================
+            WATCH DEMO
+        =================================================== */}
+
         <button
+          type="button"
+          onClick={handleWatchDemo}
           className="
+            group
             flex
+            cursor-pointer
             items-center
             gap-3
-
             rounded-full
-
             border
             border-slate-300
-
             bg-white
-
             px-8
             py-4
-
             font-semibold
-
             text-slate-700
-
             transition-all
             duration-300
-
+            hover:-translate-y-1
             hover:border-blue-500
             hover:text-blue-600
             hover:shadow-lg
           "
         >
-          <HiPlay size={18} />
+          <HiPlay
+            size={18}
+            className="
+              transition-transform
+              duration-300
+              group-hover:scale-110
+            "
+          />
 
           Watch Demo
         </button>
-
       </motion.div>
     </motion.div>
   );

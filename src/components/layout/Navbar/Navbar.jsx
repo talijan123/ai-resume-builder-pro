@@ -1,9 +1,15 @@
 import { useState } from "react";
-import { Link } from "react-scroll";
-import { HiBars3, HiXMark } from "react-icons/hi2";
+import { Link as ScrollLink } from "react-scroll";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import {
+  HiBars3,
+  HiXMark,
+} from "react-icons/hi2";
 
 import Container from "../../UI/Container/Container";
 import Button from "../../UI/Button/Button";
+
+import { useAuth } from "../../../context/AuthContext";
 
 const links = [
   {
@@ -27,6 +33,49 @@ const links = [
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const navigate = useNavigate();
+
+  const { user, loading } = useAuth();
+
+  /* =========================================================
+     LOGIN
+  ========================================================= */
+
+  const handleLogin = () => {
+    setMenuOpen(false);
+
+    navigate("/login");
+  };
+
+  /* =========================================================
+     GET STARTED
+  ========================================================= */
+
+  const handleGetStarted = () => {
+    setMenuOpen(false);
+
+    if (loading) {
+      return;
+    }
+
+    if (user) {
+      navigate("/dashboard");
+      return;
+    }
+
+    navigate("/register");
+  };
+
+  /* =========================================================
+     DASHBOARD
+  ========================================================= */
+
+  const handleDashboard = () => {
+    setMenuOpen(false);
+
+    navigate("/dashboard");
+  };
+
   return (
     <header
       className="
@@ -34,28 +83,31 @@ export default function Navbar() {
         top-0
         left-0
         z-50
-
         w-full
-
         border-b
         border-slate-800/70
-
         bg-slate-950/80
-
         backdrop-blur-xl
       "
     >
       <Container>
         <div className="flex h-20 items-center justify-between">
 
-          {/* Logo */}
+          {/* =================================================
+              LOGO
+          ================================================= */}
 
-          <Link
+          <ScrollLink
             to="hero"
             smooth
             duration={600}
             offset={-80}
-            className="flex cursor-pointer items-center gap-3"
+            className="
+              flex
+              cursor-pointer
+              items-center
+              gap-3
+            "
           >
             <div
               className="
@@ -64,16 +116,12 @@ export default function Navbar() {
                 w-11
                 items-center
                 justify-center
-
                 rounded-xl
-
                 bg-gradient-to-br
                 from-blue-500
                 to-indigo-600
-
                 font-black
                 text-white
-
                 shadow-lg
                 shadow-blue-500/30
               "
@@ -82,12 +130,10 @@ export default function Navbar() {
             </div>
 
             <div>
-
               <h1
                 className="
                   text-xl
                   font-black
-
                   text-white
                 "
               >
@@ -97,22 +143,28 @@ export default function Navbar() {
               <p
                 className="
                   text-xs
-
                   text-slate-400
                 "
               >
                 AI Resume Builder
               </p>
-
             </div>
-          </Link>
+          </ScrollLink>
 
-          {/* Desktop Navigation */}
+          {/* =================================================
+              DESKTOP NAVIGATION
+          ================================================= */}
 
-          <nav className="hidden items-center gap-8 lg:flex">
-
+          <nav
+            className="
+              hidden
+              items-center
+              gap-8
+              lg:flex
+            "
+          >
             {links.map((link) => (
-              <Link
+              <ScrollLink
                 key={link.name}
                 to={link.to}
                 smooth
@@ -122,27 +174,19 @@ export default function Navbar() {
                 activeClass="text-white after:w-full"
                 className="
                   relative
-
                   cursor-pointer
-
                   font-medium
-
                   text-slate-300
-
                   transition-all
                   duration-300
-
                   hover:text-white
 
                   after:absolute
                   after:-bottom-2
                   after:left-0
-
                   after:h-[2px]
                   after:w-0
-
                   after:bg-blue-500
-
                   after:transition-all
                   after:duration-300
 
@@ -150,42 +194,97 @@ export default function Navbar() {
                 "
               >
                 {link.name}
-              </Link>
+              </ScrollLink>
             ))}
-
           </nav>
 
-          {/* Desktop Right */}
+          {/* =================================================
+              DESKTOP RIGHT
+          ================================================= */}
 
-          <div className="hidden items-center gap-4 lg:flex">
+          <div
+            className="
+              hidden
+              items-center
+              gap-4
+              lg:flex
+            "
+          >
+            {loading ? (
+              <span className="text-sm text-slate-400">
+                Loading...
+              </span>
+            ) : user ? (
+              <>
+                {/* Dashboard */}
 
-            <button
-              className="
-                font-medium
+                <button
+                  type="button"
+                  onClick={handleDashboard}
+                  className="
+                    font-medium
+                    text-slate-300
+                    transition
+                    hover:text-white
+                  "
+                >
+                  Dashboard
+                </button>
 
-                text-slate-300
+                {/* Profile */}
 
-                transition
+                <RouterLink
+                  to="/profile"
+                  className="
+                    font-medium
+                    text-slate-300
+                    transition
+                    hover:text-white
+                  "
+                >
+                  Profile
+                </RouterLink>
+              </>
+            ) : (
+              <>
+                {/* Login */}
 
-                hover:text-white
-              "
-            >
-              Login
-            </button>
+                <button
+                  type="button"
+                  onClick={handleLogin}
+                  className="
+                    font-medium
+                    text-slate-300
+                    transition
+                    hover:text-white
+                  "
+                >
+                  Login
+                </button>
 
-            <Button>
-              Get Started
-            </Button>
+                {/* Get Started */}
 
+                <Button onClick={handleGetStarted}>
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* =================================================
+              MOBILE MENU BUTTON
+          ================================================= */}
 
           <button
-            onClick={() => setMenuOpen(!menuOpen)}
+            type="button"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label={
+              menuOpen
+                ? "Close navigation menu"
+                : "Open navigation menu"
+            }
             className="
               text-white
-
               lg:hidden
             "
           >
@@ -195,29 +294,29 @@ export default function Navbar() {
               <HiBars3 size={28} />
             )}
           </button>
-
         </div>
       </Container>
 
-      {/* Mobile Menu */}
+      {/* =====================================================
+          MOBILE MENU
+      ===================================================== */}
 
       {menuOpen && (
         <div
           className="
             border-t
             border-slate-800
-
             bg-slate-950
-
             lg:hidden
           "
         >
           <Container>
-
             <div className="flex flex-col py-6">
 
+              {/* Landing Page Links */}
+
               {links.map((link) => (
-                <Link
+                <ScrollLink
                   key={link.name}
                   to={link.to}
                   smooth
@@ -226,48 +325,117 @@ export default function Navbar() {
                   onClick={() => setMenuOpen(false)}
                   className="
                     cursor-pointer
-
                     border-b
                     border-slate-800
-
                     py-4
-
                     text-slate-300
-
                     transition
-
                     hover:text-white
                   "
                 >
                   {link.name}
-                </Link>
+                </ScrollLink>
               ))}
 
-              <button
-                className="
-                  mt-6
+              {/* =================================================
+                  AUTH ACTIONS
+              ================================================= */}
 
-                  rounded-xl
+              {loading ? (
+                <div
+                  className="
+                    mt-6
+                    rounded-xl
+                    border
+                    border-slate-800
+                    py-3
+                    text-center
+                    text-sm
+                    text-slate-400
+                  "
+                >
+                  Checking account...
+                </div>
+              ) : user ? (
+                <>
+                  {/* Dashboard */}
 
-                  border
-                  border-slate-700
+                  <button
+                    type="button"
+                    onClick={handleDashboard}
+                    className="
+                      mt-6
+                      rounded-xl
+                      border
+                      border-slate-700
+                      py-3
+                      font-medium
+                      text-slate-300
+                      transition
+                      hover:border-blue-500
+                      hover:text-white
+                    "
+                  >
+                    Dashboard
+                  </button>
 
-                  py-3
+                  {/* Profile */}
 
-                  text-slate-300
-                "
-              >
-                Login
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate("/profile");
+                    }}
+                    className="
+                      mt-3
+                      rounded-xl
+                      border
+                      border-slate-700
+                      py-3
+                      font-medium
+                      text-slate-300
+                      transition
+                      hover:border-blue-500
+                      hover:text-white
+                    "
+                  >
+                    My Profile
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Login */}
 
-              <div className="mt-4">
-                <Button>
-                  Get Started
-                </Button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={handleLogin}
+                    className="
+                      mt-6
+                      rounded-xl
+                      border
+                      border-slate-700
+                      py-3
+                      font-medium
+                      text-slate-300
+                      transition
+                      hover:border-blue-500
+                      hover:text-white
+                    "
+                  >
+                    Login
+                  </button>
 
+                  {/* Get Started */}
+
+                  <div className="mt-4">
+                    <Button onClick={handleGetStarted}>
+                      Get Started
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
-
           </Container>
         </div>
       )}

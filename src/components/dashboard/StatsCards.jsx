@@ -1,272 +1,207 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-
 import {
-  HiDocumentText,
-  HiArrowDownTray,
-  HiSparkles,
-  HiChartBar,
+  HiOutlineDocumentText,
+  HiOutlineSparkles,
+  HiOutlineCreditCard,
+  HiOutlineArrowTrendingUp,
 } from "react-icons/hi2";
 
-import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
+import { getCreditBalance } from "../../services/creditService";
 
 export default function StatsCards() {
-  const [statsData, setStatsData] = useState({
-    totalResumes: 0,
-    bestATS: 0,
-    totalDownloads: 0,
-  });
+  const { user, loading: authLoading } = useAuth();
 
-  const [loading, setLoading] = useState(true);
+  const [credits, setCredits] = useState(0);
+  const [creditsLoading, setCreditsLoading] = useState(true);
 
-  /* ==========================================
-     Fetch Resume Statistics
-  ========================================== */
+  /* =========================================================
+     LOAD CREDIT BALANCE
+  ========================================================= */
 
-  async function fetchResumeStats() {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    let mounted = true;
 
-      /* --------------------------------------
-         Get Logged-In User
-      -------------------------------------- */
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) {
-        throw userError;
+    async function loadCredits() {
+      if (authLoading) {
+        return;
       }
 
       if (!user) {
-        setStatsData({
-          totalResumes: 0,
-          bestATS: 0,
-          totalDownloads: 0,
-        });
+        if (mounted) {
+          setCredits(0);
+          setCreditsLoading(false);
+        }
 
         return;
       }
 
-      /* --------------------------------------
-         Get User's Resumes
-      -------------------------------------- */
+      try {
+        setCreditsLoading(true);
 
-      const {
-        data: resumes,
-        error: resumesError,
-      } = await supabase
-        .from("resumes")
-        .select("id, ats_score, downloads")
-        .eq("user_id", user.id);
+        const balance = await getCreditBalance();
 
-      if (resumesError) {
-        throw resumesError;
-      }
+        if (mounted) {
+          setCredits(balance);
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load credit balance:",
+          error
+        );
 
-      /* --------------------------------------
-         Calculate Total Resumes
-      -------------------------------------- */
-
-      const totalResumes = resumes?.length || 0;
-
-      /* --------------------------------------
-         Calculate Best ATS Score
-      -------------------------------------- */
-
-      const bestATS =
-        resumes && resumes.length > 0
-          ? Math.max(
-              ...resumes.map(
-                (resume) =>
-                  Number(resume.ats_score) || 0
-              )
-            )
-          : 0;
-
-      /* --------------------------------------
-         Calculate Total Downloads
-      -------------------------------------- */
-
-      const totalDownloads =
-        resumes?.reduce(
-          (total, resume) =>
-            total +
-            (Number(resume.downloads) || 0),
-          0
-        ) || 0;
-
-      /* --------------------------------------
-         Update State
-      -------------------------------------- */
-
-      setStatsData({
-        totalResumes,
-        bestATS,
-        totalDownloads,
-      });
-    } catch (error) {
-      console.error(
-        "Failed to load resume statistics:",
-        error
-      );
-
-      setStatsData({
-        totalResumes: 0,
-        bestATS: 0,
-        totalDownloads: 0,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  /* ==========================================
-     Initial Load + Refresh When Dashboard
-     Becomes Visible Again
-  ========================================== */
-
-  useEffect(() => {
-    fetchResumeStats();
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === "visible") {
-        fetchResumeStats();
+        if (mounted) {
+          setCredits(0);
+        }
+      } finally {
+        if (mounted) {
+          setCreditsLoading(false);
+        }
       }
     }
 
-    document.addEventListener(
-      "visibilitychange",
-      handleVisibilityChange
-    );
+    loadCredits();
 
     return () => {
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibilityChange
-      );
+      mounted = false;
     };
-  }, []);
+  }, [user, authLoading]);
 
-  /* ==========================================
-     AI Credits
-  ========================================== */
-
-  const aiCredits = 48;
-
-  /* ==========================================
-     Dashboard Stats
-  ========================================== */
+  /* =========================================================
+     STATS
+  ========================================================= */
 
   const stats = [
     {
-      title: "Total Resumes",
-      value: loading
-        ? "..."
-        : statsData.totalResumes,
-      icon: HiDocumentText,
-      color: "from-blue-500 to-indigo-600",
-    },
-
-    {
-      title: "Best ATS Score",
-      value: loading
-        ? "..."
-        : `${statsData.bestATS}%`,
-      icon: HiChartBar,
-      color: "from-green-500 to-emerald-600",
-    },
-
-    {
-      title: "Downloads",
-      value: loading
-        ? "..."
-        : statsData.totalDownloads,
-      icon: HiArrowDownTray,
-      color: "from-orange-500 to-amber-600",
+      title: "Resumes Created",
+      value: "0",
+      description: "Total resumes",
+      icon: HiOutlineDocumentText,
+      iconBg: "bg-blue-50",
+      iconColor: "text-blue-600",
     },
 
     {
       title: "AI Credits",
-      value: aiCredits,
-      icon: HiSparkles,
-      color: "from-purple-500 to-pink-600",
+      value: creditsLoading ? "..." : credits,
+      description:
+        credits === 0 && !creditsLoading
+          ? "No credits remaining"
+          : "Credits available",
+      icon: HiOutlineSparkles,
+      iconBg: "bg-indigo-50",
+      iconColor: "text-indigo-600",
+    },
+
+    {
+      title: "Plan",
+      value: "Starter",
+      description: "Current subscription",
+      icon: HiOutlineCreditCard,
+      iconBg: "bg-emerald-50",
+      iconColor: "text-emerald-600",
+    },
+
+    {
+      title: "Profile",
+      value: "0%",
+      description: "Profile completion",
+      icon: HiOutlineArrowTrendingUp,
+      iconBg: "bg-purple-50",
+      iconColor: "text-purple-600",
     },
   ];
 
-  /* ==========================================
-     UI
-  ========================================== */
+  /* =========================================================
+     RENDER
+  ========================================================= */
 
   return (
-    <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-      {stats.map((item, index) => {
-        const Icon = item.icon;
+    <section>
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
 
-        return (
-          <motion.div
-            key={item.title}
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              duration: 0.4,
-              delay: index * 0.1,
-            }}
-            whileHover={{
-              y: -6,
-              scale: 1.02,
-            }}
-            className="
-              rounded-3xl
-              border
-              border-slate-200
-              bg-white
-              p-6
-              shadow-sm
-              transition-all
-              duration-300
-              hover:shadow-xl
-            "
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">
-                  {item.title}
-                </p>
+          return (
+            <div
+              key={stat.title}
+              className="
+                rounded-2xl
+                border
+                border-slate-200
+                bg-white
+                p-6
+                shadow-sm
 
-                <h2 className="mt-3 text-4xl font-black text-slate-900">
-                  {item.value}
-                </h2>
+                transition-all
+                duration-300
+
+                hover:-translate-y-1
+                hover:shadow-lg
+              "
+            >
+              {/* Header */}
+
+              <div className="flex items-start justify-between">
+                <div>
+                  <p
+                    className="
+                      text-sm
+                      font-semibold
+                      text-slate-500
+                    "
+                  >
+                    {stat.title}
+                  </p>
+
+                  <h3
+                    className="
+                      mt-3
+                      text-3xl
+                      font-black
+                      text-slate-900
+                    "
+                  >
+                    {stat.value}
+                  </h3>
+                </div>
+
+                {/* Icon */}
+
+                <div
+                  className={`
+                    flex
+                    h-12
+                    w-12
+                    items-center
+                    justify-center
+                    rounded-xl
+                    ${stat.iconBg}
+                  `}
+                >
+                  <Icon
+                    className={stat.iconColor}
+                    size={24}
+                  />
+                </div>
               </div>
 
-              <div
-                className={`
-                  flex
-                  h-16
-                  w-16
-                  items-center
-                  justify-center
-                  rounded-2xl
-                  bg-gradient-to-r
-                  ${item.color}
-                  text-white
-                  shadow-lg
-                `}
+              {/* Description */}
+
+              <p
+                className="
+                  mt-4
+                  text-xs
+                  font-medium
+                  text-slate-400
+                "
               >
-                <Icon size={30} />
-              </div>
+                {stat.description}
+              </p>
             </div>
-          </motion.div>
-        );
-      })}
+          );
+        })}
+      </div>
     </section>
   );
 }

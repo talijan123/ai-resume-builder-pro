@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import Section from "../../ui/Section/Section";
 import SectionTitle from "../../ui/SectionTitle/SectionTitle";
@@ -9,19 +10,86 @@ import PricingToggle from "./PricingToggle";
 
 import { pricingPlans } from "./pricingData";
 
+import { useAuth } from "../../../context/AuthContext";
+
 export default function Pricing() {
   const [yearly, setYearly] = useState(false);
 
+  const navigate = useNavigate();
+
+  const { user, loading } = useAuth();
+
+  /* =====================================================
+     HANDLE PLAN SELECTION
+  ===================================================== */
+
+  const handleSelectPlan = (plan) => {
+    if (!plan) {
+      return;
+    }
+
+    /* -----------------------------------------------
+       Wait for authentication to finish
+    ------------------------------------------------ */
+
+    if (loading) {
+      return;
+    }
+
+    /* -----------------------------------------------
+       Starter / Free Plan
+    ------------------------------------------------ */
+
+    if (
+      plan.id === "starter" ||
+      plan.id === "free"
+    ) {
+      if (user) {
+        navigate("/dashboard");
+      } else {
+        navigate("/login");
+      }
+
+      return;
+    }
+
+    /* -----------------------------------------------
+       Paid Plans
+    ------------------------------------------------ */
+
+    if (!user) {
+      navigate("/login", {
+        state: {
+          redirectTo: "/checkout",
+          planId: plan.id,
+          billing: yearly ? "yearly" : "monthly",
+        },
+      });
+
+      return;
+    }
+
+    /* -----------------------------------------------
+       Logged-in User → Checkout
+    ------------------------------------------------ */
+
+    navigate(
+      `/checkout?plan=${encodeURIComponent(
+        plan.id
+      )}&billing=${yearly ? "yearly" : "monthly"}`
+    );
+  };
+
   return (
     <Section id="pricing">
-
-      {/* Heading */}
+      {/* =================================================
+          HEADING
+      ================================================= */}
 
       <div className="text-center">
-
         <p
           className="
-             inline-flex
+            inline-flex
             items-center
 
             rounded-full
@@ -55,16 +123,19 @@ export default function Pricing() {
           ResumeForge AI has a plan built for you.
         </SectionSubtitle>
 
-        {/* Toggle */}
+        {/* =================================================
+            BILLING TOGGLE
+        ================================================= */}
 
         <PricingToggle
           yearly={yearly}
           setYearly={setYearly}
         />
-
       </div>
 
-      {/* Pricing Cards */}
+      {/* =================================================
+          PRICING CARDS
+      ================================================= */}
 
       <div
         className="
@@ -78,17 +149,18 @@ export default function Pricing() {
         "
       >
         {pricingPlans.map((plan) => (
-
           <PricingCard
             key={plan.id}
             {...plan}
             yearly={yearly}
+            onSelectPlan={handleSelectPlan}
           />
-
         ))}
       </div>
 
-      {/* Bottom Note */}
+      {/* =================================================
+          BOTTOM NOTE
+      ================================================= */}
 
       <div
         className="
@@ -106,7 +178,6 @@ export default function Pricing() {
           text-center
         "
       >
-
         <h3
           className="
             text-xl
@@ -121,9 +192,8 @@ export default function Pricing() {
 
         <p
           className="
-            mt-3
-
             mx-auto
+            mt-3
 
             max-w-2xl
 
@@ -133,13 +203,11 @@ export default function Pricing() {
           "
         >
           No credit card required.
-          Build your first ATS-friendly resume in
-          minutes and upgrade only when you're
+          Build your first ATS-friendly resume
+          in minutes and upgrade only when you're
           ready.
         </p>
-
       </div>
-
     </Section>
   );
 }
