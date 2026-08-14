@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { HiCheck } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
 
 export default function PricingCard({
   id,
@@ -14,8 +15,9 @@ export default function PricingCard({
   buttonStyle,
   features,
   featured,
-  onSelectPlan,
 }) {
+  const navigate = useNavigate();
+
   /* =====================================================
      CURRENT PRICE
   ===================================================== */
@@ -40,38 +42,46 @@ export default function PricingCard({
   };
 
   /* =====================================================
-     PLAN OBJECT
+     PLAN NAVIGATION
   ===================================================== */
 
-  const plan = {
-    id,
-    name,
-    monthlyPrice,
-    yearlyPrice,
-    yearlyTotal,
-    description,
-    badge,
-    buttonText,
-    buttonStyle,
-    features,
-    featured,
-  };
+  const handlePlanClick = () => {
+    /*
+     * Starter is free.
+     *
+     * Do NOT send Starter through checkout.
+     * Send the user directly to the dashboard.
+     */
 
-  /* =====================================================
-     HANDLE PLAN SELECTION
-  ===================================================== */
-
-  const handleSelectPlan = () => {
-    if (typeof onSelectPlan !== "function") {
-      console.error(
-        "PricingCard: onSelectPlan handler is missing."
-      );
-
+    if (name === "Starter" || id === "starter") {
+      navigate("/dashboard");
       return;
     }
 
-    onSelectPlan(plan);
+    /*
+     * Paid plans go through Checkout.
+     *
+     * The backend will determine the trusted price
+     * and payment details.
+     */
+
+    const planSlug =
+      typeof id === "string"
+        ? id
+        : name.toLowerCase();
+
+    const billingCycle = yearly
+      ? "yearly"
+      : "monthly";
+
+    navigate(
+      `/checkout?plan=${planSlug}&billing=${billingCycle}`
+    );
   };
+
+  /* =====================================================
+     RENDER
+  ===================================================== */
 
   return (
     <motion.div
@@ -84,18 +94,12 @@ export default function PricingCard({
       }}
       className={`
         relative
-
         flex
         flex-col
-
         rounded-3xl
-
         border
-
         p-8
-
         shadow-lg
-
         transition-all
         duration-300
 
@@ -131,7 +135,6 @@ export default function PricingCard({
             tracking-wider
 
             text-white
-
             shadow-lg
           "
         >
@@ -172,7 +175,7 @@ export default function PricingCard({
       <div className="mt-8 text-center">
         <AnimatePresence mode="wait">
           <motion.div
-            key={`${id}-${currentPrice}-${yearly}`}
+            key={`${currentPrice}-${yearly}`}
             initial={{
               opacity: 0,
               y: 15,
@@ -214,6 +217,38 @@ export default function PricingCard({
         </AnimatePresence>
 
         {/* =================================================
+            FREE PLAN LABEL
+        ================================================= */}
+
+        {currentPrice === 0 && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              scale: 0.8,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+            }}
+            className="
+              mt-4
+              inline-flex
+              rounded-full
+              bg-slate-100
+              px-3
+              py-1
+              text-xs
+              font-bold
+              uppercase
+              tracking-wide
+              text-slate-600
+            "
+          >
+            Free Forever
+          </motion.div>
+        )}
+
+        {/* =================================================
             SAVE BADGE
         ================================================= */}
 
@@ -229,22 +264,15 @@ export default function PricingCard({
             }}
             className="
               mt-4
-
               inline-flex
-
               rounded-full
-
               bg-green-100
-
               px-3
               py-1
-
               text-xs
               font-bold
               uppercase
-
               tracking-wide
-
               text-green-700
             "
           >
@@ -287,9 +315,7 @@ export default function PricingCard({
       <div
         className="
           my-8
-
           h-px
-
           bg-slate-200
         "
       />
@@ -299,44 +325,39 @@ export default function PricingCard({
       ================================================= */}
 
       <div className="flex-1 space-y-4">
-        {Array.isArray(features) &&
-          features.map((feature) => (
+        {features?.map((feature) => (
+          <div
+            key={feature}
+            className="
+              flex
+              items-start
+              gap-3
+            "
+          >
             <div
-              key={feature}
               className="
-                flex
-                items-start
-                gap-3
+                mt-1
+                rounded-full
+                bg-green-100
+                p-1
               "
             >
-              <div
-                className="
-                  mt-1
-
-                  rounded-full
-
-                  bg-green-100
-
-                  p-1
-                "
-              >
-                <HiCheck
-                  size={16}
-                  className="text-green-600"
-                />
-              </div>
-
-              <span
-                className="
-                  leading-7
-
-                  text-slate-700
-                "
-              >
-                {feature}
-              </span>
+              <HiCheck
+                size={16}
+                className="text-green-600"
+              />
             </div>
-          ))}
+
+            <span
+              className="
+                leading-7
+                text-slate-700
+              "
+            >
+              {feature}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* =================================================
@@ -345,7 +366,7 @@ export default function PricingCard({
 
       <motion.button
         type="button"
-        onClick={handleSelectPlan}
+        onClick={handlePlanClick}
         whileHover={{
           scale: 1.03,
         }}
@@ -354,11 +375,8 @@ export default function PricingCard({
         }}
         className={`
           mt-10
-
           w-full
-
           rounded-2xl
-
           py-4
 
           font-semibold
@@ -366,10 +384,12 @@ export default function PricingCard({
           transition-all
           duration-300
 
-          ${buttonClasses[buttonStyle] || buttonClasses.primary}
+          ${buttonClasses[buttonStyle] || buttonClasses.secondary}
         `}
       >
-        {buttonText}
+        {name === "Starter"
+          ? "Start Building Free"
+          : buttonText}
       </motion.button>
     </motion.div>
   );

@@ -1,6 +1,6 @@
 export const pricingPlans = [
   {
-    id: 1,
+    id: "starter",
 
     name: "Starter",
 
@@ -28,7 +28,7 @@ export const pricingPlans = [
   },
 
   {
-    id: 2,
+    id: "pro",
 
     name: "Pro",
 
@@ -60,7 +60,7 @@ export const pricingPlans = [
   },
 
   {
-    id: 3,
+    id: "team",
 
     name: "Team",
 

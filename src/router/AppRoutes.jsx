@@ -15,6 +15,8 @@ import MyResumes from "../pages/MyResumes";
 import CoverLetter from "../pages/CoverLetter";
 import MyProfile from "../pages/MyProfile";
 import NotFound from "../pages/NotFound";
+import Checkout from "../pages/Checkout";
+import TestCheckout from "../pages/TestCheckout";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
@@ -143,6 +145,47 @@ export default function AppRoutes() {
               <SettingsProvider>
                 <Settings />
               </SettingsProvider>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =====================================================
+            NORMAL CHECKOUT
+        ====================================================== */}
+
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =====================================================
+            TEST CHECKOUT
+        ======================================================
+
+            Examples:
+
+            /test-checkout?plan=pro&billing=monthly
+
+            /test-checkout?plan=pro&billing=yearly
+
+            /test-checkout?plan=team&billing=monthly
+
+            /test-checkout?plan=team&billing=yearly
+
+            This is only for testing our payment flow.
+            No real money is charged.
+
+        ====================================================== */}
+
+        <Route
+          path="/test-checkout"
+          element={
+            <ProtectedRoute>
+              <TestCheckout />
             </ProtectedRoute>
           }
         />

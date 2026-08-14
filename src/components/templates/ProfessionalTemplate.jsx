@@ -12,6 +12,64 @@ export default function ProfessionalTemplate() {
     certifications = [],
   } = resumeData || {};
 
+  /* =========================================
+     Helpers
+  ========================================= */
+
+  function getDescription(item) {
+    if (!item) return "";
+
+    return (
+      item.description ||
+      item.details ||
+      item.notes ||
+      ""
+    );
+  }
+
+  function getSkillName(skill) {
+    if (typeof skill === "string") {
+      return skill;
+    }
+
+    return (
+      skill?.name ||
+      skill?.skill ||
+      skill?.title ||
+      ""
+    );
+  }
+
+  function getDateRange(item) {
+    if (!item) return "";
+
+    const start =
+      item.startDate ||
+      item.start ||
+      "";
+
+    const end =
+      item.endDate ||
+      item.end ||
+      "";
+
+    if (start && end) {
+      return `${start} - ${end}`;
+    }
+
+    return start || end;
+  }
+
+  function getTechnologies(technologies) {
+    if (!technologies) return "";
+
+    if (Array.isArray(technologies)) {
+      return technologies.join(", ");
+    }
+
+    return technologies;
+  }
+
   return (
     <div
       className="
@@ -30,15 +88,18 @@ export default function ProfessionalTemplate() {
       ========================================= */}
 
       <header className="border-b-2 border-slate-800 pb-6">
+
         <h1 className="text-4xl font-black uppercase tracking-wide text-slate-900">
           {personalInfo.fullName || "Your Name"}
         </h1>
 
         <p className="mt-2 text-lg font-semibold text-slate-600">
-          {personalInfo.jobTitle || "Professional Title"}
+          {personalInfo.jobTitle ||
+            "Professional Title"}
         </p>
 
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
+
           {personalInfo.email && (
             <span>{personalInfo.email}</span>
           )}
@@ -62,6 +123,7 @@ export default function ProfessionalTemplate() {
           {personalInfo.github && (
             <span>{personalInfo.github}</span>
           )}
+
         </div>
       </header>
 
@@ -71,11 +133,13 @@ export default function ProfessionalTemplate() {
 
       {personalInfo.summary && (
         <section className="mt-7">
+
           <SectionTitle title="Professional Summary" />
 
-          <p className="mt-3 text-sm leading-6 text-slate-700">
+          <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">
             {personalInfo.summary}
           </p>
+
         </section>
       )}
 
@@ -85,42 +149,43 @@ export default function ProfessionalTemplate() {
 
       {experience.length > 0 && (
         <section className="mt-7">
+
           <SectionTitle title="Professional Experience" />
 
           <div className="mt-4 space-y-5">
-            {experience.map((item) => (
-              <div key={item.id}>
+
+            {experience.map((item, index) => (
+              <article
+                key={
+                  item.id ||
+                  `experience-${index}`
+                }
+              >
+
                 <div className="flex items-start justify-between gap-4">
+
                   <div>
+
                     <h3 className="text-base font-bold text-slate-900">
                       {item.jobTitle ||
                         item.position ||
+                        item.title ||
                         "Job Title"}
                     </h3>
 
                     <p className="mt-1 text-sm font-semibold text-slate-600">
-                      {item.company || "Company Name"}
+                      {item.company ||
+                        "Company Name"}
                     </p>
+
                   </div>
 
-                  <div className="text-right text-sm text-slate-500">
-                    {(item.startDate || item.start) && (
-                      <span>
-                        {item.startDate || item.start}
-                      </span>
-                    )}
+                  {getDateRange(item) && (
+                    <div className="text-right text-sm text-slate-500">
+                      {getDateRange(item)}
+                    </div>
+                  )}
 
-                    {(item.startDate || item.start) &&
-                      (item.endDate || item.end) && (
-                        <span> - </span>
-                      )}
-
-                    {(item.endDate || item.end) && (
-                      <span>
-                        {item.endDate || item.end}
-                      </span>
-                    )}
-                  </div>
                 </div>
 
                 {item.location && (
@@ -129,13 +194,15 @@ export default function ProfessionalTemplate() {
                   </p>
                 )}
 
-                {item.description && (
+                {getDescription(item) && (
                   <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">
-                    {item.description}
+                    {getDescription(item)}
                   </p>
                 )}
-              </div>
+
+              </article>
             ))}
+
           </div>
         </section>
       )}
@@ -146,16 +213,27 @@ export default function ProfessionalTemplate() {
 
       {education.length > 0 && (
         <section className="mt-7">
+
           <SectionTitle title="Education" />
 
           <div className="mt-4 space-y-5">
-            {education.map((item) => (
-              <div key={item.id}>
+
+            {education.map((item, index) => (
+              <article
+                key={
+                  item.id ||
+                  `education-${index}`
+                }
+              >
+
                 <div className="flex items-start justify-between gap-4">
+
                   <div>
+
                     <h3 className="text-base font-bold text-slate-900">
                       {item.degree ||
                         item.program ||
+                        item.title ||
                         "Degree"}
                     </h3>
 
@@ -164,26 +242,15 @@ export default function ProfessionalTemplate() {
                         item.school ||
                         "Institution"}
                     </p>
+
                   </div>
 
-                  <div className="text-right text-sm text-slate-500">
-                    {(item.startDate || item.start) && (
-                      <span>
-                        {item.startDate || item.start}
-                      </span>
-                    )}
+                  {getDateRange(item) && (
+                    <div className="text-right text-sm text-slate-500">
+                      {getDateRange(item)}
+                    </div>
+                  )}
 
-                    {(item.startDate || item.start) &&
-                      (item.endDate || item.end) && (
-                        <span> - </span>
-                      )}
-
-                    {(item.endDate || item.end) && (
-                      <span>
-                        {item.endDate || item.end}
-                      </span>
-                    )}
-                  </div>
                 </div>
 
                 {item.location && (
@@ -192,13 +259,17 @@ export default function ProfessionalTemplate() {
                   </p>
                 )}
 
-                {item.description && (
+                {/* Education Description */}
+
+                {getDescription(item) && (
                   <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">
-                    {item.description}
+                    {getDescription(item)}
                   </p>
                 )}
-              </div>
+
+              </article>
             ))}
+
           </div>
         </section>
       )}
@@ -209,28 +280,32 @@ export default function ProfessionalTemplate() {
 
       {skills.length > 0 && (
         <section className="mt-7">
+
           <SectionTitle title="Skills" />
 
           <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
-            {skills.map((skill) => {
-              const skillName =
-                typeof skill === "string"
-                  ? skill
-                  : skill.name ||
-                    skill.skill ||
-                    skill.title;
 
-              if (!skillName) return null;
+            {skills.map((skill, index) => {
+              const skillName =
+                getSkillName(skill);
+
+              if (!skillName) {
+                return null;
+              }
 
               return (
                 <span
-                  key={skill.id || skillName}
+                  key={
+                    skill?.id ||
+                    `skill-${index}`
+                  }
                   className="text-sm font-medium text-slate-700"
                 >
                   • {skillName}
                 </span>
               );
             })}
+
           </div>
         </section>
       )}
@@ -241,11 +316,19 @@ export default function ProfessionalTemplate() {
 
       {projects.length > 0 && (
         <section className="mt-7">
+
           <SectionTitle title="Projects" />
 
           <div className="mt-4 space-y-5">
-            {projects.map((project) => (
-              <div key={project.id}>
+
+            {projects.map((project, index) => (
+              <article
+                key={
+                  project.id ||
+                  `project-${index}`
+                }
+              >
+
                 <h3 className="text-base font-bold text-slate-900">
                   {project.name ||
                     project.title ||
@@ -258,9 +341,9 @@ export default function ProfessionalTemplate() {
                   </p>
                 )}
 
-                {project.description && (
+                {getDescription(project) && (
                   <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">
-                    {project.description}
+                    {getDescription(project)}
                   </p>
                 )}
 
@@ -269,19 +352,21 @@ export default function ProfessionalTemplate() {
                     <span className="font-semibold">
                       Technologies:
                     </span>{" "}
-                    {Array.isArray(project.technologies)
-                      ? project.technologies.join(", ")
-                      : project.technologies}
+                    {getTechnologies(
+                      project.technologies
+                    )}
                   </p>
                 )}
 
                 {project.url && (
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 break-all text-sm text-slate-500">
                     {project.url}
                   </p>
                 )}
-              </div>
+
+              </article>
             ))}
+
           </div>
         </section>
       )}
@@ -292,11 +377,19 @@ export default function ProfessionalTemplate() {
 
       {certifications.length > 0 && (
         <section className="mt-7">
+
           <SectionTitle title="Certifications" />
 
-          <div className="mt-4 space-y-3">
-            {certifications.map((item) => (
-              <div key={item.id}>
+          <div className="mt-4 space-y-4">
+
+            {certifications.map((item, index) => (
+              <article
+                key={
+                  item.id ||
+                  `certification-${index}`
+                }
+              >
+
                 <h3 className="text-sm font-bold text-slate-900">
                   {item.name ||
                     item.title ||
@@ -304,22 +397,36 @@ export default function ProfessionalTemplate() {
                 </h3>
 
                 <div className="mt-1 flex flex-wrap gap-2 text-sm text-slate-600">
+
                   {item.issuer && (
                     <span>{item.issuer}</span>
                   )}
 
-                  {item.date && (
-                    <>
-                      <span>•</span>
-                      <span>{item.date}</span>
-                    </>
+                  {item.issuer && item.date && (
+                    <span>•</span>
                   )}
+
+                  {item.date && (
+                    <span>{item.date}</span>
+                  )}
+
                 </div>
-              </div>
+
+                {/* Certification Description */}
+
+                {getDescription(item) && (
+                  <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">
+                    {getDescription(item)}
+                  </p>
+                )}
+
+              </article>
             ))}
+
           </div>
         </section>
       )}
+
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 import {
   HiPencilSquare,
   HiArrowDownTray,
@@ -10,6 +11,8 @@ import {
 import { supabase } from "../../lib/supabase";
 
 export default function RecentResumes() {
+  const navigate = useNavigate();
+
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -95,6 +98,27 @@ export default function RecentResumes() {
         day: "numeric",
       }
     );
+  }
+
+  /* =======================================
+     DOWNLOAD RESUME
+  ======================================= */
+
+  function handleDownload(resumeId) {
+    if (!resumeId) {
+      return;
+    }
+
+    console.log(
+      "📥 Opening resume for automatic PDF download:",
+      resumeId
+    );
+
+    navigate(`/builder/${resumeId}`, {
+      state: {
+        autoDownload: true,
+      },
+    });
   }
 
   /* =======================================
@@ -340,6 +364,7 @@ export default function RecentResumes() {
                   <HiPencilSquare
                     size={18}
                   />
+
                   Edit
                 </Link>
 
@@ -347,6 +372,9 @@ export default function RecentResumes() {
 
                 <button
                   type="button"
+                  onClick={() =>
+                    handleDownload(resume.id)
+                  }
                   className="
                     flex
                     items-center
@@ -361,11 +389,13 @@ export default function RecentResumes() {
                     text-white
                     transition-all
                     hover:shadow-lg
+                    active:scale-[0.98]
                   "
                 >
                   <HiArrowDownTray
                     size={18}
                   />
+
                   Download
                 </button>
               </div>

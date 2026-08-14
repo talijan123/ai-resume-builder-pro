@@ -21,110 +21,216 @@ const PricingContext = createContext(null);
 ========================================================= */
 
 export function PricingProvider({ children }) {
-  const { user, loading: authLoading } = useAuth();
+  const {
+    user,
+    loading: authLoading,
+  } = useAuth();
 
   /* =======================================================
      STATE
   ======================================================= */
 
   const [plan, setPlan] = useState(null);
-  const [subscription, setSubscription] = useState(null);
+  const [subscription, setSubscription] =
+    useState(null);
+
+  /*
+    IMPORTANT:
+
+    Credits now come from:
+
+    user_subscriptions.credits_remaining
+
+    We are no longer using credit_balances.
+  */
   const [credits, setCredits] = useState(null);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState(null);
 
   /* =======================================================
      LOAD PRICING DATA
   ======================================================= */
 
-  const loadPricingData = useCallback(async () => {
-    if (!user) {
-      setPlan(null);
-      setSubscription(null);
-      setCredits(null);
-      setLoading(false);
-      return;
-    }
+  const loadPricingData =
+    useCallback(async () => {
+      /* -----------------------------------------------------
+         No authenticated user
+      ----------------------------------------------------- */
 
-    try {
-      setLoading(true);
-      setError(null);
+      if (!user) {
+        setPlan(null);
+        setSubscription(null);
+        setCredits(null);
+        setError(null);
+        setLoading(false);
 
-      /* ===================================================
-         GET USER SUBSCRIPTION + PLAN
-      =================================================== */
+        return;
+      }
 
-      const {
-        data: subscriptionData,
-        error: subscriptionError,
-      } = await supabase
-        .from("user_subscriptions")
-        .select(
-          `
-            *,
-            plan:plans (
+      try {
+        setLoading(true);
+        setError(null);
+
+        console.log(
+          "🔄 Loading pricing data for user:",
+          user.id
+        );
+
+        /* ===================================================
+           1. GET USER SUBSCRIPTION
+        =================================================== */
+
+        const {
+          data: subscriptionData,
+          error: subscriptionError,
+        } = await supabase
+          .from("user_subscriptions")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (subscriptionError) {
+          throw subscriptionError;
+        }
+
+        console.log(
+          "✅ Subscription:",
+          subscriptionData
+        );
+
+        /* ===================================================
+           2. GET PLAN
+        =================================================== */
+
+        let planData = null;
+
+        if (subscriptionData?.plan_id) {
+          const {
+            data,
+            error: planError,
+          } = await supabase
+            .from("plans")
+            .select(`
               id,
               name,
               slug,
               description,
               price_monthly,
               price_yearly,
-              monthly_credits,
+              currency,
               max_resumes,
-              max_cover_letters,
+              monthly_credits,
               premium_templates,
-              ai_features,
-              team_members,
-              is_active
+              cover_letters,
+              ats_optimization,
+              ai_resume_generation,
+              ai_resume_analysis,
+              team_workspace,
+              max_team_members,
+              is_active,
+              features
+            `)
+            .eq(
+              "id",
+              subscriptionData.plan_id
             )
-          `
-        )
-        .eq("user_id", user.id)
-        .maybeSingle();
+            .maybeSingle();
 
-      if (subscriptionError) {
-        throw subscriptionError;
+          if (planError) {
+            throw planError;
+          }
+
+          planData = data;
+
+          /*
+            Helpful debugging if subscription exists
+            but the plan cannot be read.
+          */
+
+          if (
+            subscriptionData &&
+            !planData
+          ) {
+            console.warn(
+              "⚠️ Subscription exists, but no plan was returned for plan_id:",
+              subscriptionData.plan_id
+            );
+          }
+        }
+
+        console.log(
+          "✅ Plan:",
+          planData
+        );
+
+        /* ===================================================
+           3. GET CREDIT BALANCE
+           
+           IMPORTANT:
+
+           We DO NOT query credit_balances anymore.
+
+           The source of truth is:
+
+           user_subscriptions.credits_remaining
+        =================================================== */
+
+        const creditData =
+          subscriptionData
+            ? {
+                user_id: user.id,
+
+                credits_remaining:
+                  Number(
+                    subscriptionData.credits_remaining
+                  ) || 0,
+              }
+            : null;
+
+        console.log(
+          "✅ Credit balance:",
+          creditData
+        );
+
+        /* ===================================================
+           4. SAVE STATE
+        =================================================== */
+
+        setSubscription(
+          subscriptionData || null
+        );
+
+        setPlan(
+          planData || null
+        );
+
+        setCredits(
+          creditData
+        );
+
+      } catch (err) {
+        console.error(
+          "❌ Failed to load pricing data:",
+          err
+        );
+
+        setError(
+          err?.message ||
+            "Failed to load pricing information."
+        );
+
+        setSubscription(null);
+        setPlan(null);
+        setCredits(null);
+
+      } finally {
+        setLoading(false);
       }
-
-      /* ===================================================
-         GET CREDIT BALANCE
-      =================================================== */
-
-      const {
-        data: creditData,
-        error: creditError,
-      } = await supabase
-        .from("credit_balances")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (creditError) {
-        throw creditError;
-      }
-
-      setSubscription(subscriptionData || null);
-
-      setPlan(
-        subscriptionData?.plan || null
-      );
-
-      setCredits(creditData || null);
-    } catch (err) {
-      console.error(
-        "Failed to load pricing data:",
-        err
-      );
-
-      setError(
-        err?.message ||
-          "Failed to load pricing information."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+    }, [user]);
 
   /* =======================================================
      LOAD WHEN USER CHANGES
@@ -142,244 +248,493 @@ export function PricingProvider({ children }) {
   ]);
 
   /* =======================================================
-     CALCULATE AVAILABLE CREDITS
+     REALTIME SUBSCRIPTION LISTENER
+     
+     IMPORTANT:
+
+     Credits are stored inside the same table,
+     so we only need ONE realtime listener.
   ======================================================= */
 
-  const availableCredits = useMemo(() => {
-    if (!credits) {
-      return 0;
+  useEffect(() => {
+    if (
+      !user ||
+      authLoading
+    ) {
+      return;
     }
 
-    return (
-      Number(credits.monthly_credits || 0) +
-      Number(credits.purchased_credits || 0) +
-      Number(credits.bonus_credits || 0)
+    console.log(
+      "📡 Starting pricing realtime listener"
     );
-  }, [credits]);
+
+    const pricingChannel =
+      supabase
+        .channel(
+          `pricing-${user.id}`
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "user_subscriptions",
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            console.log(
+              "🔄 Subscription realtime update:",
+              payload
+            );
+
+            /*
+              Reload:
+
+              - subscription
+              - credits_remaining
+              - plan
+            */
+
+            loadPricingData();
+          }
+        )
+        .subscribe((status) => {
+          console.log(
+            "📡 Pricing realtime status:",
+            status
+          );
+        });
+
+    return () => {
+      console.log(
+        "🧹 Cleaning pricing realtime listener"
+      );
+
+      supabase.removeChannel(
+        pricingChannel
+      );
+    };
+  }, [
+    user,
+    authLoading,
+    loadPricingData,
+  ]);
+
+  /* =======================================================
+     AVAILABLE CREDITS
+  ======================================================= */
+
+  const availableCredits =
+    useMemo(() => {
+      if (!credits) {
+        return 0;
+      }
+
+      return Number(
+        credits.credits_remaining || 0
+      );
+    }, [credits]);
 
   /* =======================================================
      PLAN NAME
   ======================================================= */
 
-  const planName = useMemo(() => {
-    return plan?.name || "Starter";
-  }, [plan]);
+  const planName =
+    useMemo(() => {
+      return (
+        plan?.name ||
+        "Starter"
+      );
+    }, [plan]);
 
   /* =======================================================
      PLAN SLUG
   ======================================================= */
 
-  const planSlug = useMemo(() => {
-    return plan?.slug || "starter";
-  }, [plan]);
+  const planSlug =
+    useMemo(() => {
+      return (
+        plan?.slug ||
+        "starter"
+      );
+    }, [plan]);
 
   /* =======================================================
-     CHECK PLAN
+     PLAN CHECKS
   ======================================================= */
 
-  const isStarter = planSlug === "starter";
+  const isStarter =
+    planSlug === "starter";
 
-  const isPro = planSlug === "pro";
+  const isPro =
+    planSlug === "pro";
 
-  const isTeam = planSlug === "team";
+  const isTeam =
+    planSlug === "team";
 
   /* =======================================================
-     FEATURE ACCESS
+     PREMIUM TEMPLATES
   ======================================================= */
 
-  const canUsePremiumTemplates = useMemo(() => {
-    return Boolean(
-      plan?.premium_templates
-    );
-  }, [plan]);
-
-  const canUseCoverLetters = useMemo(() => {
-    /*
-      Cover letters are available only
-      for paid plans.
-    */
-
-    return (
-      isPro ||
-      isTeam ||
-      plan?.name?.toLowerCase() === "starter-paid"
-    );
-  }, [isPro, isTeam, plan]);
-
-  const canUseAI = useMemo(() => {
-    return Boolean(
-      plan?.ai_features
-    );
-  }, [plan]);
+  const canUsePremiumTemplates =
+    useMemo(() => {
+      return Boolean(
+        plan?.premium_templates
+      );
+    }, [plan]);
 
   /* =======================================================
-     RESUME LIMIT
+     COVER LETTERS
   ======================================================= */
 
-  const maxResumes = useMemo(() => {
-    return Number(
-      plan?.max_resumes || 3
-    );
-  }, [plan]);
+  const canUseCoverLetters =
+    useMemo(() => {
+      return Boolean(
+        plan?.cover_letters
+      );
+    }, [plan]);
 
   /* =======================================================
-     COVER LETTER LIMIT
+     AI RESUME GENERATION
   ======================================================= */
 
-  const maxCoverLetters = useMemo(() => {
-    return Number(
-      plan?.max_cover_letters || 0
-    );
-  }, [plan]);
+  const canUseAIResumeGeneration =
+    useMemo(() => {
+      return Boolean(
+        plan?.ai_resume_generation
+      );
+    }, [plan]);
+
+  /* =======================================================
+     AI RESUME ANALYSIS
+  ======================================================= */
+
+  const canUseAIResumeAnalysis =
+    useMemo(() => {
+      return Boolean(
+        plan?.ai_resume_analysis
+      );
+    }, [plan]);
+
+  /* =======================================================
+     ATS OPTIMIZATION
+  ======================================================= */
+
+  const canUseATSOptimization =
+    useMemo(() => {
+      return Boolean(
+        plan?.ats_optimization
+      );
+    }, [plan]);
+
+  /* =======================================================
+     TEAM WORKSPACE
+  ======================================================= */
+
+  const canUseTeamWorkspace =
+    useMemo(() => {
+      return Boolean(
+        plan?.team_workspace
+      );
+    }, [plan]);
+
+  /* =======================================================
+     MAX RESUMES
+  ======================================================= */
+
+  const maxResumes =
+    useMemo(() => {
+      /*
+        null means unlimited.
+      */
+
+      if (
+        plan?.max_resumes === null ||
+        plan?.max_resumes === undefined
+      ) {
+        return null;
+      }
+
+      return Number(
+        plan.max_resumes
+      );
+    }, [plan]);
+
+  /* =======================================================
+     MAX COVER LETTERS
+  ======================================================= */
+
+  const maxCoverLetters =
+    useMemo(() => {
+      /*
+        Current plans schema does not contain
+        max_cover_letters.
+
+        If cover letters are enabled,
+        return null to represent unlimited.
+      */
+
+      if (!canUseCoverLetters) {
+        return 0;
+      }
+
+      return null;
+    }, [
+      canUseCoverLetters,
+    ]);
+
+  /* =======================================================
+     MAX TEAM MEMBERS
+  ======================================================= */
+
+  const maxTeamMembers =
+    useMemo(() => {
+      return Number(
+        plan?.max_team_members || 1
+      );
+    }, [plan]);
 
   /* =======================================================
      GENERIC FEATURE CHECK
   ======================================================= */
 
-  const canUseFeature = useCallback(
-    (feature) => {
-      if (!plan) {
-        return false;
-      }
-
-      switch (feature) {
-        case "premium_templates":
-          return Boolean(
-            plan.premium_templates
-          );
-
-        case "cover_letters":
-          return (
-            isPro ||
-            isTeam ||
-            plan?.name?.toLowerCase() ===
-              "starter-paid"
-          );
-
-        case "ai":
-          return Boolean(
-            plan.ai_features
-          );
-
-        case "team":
-          return isTeam;
-
-        default:
+  const canUseFeature =
+    useCallback(
+      (feature) => {
+        if (!plan) {
           return false;
-      }
-    },
-    [
-      plan,
-      isPro,
-      isTeam,
-    ]
-  );
+        }
+
+        switch (feature) {
+          /* ---------------------------------------------
+             Premium templates
+          --------------------------------------------- */
+
+          case "premium_templates":
+            return Boolean(
+              plan.premium_templates
+            );
+
+          /* ---------------------------------------------
+             Cover letters
+          --------------------------------------------- */
+
+          case "cover_letters":
+            return Boolean(
+              plan.cover_letters
+            );
+
+          /* ---------------------------------------------
+             AI
+          --------------------------------------------- */
+
+          case "ai":
+          case "ai_resume_generation":
+            return Boolean(
+              plan.ai_resume_generation
+            );
+
+          /* ---------------------------------------------
+             AI Resume Analysis
+          --------------------------------------------- */
+
+          case "ai_resume_analysis":
+            return Boolean(
+              plan.ai_resume_analysis
+            );
+
+          /* ---------------------------------------------
+             ATS
+          --------------------------------------------- */
+
+          case "ats":
+          case "ats_optimization":
+            return Boolean(
+              plan.ats_optimization
+            );
+
+          /* ---------------------------------------------
+             Team
+          --------------------------------------------- */
+
+          case "team":
+          case "team_workspace":
+            return Boolean(
+              plan.team_workspace
+            );
+
+          /* ---------------------------------------------
+             Resume
+          --------------------------------------------- */
+
+          case "resume":
+          case "resume_builder":
+            return (
+              Number(
+                plan.max_resumes || 0
+              ) > 0 ||
+              plan.max_resumes === null
+            );
+
+          /* ---------------------------------------------
+             Unknown
+          --------------------------------------------- */
+
+          default:
+            return false;
+        }
+      },
+      [plan]
+    );
 
   /* =======================================================
      HAS ENOUGH CREDITS
   ======================================================= */
 
-  const hasEnoughCredits = useCallback(
-    (requiredCredits = 1) => {
-      return (
-        availableCredits >=
-        Number(requiredCredits)
-      );
-    },
-    [availableCredits]
-  );
+  const hasEnoughCredits =
+    useCallback(
+      (
+        requiredCredits = 1
+      ) => {
+        return (
+          availableCredits >=
+          Number(
+            requiredCredits
+          )
+        );
+      },
+      [availableCredits]
+    );
 
   /* =======================================================
-     REFRESH PRICING DATA
+     REFRESH PRICING
   ======================================================= */
 
-  const refreshPricing = useCallback(async () => {
-    await loadPricingData();
-  }, [loadPricingData]);
+  const refreshPricing =
+    useCallback(async () => {
+      await loadPricingData();
+    }, [
+      loadPricingData,
+    ]);
 
   /* =======================================================
      CONTEXT VALUE
   ======================================================= */
 
-  const value = useMemo(
-    () => ({
-      /* Subscription */
+  const value =
+    useMemo(
+      () => ({
+        /* ---------------------------------------------
+           Subscription
+        --------------------------------------------- */
 
-      subscription,
+        subscription,
 
-      /* Current plan */
+        /* ---------------------------------------------
+           Current plan
+        --------------------------------------------- */
 
-      plan,
+        plan,
 
-      planName,
+        planName,
 
-      planSlug,
+        planSlug,
 
-      /* Plan helpers */
+        /* ---------------------------------------------
+           Plan checks
+        --------------------------------------------- */
 
-      isStarter,
-      isPro,
-      isTeam,
+        isStarter,
 
-      /* Credits */
+        isPro,
 
-      credits,
+        isTeam,
 
-      availableCredits,
+        /* ---------------------------------------------
+           Credits
+        --------------------------------------------- */
 
-      hasEnoughCredits,
+        credits,
 
-      /* Limits */
+        availableCredits,
 
-      maxResumes,
-      maxCoverLetters,
+        hasEnoughCredits,
 
-      /* Features */
+        /* ---------------------------------------------
+           Limits
+        --------------------------------------------- */
 
-      canUsePremiumTemplates,
-      canUseCoverLetters,
-      canUseAI,
+        maxResumes,
 
-      canUseFeature,
+        maxCoverLetters,
 
-      /* State */
+        maxTeamMembers,
 
-      loading,
-      error,
+        /* ---------------------------------------------
+           Features
+        --------------------------------------------- */
 
-      /* Actions */
+        canUsePremiumTemplates,
 
-      refreshPricing,
-    }),
-    [
-      subscription,
-      plan,
-      planName,
-      planSlug,
+        canUseCoverLetters,
 
-      isStarter,
-      isPro,
-      isTeam,
+        canUseAIResumeGeneration,
 
-      credits,
-      availableCredits,
-      hasEnoughCredits,
+        canUseAIResumeAnalysis,
 
-      maxResumes,
-      maxCoverLetters,
+        canUseATSOptimization,
 
-      canUsePremiumTemplates,
-      canUseCoverLetters,
-      canUseAI,
+        canUseTeamWorkspace,
 
-      canUseFeature,
+        canUseFeature,
 
-      loading,
-      error,
+        /* ---------------------------------------------
+           State
+        --------------------------------------------- */
 
-      refreshPricing,
-    ]
-  );
+        loading,
+
+        error,
+
+        /* ---------------------------------------------
+           Actions
+        --------------------------------------------- */
+
+        refreshPricing,
+      }),
+      [
+        subscription,
+        plan,
+        planName,
+        planSlug,
+
+        isStarter,
+        isPro,
+        isTeam,
+
+        credits,
+        availableCredits,
+        hasEnoughCredits,
+
+        maxResumes,
+        maxCoverLetters,
+        maxTeamMembers,
+
+        canUsePremiumTemplates,
+        canUseCoverLetters,
+        canUseAIResumeGeneration,
+        canUseAIResumeAnalysis,
+        canUseATSOptimization,
+        canUseTeamWorkspace,
+
+        canUseFeature,
+
+        loading,
+        error,
+
+        refreshPricing,
+      ]
+    );
 
   /* =======================================================
      PROVIDER
@@ -400,7 +755,9 @@ export function PricingProvider({ children }) {
 
 export function usePricing() {
   const context =
-    useContext(PricingContext);
+    useContext(
+      PricingContext
+    );
 
   if (!context) {
     throw new Error(

@@ -3,9 +3,6 @@ import { useResume } from "../../context/ResumeContext";
 export default function ModernTemplate({ previewData = null }) {
     const { resumeData } = useResume();
 
-    // Use preview data when this component is being
-    // displayed inside the Templates page.
-    // Otherwise use the user's actual resume data.
     const data = previewData || resumeData;
 
     const {
@@ -15,14 +12,11 @@ export default function ModernTemplate({ previewData = null }) {
         skills = [],
         projects = [],
         certifications = [],
-    } = data;
+    } = data || {};
 
     return (
         <div className="min-h-[1123px] bg-white p-10 text-slate-900">
-            {/* ================================
-                Header
-            ================================= */}
-
+            {/* Header */}
             <header className="border-b-4 border-blue-600 pb-6">
                 <h1 className="text-4xl font-black text-slate-900">
                     {personalInfo.fullName || "Your Name"}
@@ -59,10 +53,7 @@ export default function ModernTemplate({ previewData = null }) {
                 </div>
             </header>
 
-            {/* ================================
-                Summary
-            ================================= */}
-
+            {/* Summary */}
             {personalInfo.summary && (
                 <section className="mt-7">
                     <h2 className="mb-3 text-sm font-black uppercase tracking-widest text-blue-600">
@@ -75,10 +66,7 @@ export default function ModernTemplate({ previewData = null }) {
                 </section>
             )}
 
-            {/* ================================
-                Experience
-            ================================= */}
-
+            {/* Experience */}
             {experience.length > 0 && (
                 <section className="mt-8">
                     <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-blue-600">
@@ -92,7 +80,8 @@ export default function ModernTemplate({ previewData = null }) {
                                     <div>
                                         <h3 className="text-base font-bold text-slate-900">
                                             {item.jobTitle ||
-                                                item.position}
+                                                item.position ||
+                                                "Job Title"}
                                         </h3>
 
                                         <p className="mt-1 font-semibold text-slate-600">
@@ -113,7 +102,7 @@ export default function ModernTemplate({ previewData = null }) {
                                 </div>
 
                                 {item.description && (
-                                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                                    <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600">
                                         {item.description}
                                     </p>
                                 )}
@@ -123,10 +112,7 @@ export default function ModernTemplate({ previewData = null }) {
                 </section>
             )}
 
-            {/* ================================
-                Education
-            ================================= */}
-
+            {/* Education */}
             {education.length > 0 && (
                 <section className="mt-8">
                     <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-blue-600">
@@ -139,11 +125,15 @@ export default function ModernTemplate({ previewData = null }) {
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
                                         <h3 className="font-bold text-slate-900">
-                                            {item.degree}
+                                            {item.degree ||
+                                                item.program ||
+                                                "Degree"}
                                         </h3>
 
                                         <p className="mt-1 text-sm font-semibold text-slate-600">
-                                            {item.institution}
+                                            {item.institution ||
+                                                item.school ||
+                                                "Institution"}
                                         </p>
                                     </div>
 
@@ -158,16 +148,20 @@ export default function ModernTemplate({ previewData = null }) {
                                         {item.endDate}
                                     </p>
                                 </div>
+
+                                {/* Education Description */}
+                                {item.description && (
+                                    <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600">
+                                        {item.description}
+                                    </p>
+                                )}
                             </div>
                         ))}
                     </div>
                 </section>
             )}
 
-            {/* ================================
-                Skills
-            ================================= */}
-
+            {/* Skills */}
             {skills.length > 0 && (
                 <section className="mt-8">
                     <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-blue-600">
@@ -180,17 +174,14 @@ export default function ModernTemplate({ previewData = null }) {
                                 key={skill.id}
                                 className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700"
                             >
-                                {skill.name || skill.skill}
+                                {skill.name || skill.skill || skill}
                             </span>
                         ))}
                     </div>
                 </section>
             )}
 
-            {/* ================================
-                Projects
-            ================================= */}
-
+            {/* Projects */}
             {projects.length > 0 && (
                 <section className="mt-8">
                     <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-blue-600">
@@ -202,11 +193,12 @@ export default function ModernTemplate({ previewData = null }) {
                             <div key={project.id}>
                                 <h3 className="font-bold text-slate-900">
                                     {project.name ||
-                                        project.title}
+                                        project.title ||
+                                        "Project"}
                                 </h3>
 
                                 {project.description && (
-                                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                                    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">
                                         {project.description}
                                     </p>
                                 )}
@@ -216,9 +208,7 @@ export default function ModernTemplate({ previewData = null }) {
                                         {Array.isArray(
                                             project.technologies
                                         )
-                                            ? project.technologies.join(
-                                                  ", "
-                                              )
+                                            ? project.technologies.join(", ")
                                             : project.technologies}
                                     </p>
                                 )}
@@ -228,10 +218,7 @@ export default function ModernTemplate({ previewData = null }) {
                 </section>
             )}
 
-            {/* ================================
-                Certifications
-            ================================= */}
-
+            {/* Certifications */}
             {certifications.length > 0 && (
                 <section className="mt-8">
                     <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-blue-600">
@@ -239,34 +226,34 @@ export default function ModernTemplate({ previewData = null }) {
                     </h2>
 
                     <div className="space-y-4">
-                        {certifications.map(
-                            (certification) => (
-                                <div
-                                    key={certification.id}
-                                >
-                                    <h3 className="font-bold text-slate-900">
-                                        {certification.name ||
-                                            certification.title}
-                                    </h3>
+                        {certifications.map((certification) => (
+                            <div key={certification.id}>
+                                <h3 className="font-bold text-slate-900">
+                                    {certification.name ||
+                                        certification.title ||
+                                        "Certification"}
+                                </h3>
 
-                                    {certification.issuer && (
-                                        <p className="text-sm text-slate-600">
-                                            {
-                                                certification.issuer
-                                            }
-                                        </p>
-                                    )}
+                                {certification.issuer && (
+                                    <p className="text-sm text-slate-600">
+                                        {certification.issuer}
+                                    </p>
+                                )}
 
-                                    {certification.date && (
-                                        <p className="text-xs text-slate-500">
-                                            {
-                                                certification.date
-                                            }
-                                        </p>
-                                    )}
-                                </div>
-                            )
-                        )}
+                                {certification.date && (
+                                    <p className="text-xs text-slate-500">
+                                        {certification.date}
+                                    </p>
+                                )}
+
+                                {/* Certification Description */}
+                                {certification.description && (
+                                    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">
+                                        {certification.description}
+                                    </p>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </section>
             )}

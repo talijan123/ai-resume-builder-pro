@@ -21,6 +21,7 @@ import { useResume } from "../context/ResumeContext";
 import { useAuth } from "../context/AuthContext";
 
 import { supabase } from "../lib/supabase";
+import { deductCredit } from "../services/creditService";
 
 /* ==========================================
    Empty Resume
@@ -60,15 +61,26 @@ const validTemplates = [
   "minimal",
 ];
 
+/* ==========================================
+   Resume Builder
+========================================== */
+
 export default function ResumeBuilder() {
   const { id } = useParams();
 
   const location = useLocation();
   const navigate = useNavigate();
 
-  const resumeRef = useRef(null);
+  /* ==========================================
+     Refs
+  ========================================== */
 
+  const resumeRef = useRef(null);
   const autoDownloadHandled = useRef(false);
+
+  /* ==========================================
+     State
+  ========================================== */
 
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
@@ -77,20 +89,38 @@ export default function ResumeBuilder() {
   const [generationMessage, setGenerationMessage] =
     useState("");
 
+  /* ==========================================
+     Resume Context
+  ========================================== */
+
   const {
     resumeData,
     setResumeData,
     setTemplate,
   } = useResume();
 
-  const { user, loading: authLoading } = useAuth();
+  /* ==========================================
+     Auth Context
+  ========================================== */
+
+  const {
+    user,
+    loading: authLoading,
+  } = useAuth();
 
   /* ==========================================
-     Template From URL
+     TEMPLATE FROM URL
   ========================================== */
 
   useEffect(() => {
-    if (id) return;
+    /*
+      Existing resumes already have their
+      own saved template.
+    */
+
+    if (id) {
+      return;
+    }
 
     const params = new URLSearchParams(
       location.search
@@ -115,10 +145,6 @@ export default function ResumeBuilder() {
 
   /* ==========================================
      SECURE CREDIT DEDUCTION
-     
-     IMPORTANT:
-     This is called ONLY when the user
-     actually clicks "Generate Resume".
   ========================================== */
 
   async function deductGenerationCredit() {
@@ -128,55 +154,112 @@ export default function ResumeBuilder() {
     }
 
     try {
-      const { data, error } =
-        await supabase.rpc("deduct_credit", {
-          p_amount: 1,
-          p_description:
-            "AI resume generation",
-        });
+      setGenerationMessage(
+        "Checking your AI credits..."
+      );
 
-      if (error) {
-        console.error(
-          "Credit deduction failed:",
-          error
+      console.log(
+        "💳 Attempting to deduct 1 AI credit..."
+      );
+
+      const remainingCredits =
+        await deductCredit(
+          1,
+          "AI resume generation"
         );
 
-        throw error;
-      }
+      console.log(
+        "✅ AI credit deducted successfully.",
+        "Remaining credits:",
+        remainingCredits
+      );
 
-      /*
-        The RPC should return something similar to:
-
-        {
-          success: true,
-          remaining_credits: 9
-        }
-
-        We don't trust the frontend to decide
-        whether the credit was actually deducted.
-        Supabase RPC is the authority.
-      */
-
-      if (!data?.success) {
-        const message =
-          data?.message ||
-          "You do not have enough credits.";
-
-        setGenerationMessage(message);
-
-        return false;
-      }
+      setGenerationMessage(
+        `1 credit used. ${remainingCredits} credits remaining.`
+      );
 
       return true;
     } catch (error) {
       console.error(
-        "Failed to deduct generation credit:",
+        "❌ Credit deduction failed:",
         error
       );
 
+      const message =
+        error?.message || "";
+
+      /* --------------------------------------
+         Insufficient credits
+      -------------------------------------- */
+
+      if (
+        message.includes(
+          "INSUFFICIENT_CREDITS"
+        )
+      ) {
+        setGenerationMessage(
+          "You do not have enough AI credits."
+        );
+
+        return false;
+      }
+
+      /* --------------------------------------
+         No active subscription
+      -------------------------------------- */
+
+      if (
+        message.includes(
+          "ACTIVE_SUBSCRIPTION_NOT_FOUND"
+        )
+      ) {
+        setGenerationMessage(
+          "No active subscription was found."
+        );
+
+        return false;
+      }
+
+      /* --------------------------------------
+         Authentication
+      -------------------------------------- */
+
+      if (
+        message.includes(
+          "USER_NOT_AUTHENTICATED"
+        )
+      ) {
+        setGenerationMessage(
+          "Your session has expired. Please login again."
+        );
+
+        navigate("/login");
+
+        return false;
+      }
+
+      /* --------------------------------------
+         Invalid amount
+      -------------------------------------- */
+
+      if (
+        message.includes(
+          "CREDIT_AMOUNT_INVALID"
+        )
+      ) {
+        setGenerationMessage(
+          "Invalid credit amount."
+        );
+
+        return false;
+      }
+
+      /* --------------------------------------
+         Generic error
+      -------------------------------------- */
+
       setGenerationMessage(
-        error?.message ||
-          "Unable to use a credit right now."
+        "Unable to use an AI credit right now."
       );
 
       return false;
@@ -193,6 +276,10 @@ export default function ResumeBuilder() {
     */
 
     if (generating) {
+      console.log(
+        "⚠️ Generation already in progress."
+      );
+
       return;
     }
 
@@ -201,6 +288,10 @@ export default function ResumeBuilder() {
     */
 
     if (authLoading) {
+      console.log(
+        "⏳ Authentication still loading..."
+      );
+
       return;
     }
 
@@ -217,70 +308,62 @@ export default function ResumeBuilder() {
     setGenerating(true);
 
     try {
-      /*
-        STEP 1
-        Securely deduct one credit.
-
-        Nothing is deducted when:
-        - opening builder
-        - editing fields
-        - changing template
-        - viewing preview
-        - downloading PDF
-      */
+      /* ======================================
+         STEP 1
+         DEDUCT ONE CREDIT
+      ====================================== */
 
       const creditDeducted =
         await deductGenerationCredit();
+
+      /*
+        If credit deduction fails,
+        stop generation.
+      */
 
       if (!creditDeducted) {
         return;
       }
 
-      /*
-        STEP 2
-        ACTUAL AI GENERATION GOES HERE.
-
-        For now we mark the generation as started.
-
-        Later we will connect this section to
-        your actual AI API.
-      */
+      /* ======================================
+         STEP 2
+         AI GENERATION
+      ====================================== */
 
       setGenerationMessage(
         "Credit used. Generating your AI resume..."
       );
 
       console.log(
-        "AI resume generation started:",
+        "🤖 AI resume generation started:",
         resumeData
       );
 
       /*
-        Example future flow:
+        Temporary test delay.
 
-        const generatedResume =
-          await generateAIResume(resumeData);
-
-        setResumeData(generatedResume);
-
-        await saveResumeToSupabase(generatedResume);
-      */
-
-      /*
-        Temporary delay so you can test
-        the complete credit flow.
+        Replace this later with your
+        actual AI generation API.
       */
 
       await new Promise((resolve) =>
         setTimeout(resolve, 1200)
       );
 
+      /* ======================================
+         GENERATION COMPLETE
+      ====================================== */
+
       setGenerationMessage(
         "AI resume generation completed."
       );
+
+      console.log(
+        "✅ AI resume generation completed."
+      );
     } catch (error) {
       console.error(
-        "AI resume generation failed:",
+        "❌ AI resume generation failed:",
         error
       );
 
@@ -294,7 +377,7 @@ export default function ResumeBuilder() {
   }
 
   /* ==========================================
-     PDF
+     PDF PRINT CONFIGURATION
   ========================================== */
 
   const handlePrint = useReactToPrint({
@@ -303,6 +386,139 @@ export default function ResumeBuilder() {
     documentTitle:
       resumeData.personalInfo?.fullName ||
       "Resume",
+
+    /*
+      Global print CSS.
+
+      The actual resume is treated as an A4
+      document while allowing multiple pages.
+    */
+
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      @media print {
+
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+
+          width: 210mm !important;
+
+          background: white !important;
+        }
+
+        body {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+
+        /*
+          Main resume container
+        */
+
+        #resume-preview {
+          width: 210mm !important;
+
+          min-height: 297mm !important;
+
+          height: auto !important;
+
+          margin: 0 !important;
+
+          padding: 10mm !important;
+
+          background: white !important;
+
+          border-radius: 0 !important;
+
+          box-shadow: none !important;
+
+          overflow: visible !important;
+        }
+
+        /*
+          Keep complete resume entries
+          together whenever possible.
+        */
+
+        .resume-entry,
+        .resume-section,
+        .resume-education-item,
+        .resume-experience-item,
+        .resume-project-item,
+        .resume-certification-item {
+          break-inside: avoid !important;
+
+          page-break-inside: avoid !important;
+        }
+
+        /*
+          Keep section heading with the
+          content immediately following it.
+        */
+
+        .resume-section-title {
+          break-after: avoid !important;
+
+          page-break-after: avoid !important;
+        }
+
+        /*
+          Avoid splitting common elements.
+        */
+
+        table,
+        tr,
+        td,
+        th,
+        figure,
+        blockquote {
+          break-inside: avoid !important;
+
+          page-break-inside: avoid !important;
+        }
+
+        /*
+          Prevent unnecessary forced
+          page breaks.
+        */
+
+        #resume-preview > *:last-child {
+          break-after: auto !important;
+
+          page-break-after: auto !important;
+        }
+
+        /*
+          Hide screen-only elements.
+        */
+
+        .print\\:hidden {
+          display: none !important;
+        }
+
+        /*
+          Links should appear as normal
+          text in the PDF.
+        */
+
+        a {
+          color: inherit !important;
+
+          text-decoration: none !important;
+        }
+      }
+    `,
+
+    /*
+      Reset download indicator after
+      browser print dialog finishes.
+    */
 
     onAfterPrint: () => {
       setDownloading(false);
@@ -320,7 +536,7 @@ export default function ResumeBuilder() {
       setLoading(true);
 
       /* --------------------------------------
-         New Resume
+         NEW RESUME
       -------------------------------------- */
 
       if (!id) {
@@ -363,12 +579,14 @@ export default function ResumeBuilder() {
       }
 
       /* --------------------------------------
-         Existing Resume
+         EXISTING RESUME
       -------------------------------------- */
 
       try {
         const {
-          data: { user: currentUser },
+          data: {
+            user: currentUser,
+          },
           error: userError,
         } = await supabase.auth.getUser();
 
@@ -391,7 +609,10 @@ export default function ResumeBuilder() {
           .from("resumes")
           .select("*")
           .eq("id", id)
-          .eq("user_id", currentUser.id)
+          .eq(
+            "user_id",
+            currentUser.id
+          )
           .single();
 
         if (error) {
@@ -399,7 +620,9 @@ export default function ResumeBuilder() {
         }
 
         if (!data) {
-          alert("Resume not found.");
+          alert(
+            "Resume not found."
+          );
 
           navigate("/my-resumes");
 
@@ -420,11 +643,12 @@ export default function ResumeBuilder() {
 
             ...savedResumeData,
 
-            template: validTemplates.includes(
-              savedTemplate
-            )
-              ? savedTemplate
-              : "modern",
+            template:
+              validTemplates.includes(
+                savedTemplate
+              )
+                ? savedTemplate
+                : "modern",
 
             personalInfo: {
               ...emptyResume.personalInfo,
@@ -434,16 +658,20 @@ export default function ResumeBuilder() {
             },
 
             experience:
-              savedResumeData.experience || [],
+              savedResumeData.experience ||
+              [],
 
             education:
-              savedResumeData.education || [],
+              savedResumeData.education ||
+              [],
 
             skills:
-              savedResumeData.skills || [],
+              savedResumeData.skills ||
+              [],
 
             projects:
-              savedResumeData.projects || [],
+              savedResumeData.projects ||
+              [],
 
             certifications:
               savedResumeData.certifications ||
@@ -452,12 +680,12 @@ export default function ResumeBuilder() {
         }
       } catch (error) {
         console.error(
-          "Failed to load resume:",
+          "❌ Failed to load resume:",
           error
         );
 
         alert(
-          error.message ||
+          error?.message ||
             "Failed to load resume."
         );
 
@@ -486,7 +714,9 @@ export default function ResumeBuilder() {
   ========================================== */
 
   async function incrementDownloadCount() {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
 
     try {
       const {
@@ -503,14 +733,17 @@ export default function ResumeBuilder() {
       }
 
       const currentDownloads =
-        Number(resume?.downloads) || 0;
+        Number(
+          resume?.downloads
+        ) || 0;
 
       const {
         error: updateError,
       } = await supabase
         .from("resumes")
         .update({
-          downloads: currentDownloads + 1,
+          downloads:
+            currentDownloads + 1,
 
           updated_at:
             new Date().toISOString(),
@@ -522,13 +755,73 @@ export default function ResumeBuilder() {
       }
 
       console.log(
-        "Download count updated successfully."
+        "✅ Download count updated successfully."
       );
     } catch (error) {
+      /*
+        Download count failure should NOT
+        make the PDF download fail.
+      */
+
       console.error(
-        "Failed to update download count:",
+        "❌ Failed to update download count:",
         error
       );
+    }
+  }
+
+  /* ==========================================
+     DOWNLOAD PDF
+  ========================================== */
+
+  async function handleDownloadPDF() {
+    /*
+      Prevent multiple download clicks.
+    */
+
+    if (downloading) {
+      return;
+    }
+
+    /*
+      New unsaved resume doesn't have an ID.
+      We can still print it, but there is no
+      database download count to increment.
+    */
+
+    setDownloading(true);
+
+    try {
+      /*
+        Wait one frame so React has time to
+        render the latest resume changes.
+      */
+
+      await new Promise((resolve) =>
+        requestAnimationFrame(resolve)
+      );
+
+      /*
+        Start browser PDF/print process.
+      */
+
+      await handlePrint();
+
+      /*
+        Only existing resumes have a
+        download counter.
+      */
+
+      if (id) {
+        await incrementDownloadCount();
+      }
+    } catch (error) {
+      console.error(
+        "❌ PDF download failed:",
+        error
+      );
+
+      setDownloading(false);
     }
   }
 
@@ -537,7 +830,9 @@ export default function ResumeBuilder() {
   ========================================== */
 
   useEffect(() => {
-    if (!location.state?.autoDownload) {
+    if (
+      !location.state?.autoDownload
+    ) {
       return;
     }
 
@@ -549,7 +844,9 @@ export default function ResumeBuilder() {
       return;
     }
 
-    if (autoDownloadHandled.current) {
+    if (
+      autoDownloadHandled.current
+    ) {
       return;
     }
 
@@ -557,27 +854,49 @@ export default function ResumeBuilder() {
 
     setDownloading(true);
 
-    const timer = setTimeout(async () => {
-      try {
-        await handlePrint();
+    const timer = setTimeout(
+      async () => {
+        try {
+          /*
+            Give the preview a little time to
+            finish rendering before printing.
+          */
 
-        await incrementDownloadCount();
+          await new Promise((resolve) =>
+            requestAnimationFrame(resolve)
+          );
 
-        navigate(`/builder/${id}`, {
-          replace: true,
-          state: {},
-        });
-      } catch (error) {
-        console.error(
-          "Automatic PDF download failed:",
-          error
-        );
+          await handlePrint();
 
-        setDownloading(false);
-      }
-    }, 800);
+          await incrementDownloadCount();
 
-    return () => clearTimeout(timer);
+          /*
+            Remove autoDownload state so
+            refreshing the builder doesn't
+            download again.
+          */
+
+          navigate(
+            `/builder/${id}`,
+            {
+              replace: true,
+              state: {},
+            }
+          );
+        } catch (error) {
+          console.error(
+            "❌ Automatic PDF download failed:",
+            error
+          );
+
+          setDownloading(false);
+        }
+      },
+      800
+    );
+
+    return () =>
+      clearTimeout(timer);
   }, [
     id,
     loading,
@@ -593,6 +912,7 @@ export default function ResumeBuilder() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
+
           <div
             className="
               mx-auto
@@ -606,9 +926,16 @@ export default function ResumeBuilder() {
             "
           />
 
-          <p className="mt-4 font-semibold text-slate-700">
+          <p
+            className="
+              mt-4
+              font-semibold
+              text-slate-700
+            "
+          >
             Loading resume...
           </p>
+
         </div>
       </div>
     );
@@ -621,24 +948,18 @@ export default function ResumeBuilder() {
   return (
     <div className="min-h-screen bg-slate-50">
 
-      {/* Header */}
+      {/* ======================================
+          HEADER
+      ====================================== */}
 
       <BuilderHeader
-        onDownloadPDF={async () => {
-          setDownloading(true);
-
-          try {
-            await handlePrint();
-
-            await incrementDownloadCount();
-          } finally {
-            setDownloading(false);
-          }
-        }}
+        onDownloadPDF={handleDownloadPDF}
         resumeId={id}
       />
 
-      {/* Download Indicator */}
+      {/* ======================================
+          DOWNLOAD INDICATOR
+      ====================================== */}
 
       {downloading && (
         <div
@@ -661,13 +982,17 @@ export default function ResumeBuilder() {
             text-blue-700
 
             shadow-lg
+
+            print:hidden
           "
         >
           Preparing your PDF...
         </div>
       )}
 
-      {/* Generation Indicator */}
+      {/* ======================================
+          GENERATION INDICATOR
+      ====================================== */}
 
       {generationMessage && (
         <div
@@ -690,13 +1015,22 @@ export default function ResumeBuilder() {
 
             shadow-lg
 
+            print:hidden
+
             ${
               generationMessage.includes(
                 "completed"
               )
                 ? "border-green-200 bg-green-50 text-green-700"
                 : generationMessage.includes(
+                    "credit used"
+                  ) ||
+                  generationMessage.includes(
                     "Credit used"
+                  )
+                ? "border-blue-200 bg-blue-50 text-blue-700"
+                : generationMessage.includes(
+                    "remaining"
                   )
                 ? "border-blue-200 bg-blue-50 text-blue-700"
                 : "border-red-200 bg-red-50 text-red-700"
@@ -707,9 +1041,18 @@ export default function ResumeBuilder() {
         </div>
       )}
 
-      {/* Main */}
+      {/* ======================================
+          MAIN
+      ====================================== */}
 
-      <div className="mx-auto max-w-[1800px] px-6 py-8">
+      <div
+        className="
+          mx-auto
+          max-w-[1800px]
+          px-6
+          py-8
+        "
+      >
         <div
           className="
             grid
@@ -717,7 +1060,12 @@ export default function ResumeBuilder() {
             xl:grid-cols-[320px_1fr_650px]
           "
         >
+
+          {/* Sidebar */}
+
           <BuilderSidebar />
+
+          {/* Content */}
 
           <BuilderContent
             onGenerateResume={
@@ -726,9 +1074,12 @@ export default function ResumeBuilder() {
             generating={generating}
           />
 
+          {/* Preview */}
+
           <ResumePreview
             ref={resumeRef}
           />
+
         </div>
       </div>
     </div>

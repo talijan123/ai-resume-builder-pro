@@ -1,14 +1,21 @@
 import { useEffect, useState } from "react";
+
 import {
   HiArrowLeft,
   HiCloudArrowUp,
   HiArrowDownTray,
 } from "react-icons/hi2";
+
 import { Link, useNavigate } from "react-router-dom";
 
 import { useResume } from "../../context/ResumeContext";
+import { usePricing } from "../../context/PricingContext";
+
 import { supabase } from "../../lib/supabase";
+
 import calculateATSScore from "../../utils/ats/calculateATSScore";
+
+import { deductCredit } from "../../services/creditService";
 
 export default function BuilderHeader({
   onDownloadPDF,
@@ -18,6 +25,15 @@ export default function BuilderHeader({
 
   const { resumeData } = useResume();
 
+  /* =======================================
+     PRICING CONTEXT
+  ======================================= */
+
+  const {
+    availableCredits,
+    refreshPricing,
+  } = usePricing();
+
   const [lastSaved, setLastSaved] =
     useState("Never");
 
@@ -25,7 +41,7 @@ export default function BuilderHeader({
     useState(false);
 
   /* =======================================
-     Auto Save Status
+     AUTO SAVE STATUS
   ======================================= */
 
   useEffect(() => {
@@ -39,16 +55,31 @@ export default function BuilderHeader({
   }, [saving]);
 
   /* =======================================
-     Save / Update Resume
+     SAVE / UPDATE RESUME
   ======================================= */
 
   async function handleSaveResume() {
+    /*
+      Prevent double clicks.
+
+      This is especially important because
+      creating a new resume costs 1 credit.
+    */
+
+    if (saving) {
+      console.log(
+        "⏳ Save already in progress..."
+      );
+
+      return;
+    }
+
     try {
       setSaving(true);
 
-      /* -----------------------------------
-         Get Current User
-      ----------------------------------- */
+      /* =====================================
+         GET CURRENT USER
+      ===================================== */
 
       const {
         data: { user },
@@ -61,12 +92,20 @@ export default function BuilderHeader({
 
       if (!user) {
         alert("Please login first.");
+
+        navigate("/login");
+
         return;
       }
 
-      /* -----------------------------------
-         Calculate ATS Score
-      ----------------------------------- */
+      console.log(
+        "👤 Current user:",
+        user.id
+      );
+
+      /* =====================================
+         CALCULATE ATS SCORE
+      ===================================== */
 
       const atsResult =
         calculateATSScore(resumeData);
@@ -81,9 +120,9 @@ export default function BuilderHeader({
         atsScore
       );
 
-      /* -----------------------------------
-         Selected Template
-      ----------------------------------- */
+      /* =====================================
+         SELECTED TEMPLATE
+      ===================================== */
 
       const selectedTemplate =
         resumeData?.template || "modern";
@@ -93,15 +132,15 @@ export default function BuilderHeader({
         selectedTemplate
       );
 
-      /* -----------------------------------
-         Resume Payload
-      ----------------------------------- */
+      /* =====================================
+         RESUME PAYLOAD
+      ===================================== */
 
       const resumePayload = {
         user_id: user.id,
 
         title:
-          resumeData.personalInfo?.fullName ||
+          resumeData?.personalInfo?.fullName ||
           "Untitled Resume",
 
         resume_data: {
@@ -114,11 +153,19 @@ export default function BuilderHeader({
         template: selectedTemplate,
       };
 
-      /* ===================================
+      /* =====================================
          UPDATE EXISTING RESUME
-      =================================== */
+
+         Updating an existing resume is FREE.
+
+         NO CREDIT IS DEDUCTED.
+      ===================================== */
 
       if (resumeId) {
+        console.log(
+          "📝 Updating existing resume..."
+        );
+
         const {
           error: updateError,
         } = await supabase
@@ -141,46 +188,219 @@ export default function BuilderHeader({
         alert(
           `✅ Resume updated successfully!\n\nATS Score: ${atsScore}/100\nTemplate: ${selectedTemplate}`
         );
+
+        return;
       }
 
-      /* ===================================
+      /* =====================================
          CREATE NEW RESUME
-      =================================== */
 
-      else {
-        const {
-          data,
-          error: insertError,
-        } = await supabase
-          .from("resumes")
-          .insert(resumePayload)
-          .select()
-          .single();
+         Creating a NEW resume costs 1 credit.
+      ===================================== */
 
-        if (insertError) {
-          throw insertError;
-        }
+      console.log(
+        "🆕 Creating new resume..."
+      );
+
+      /* =====================================
+         CHECK CURRENT CREDIT DISPLAY
+      ===================================== */
+
+      console.log(
+        "💰 Current dashboard credits:",
+        availableCredits
+      );
+
+      /* =====================================
+         DEDUCT ONE CREDIT
+      ===================================== */
+
+      console.log(
+        "💳 Deducting 1 credit..."
+      );
+
+      let remainingCredits;
+
+      try {
+        remainingCredits =
+          await deductCredit(
+            1,
+            "Resume creation"
+          );
 
         console.log(
-          "Saved resume:",
-          data
+          "✅ Credit deducted successfully."
         );
 
-        setLastSaved("Just now");
+        console.log(
+          "💳 Remaining credits:",
+          remainingCredits
+        );
+      } catch (creditError) {
+        console.error(
+          "❌ Credit deduction failed:",
+          creditError
+        );
+
+        /* ===================================
+           DO NOT SAVE RESUME
+           
+           If credit deduction failed,
+           the resume must NOT be created.
+        =================================== */
+
+        const errorMessage =
+          creditError?.message ||
+          "Unable to use your credit.";
+
+        if (
+          errorMessage.includes(
+            "INSUFFICIENT_CREDITS"
+          )
+        ) {
+          alert(
+            "❌ You don't have enough credits to create a new resume.\n\nPlease upgrade your plan or purchase more credits."
+          );
+        } else if (
+          errorMessage.includes(
+            "ACTIVE_SUBSCRIPTION_NOT_FOUND"
+          )
+        ) {
+          alert(
+            "❌ You don't have an active subscription.\n\nPlease choose a plan before creating a resume."
+          );
+        } else if (
+          errorMessage.includes(
+            "USER_NOT_AUTHENTICATED"
+          )
+        ) {
+          alert(
+            "❌ Your session has expired.\n\nPlease login again."
+          );
+
+          navigate("/login");
+        } else {
+          alert(
+            `❌ Unable to use a credit.\n\n${errorMessage}`
+          );
+        }
+
+        return;
+      }
+
+      /* =====================================
+         IMPORTANT FIX
+
+         The RPC already changed:
+
+         500 → 499
+
+         But PricingContext still has its
+         previous local value.
+
+         Refresh it now.
+      ===================================== */
+
+      console.log(
+        "🔄 Refreshing pricing context..."
+      );
+
+      try {
+        await refreshPricing();
+
+        console.log(
+          "✅ Pricing context refreshed."
+        );
+      } catch (refreshError) {
+        /*
+          The credit was already deducted.
+
+          Do NOT cancel the resume creation
+          just because the UI refresh failed.
+
+          The database is still correct.
+        */
+
+        console.error(
+          "⚠️ Pricing refresh failed:",
+          refreshError
+        );
+      }
+
+      /* =====================================
+         SAVE NEW RESUME
+      ===================================== */
+
+      console.log(
+        "💾 Saving new resume..."
+      );
+
+      const {
+        data,
+        error: insertError,
+      } = await supabase
+        .from("resumes")
+        .insert(resumePayload)
+        .select()
+        .single();
+
+      /* =====================================
+         HANDLE INSERT FAILURE
+      ===================================== */
+
+      if (insertError) {
+        console.error(
+          "❌ Resume insert failed after credit deduction:",
+          insertError
+        );
+
+        /*
+          IMPORTANT:
+
+          The credit has already been deducted.
+
+          We are not automatically refunding it here.
+
+          Later, we can make resume creation + credit
+          deduction one PostgreSQL transaction.
+        */
 
         alert(
-          `✅ Resume saved successfully!\n\nATS Score: ${atsScore}/100\nTemplate: ${selectedTemplate}`
+          "❌ Resume could not be saved after the credit was used.\n\nPlease contact support before trying again."
         );
 
-        /* ---------------------------------
-           Navigate to Saved Resume
-        --------------------------------- */
-
-        navigate(`/builder/${data.id}`);
+        return;
       }
+
+      /* =====================================
+         RESUME SAVED
+      ===================================== */
+
+      console.log(
+        "✅ Saved resume:",
+        data
+      );
+
+      setLastSaved("Just now");
+
+      /* =====================================
+         SUCCESS MESSAGE
+      ===================================== */
+
+      alert(
+        `✅ Resume created successfully!\n\n💳 1 credit used\n💳 Remaining credits: ${
+          remainingCredits ?? "updated"
+        }\n\nATS Score: ${atsScore}/100\nTemplate: ${selectedTemplate}`
+      );
+
+      /* =====================================
+         NAVIGATE TO SAVED RESUME
+      ===================================== */
+
+      navigate(`/builder/${data.id}`);
     } catch (error) {
       console.error(
-        "Failed to save resume:",
+        "❌ Failed to save resume:",
         error
       );
 
@@ -228,7 +448,7 @@ export default function BuilderHeader({
         "
       >
         {/* =================================
-            Left
+            LEFT
         ================================= */}
 
         <div className="flex items-center gap-4">
@@ -273,12 +493,12 @@ export default function BuilderHeader({
         </div>
 
         {/* =================================
-            Right
+            RIGHT
         ================================= */}
 
         <div className="flex items-center gap-4">
           {/* ---------------------------------
-              Selected Template
+              SELECTED TEMPLATE
           --------------------------------- */}
 
           <div
@@ -322,7 +542,7 @@ export default function BuilderHeader({
           </div>
 
           {/* ---------------------------------
-              Auto Save Status
+              AUTO SAVE STATUS
           --------------------------------- */}
 
           <div
@@ -366,11 +586,13 @@ export default function BuilderHeader({
           </div>
 
           {/* ---------------------------------
-              Download
+              DOWNLOAD
           --------------------------------- */}
 
           <button
+            type="button"
             onClick={onDownloadPDF}
+            disabled={saving}
             className="
               flex
               items-center
@@ -395,6 +617,9 @@ export default function BuilderHeader({
               hover:shadow-md
 
               active:scale-[0.98]
+
+              disabled:cursor-not-allowed
+              disabled:opacity-60
             "
           >
             <HiArrowDownTray size={20} />
@@ -403,10 +628,11 @@ export default function BuilderHeader({
           </button>
 
           {/* ---------------------------------
-              Save
+              SAVE
           --------------------------------- */}
 
           <button
+            type="button"
             onClick={handleSaveResume}
             disabled={saving}
             className="

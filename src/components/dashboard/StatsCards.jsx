@@ -1,113 +1,283 @@
 import { useEffect, useState } from "react";
+
 import {
   HiOutlineDocumentText,
-  HiOutlineSparkles,
-  HiOutlineCreditCard,
+  HiOutlineChartBar,
+  HiOutlineSquares2X2,
   HiOutlineArrowTrendingUp,
 } from "react-icons/hi2";
 
+import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
-import { getCreditBalance } from "../../services/creditService";
 
 export default function StatsCards() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
 
-  const [credits, setCredits] = useState(0);
-  const [creditsLoading, setCreditsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    resumesCreated: 0,
+    atsScore: 0,
+    templatesUsed: 0,
+    profileCompletion: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
 
   /* =========================================================
-     LOAD CREDIT BALANCE
+     LOAD REAL DASHBOARD STATISTICS
   ========================================================= */
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadCredits() {
-      if (authLoading) {
-        return;
-      }
-
+    async function loadStats() {
       if (!user) {
-        if (mounted) {
-          setCredits(0);
-          setCreditsLoading(false);
-        }
+        setStats({
+          resumesCreated: 0,
+          atsScore: 0,
+          templatesUsed: 0,
+          profileCompletion: 0,
+        });
+
+        setLoading(false);
 
         return;
       }
 
       try {
-        setCreditsLoading(true);
+        setLoading(true);
 
-        const balance = await getCreditBalance();
+        console.log(
+          "📊 Loading dashboard statistics for:",
+          user.id
+        );
 
-        if (mounted) {
-          setCredits(balance);
+        /* =====================================================
+           GET USER RESUMES
+        ===================================================== */
+
+        const {
+          data: resumes,
+          error: resumesError,
+        } = await supabase
+          .from("resumes")
+          .select(
+            "id, ats_score, template, created_at"
+          )
+          .eq("user_id", user.id);
+
+        if (resumesError) {
+          throw resumesError;
         }
+
+        console.log(
+          "✅ User resumes:",
+          resumes
+        );
+
+        /* =====================================================
+           RESUMES CREATED
+        ===================================================== */
+
+        const resumesCreated =
+          resumes?.length || 0;
+
+        /* =====================================================
+           AVERAGE ATS SCORE
+        ===================================================== */
+
+        let atsScore = 0;
+
+        if (resumesCreated > 0) {
+          const validScores =
+            resumes
+              .map((resume) =>
+                Number(resume.ats_score)
+              )
+              .filter(
+                (score) =>
+                  Number.isFinite(score)
+              );
+
+          if (validScores.length > 0) {
+            const totalScore =
+              validScores.reduce(
+                (total, score) =>
+                  total + score,
+                0
+              );
+
+            atsScore = Math.round(
+              totalScore /
+                validScores.length
+            );
+          }
+        }
+
+        /* =====================================================
+           UNIQUE TEMPLATES USED
+        ===================================================== */
+
+        const uniqueTemplates =
+          new Set(
+            (resumes || [])
+              .map(
+                (resume) =>
+                  resume.template
+              )
+              .filter(Boolean)
+          );
+
+        const templatesUsed =
+          uniqueTemplates.size;
+
+        /* =====================================================
+           PROFILE COMPLETION
+           
+           IMPORTANT:
+           This is temporarily calculated from
+           Supabase Auth profile information.
+
+           If your app has a profiles table,
+           we should connect this calculation
+           directly to that table instead.
+        ===================================================== */
+
+        const profileFields = [
+          user.email,
+          user.user_metadata?.full_name,
+          user.user_metadata?.avatar_url,
+        ];
+
+        const completedFields =
+          profileFields.filter(
+            Boolean
+          ).length;
+
+        const profileCompletion =
+          Math.round(
+            (completedFields /
+              profileFields.length) *
+              100
+          );
+
+        /* =====================================================
+           SAVE STATISTICS
+        ===================================================== */
+
+        setStats({
+          resumesCreated,
+          atsScore,
+          templatesUsed,
+          profileCompletion,
+        });
+
+        console.log(
+          "📊 Dashboard stats:",
+          {
+            resumesCreated,
+            atsScore,
+            templatesUsed,
+            profileCompletion,
+          }
+        );
       } catch (error) {
         console.error(
-          "Failed to load credit balance:",
+          "❌ Failed to load dashboard statistics:",
           error
         );
 
-        if (mounted) {
-          setCredits(0);
-        }
+        setStats({
+          resumesCreated: 0,
+          atsScore: 0,
+          templatesUsed: 0,
+          profileCompletion: 0,
+        });
       } finally {
-        if (mounted) {
-          setCreditsLoading(false);
-        }
+        setLoading(false);
       }
     }
 
-    loadCredits();
-
-    return () => {
-      mounted = false;
-    };
-  }, [user, authLoading]);
+    loadStats();
+  }, [user]);
 
   /* =========================================================
-     STATS
+     STATS CARDS
   ========================================================= */
 
-  const stats = [
+  const statCards = [
     {
       title: "Resumes Created",
-      value: "0",
-      description: "Total resumes",
+
+      value: loading
+        ? "..."
+        : stats.resumesCreated,
+
+      description:
+        stats.resumesCreated === 1
+          ? "1 resume saved"
+          : `${stats.resumesCreated} resumes saved`,
+
       icon: HiOutlineDocumentText,
+
       iconBg: "bg-blue-50",
+
       iconColor: "text-blue-600",
     },
 
     {
-      title: "AI Credits",
-      value: creditsLoading ? "..." : credits,
+      title: "ATS Score",
+
+      value: loading
+        ? "..."
+        : `${stats.atsScore}%`,
+
       description:
-        credits === 0 && !creditsLoading
-          ? "No credits remaining"
-          : "Credits available",
-      icon: HiOutlineSparkles,
+        stats.resumesCreated === 0
+          ? "Create a resume to get your score"
+          : "Average resume ATS score",
+
+      icon: HiOutlineChartBar,
+
       iconBg: "bg-indigo-50",
+
       iconColor: "text-indigo-600",
     },
 
     {
-      title: "Plan",
-      value: "Starter",
-      description: "Current subscription",
-      icon: HiOutlineCreditCard,
+      title: "Templates Used",
+
+      value: loading
+        ? "..."
+        : stats.templatesUsed,
+
+      description:
+        stats.templatesUsed === 0
+          ? "No templates used yet"
+          : stats.templatesUsed === 1
+          ? "1 template used"
+          : `${stats.templatesUsed} different templates`,
+
+      icon: HiOutlineSquares2X2,
+
       iconBg: "bg-emerald-50",
+
       iconColor: "text-emerald-600",
     },
 
     {
       title: "Profile",
-      value: "0%",
-      description: "Profile completion",
+
+      value: loading
+        ? "..."
+        : `${stats.profileCompletion}%`,
+
+      description:
+        stats.profileCompletion >= 100
+          ? "Profile complete"
+          : "Profile completion",
+
       icon: HiOutlineArrowTrendingUp,
+
       iconBg: "bg-purple-50",
+
       iconColor: "text-purple-600",
     },
   ];
@@ -119,7 +289,7 @@ export default function StatsCards() {
   return (
     <section>
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => {
+        {statCards.map((stat) => {
           const Icon = stat.icon;
 
           return (
@@ -132,10 +302,8 @@ export default function StatsCards() {
                 bg-white
                 p-6
                 shadow-sm
-
                 transition-all
                 duration-300
-
                 hover:-translate-y-1
                 hover:shadow-lg
               "
