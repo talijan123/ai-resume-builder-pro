@@ -1,6 +1,6 @@
-import Section from "../../ui/Section/Section";
-import SectionTitle from "../../ui/SectionTitle/SectionTitle";
-import SectionSubtitle from "../../ui/SectionSubtitle/SectionSubtitle";
+import Section from "../../UI/Section/Section";
+import SectionTitle from "../../UI/SectionTitle/SectionTitle";
+import SectionSubtitle from "../../UI/SectionSubtitle/SectionSubtitle";
 
 import TestimonialCard from "./TestimonialCard";
 import { testimonials } from "./testimonialsData";
