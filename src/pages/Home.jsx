@@ -9,7 +9,7 @@ import Testimonials from "../components/sections/Testimonials/Testimonials";
 import FAQ from "../components/sections/FAQ/FAQ";
 import CTA from "../components/sections/CTA/CTA";
 import Footer from "../components/layout/Footer/Footer";
-import ScrollToTop from "../components/ui/ScrollToTop/ScrollToTop";
+import ScrollToTop from "../components/UI/ScrollToTop/ScrollToTop";
 
 export default function Home() {
   return (

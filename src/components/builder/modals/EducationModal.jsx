@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import Modal from "../../ui/Modal";
+import Modal from "../../UI/Modal/Modal";
 
 const initialForm = {
   school: "",
