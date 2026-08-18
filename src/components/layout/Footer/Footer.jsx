@@ -1,4 +1,4 @@
-import Container from "../../ui/Container/Container";
+import Container from "../../UI/Container/Container";
 
 import FooterColumn from "./FooterColumn";
 import FooterSocials from "./FooterSocials";

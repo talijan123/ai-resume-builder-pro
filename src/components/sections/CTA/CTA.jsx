@@ -6,7 +6,7 @@ import {
   FaBolt,
 } from "react-icons/fa";
 
-import Section from "../../ui/Section/Section";
+import Section from "../../UI/Section/Section";
 
 export default function CTA() {
   return (
