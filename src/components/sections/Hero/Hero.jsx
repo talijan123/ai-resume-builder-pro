@@ -1,4 +1,4 @@
-import Container from "../../ui/Container/Container";
+import Container from "../../UI/Container/Container";
 
 import HeroContent from "./HeroContent";
 import HeroPreview from "./HeroPreview";

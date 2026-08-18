@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Section from "../../ui/Section/Section";
-import SectionTitle from "../../ui/SectionTitle/SectionTitle";
-import SectionSubtitle from "../../ui/SectionSubtitle/SectionSubtitle";
+import Section from "../../UI/Section/Section";
+import SectionTitle from "../../UI/SectionTitle/SectionTitle";
+import SectionSubtitle from "../../UI/SectionSubtitle/SectionSubtitle";
 
 import PricingCard from "./PricingCard";
 import PricingToggle from "./PricingToggle";
