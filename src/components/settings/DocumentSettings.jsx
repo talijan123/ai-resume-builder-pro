@@ -1,547 +1,969 @@
-import { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { useEffect, useState } from "react";
+import {
+  FileText,
+  Save,
+  CheckCircle2,
+  RotateCcw,
+  Download,
+  Eye,
+} from "lucide-react";
+
+import { useSettings } from "../../context/SettingsContext";
 
 /* =========================================================
-   SECURITY SETTINGS
+   DOCUMENT SETTINGS
 ========================================================= */
 
-export default function SecuritySettings() {
-  const [showCurrentPassword, setShowCurrentPassword] =
-    useState(false);
-
-  const [showNewPassword, setShowNewPassword] =
-    useState(false);
-
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
-
-  const [currentPassword, setCurrentPassword] =
-    useState("");
-
-  const [newPassword, setNewPassword] =
-    useState("");
-
-  const [confirmPassword, setConfirmPassword] =
-    useState("");
-
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+export default function DocumentSettings() {
+  const {
+    settings,
+    updateSettings,
+    saveSettings,
+    loading,
+    saving,
+  } = useSettings();
 
   /* =======================================================
-     CHANGE PASSWORD
+     LOCAL STATE
   ======================================================= */
 
-  const handleChangePassword = async (event) => {
-    event.preventDefault();
+  const [saved, setSaved] = useState(false);
 
-    setMessage("");
-    setError("");
+  const [documentSettings, setDocumentSettings] = useState({
+    defaultDocumentType: "resume",
+    defaultTemplate: "professional",
+    fontSize: "medium",
+    pageSize: "A4",
+    colorMode: "color",
+    showPhoto: true,
+    showContactInformation: true,
+    showSummary: true,
+    showSkills: true,
+    showEducation: true,
+    showExperience: true,
+    showProjects: true,
+    showCertifications: true,
+    showLanguages: true,
+    showReferences: false,
+    autoSave: true,
+    downloadFormat: "pdf",
+  });
 
-    /* Validation */
+  /* =======================================================
+     LOAD SETTINGS
+  ======================================================= */
 
-    if (!currentPassword) {
-      setError("Please enter your current password.");
+  useEffect(() => {
+    if (!settings) {
       return;
     }
 
-    if (!newPassword) {
-      setError("Please enter a new password.");
-      return;
-    }
+    setDocumentSettings((previous) => ({
+      ...previous,
 
-    if (newPassword.length < 8) {
-      setError(
-        "Your new password must be at least 8 characters long."
-      );
-      return;
-    }
+      defaultDocumentType:
+        settings.defaultDocumentType ||
+        settings.default_document_type ||
+        previous.defaultDocumentType,
 
-    if (newPassword !== confirmPassword) {
-      setError(
-        "New password and confirmation password do not match."
-      );
-      return;
-    }
+      defaultTemplate:
+        settings.defaultTemplate ||
+        settings.default_template ||
+        previous.defaultTemplate,
 
-    try {
-      setLoading(true);
+      fontSize:
+        settings.fontSize ||
+        settings.font_size ||
+        previous.fontSize,
 
-      /* -----------------------------------------------
-         Get current authenticated user
-      ------------------------------------------------ */
+      pageSize:
+        settings.pageSize ||
+        settings.page_size ||
+        previous.pageSize,
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      colorMode:
+        settings.colorMode ||
+        settings.color_mode ||
+        previous.colorMode,
 
-      if (userError) {
-        throw userError;
-      }
+      showPhoto:
+        settings.showPhoto ??
+        settings.show_photo ??
+        previous.showPhoto,
 
-      if (!user?.email) {
-        throw new Error(
-          "No authenticated user was found."
-        );
-      }
+      showContactInformation:
+        settings.showContactInformation ??
+        settings.show_contact_information ??
+        previous.showContactInformation,
 
-      /* -----------------------------------------------
-         Verify current password
-         
-         Supabase does not provide a direct
-         "verify password" method.
+      showSummary:
+        settings.showSummary ??
+        settings.show_summary ??
+        previous.showSummary,
 
-         We re-authenticate using the current
-         credentials.
-      ------------------------------------------------ */
+      showSkills:
+        settings.showSkills ??
+        settings.show_skills ??
+        previous.showSkills,
 
-      const { error: signInError } =
-        await supabase.auth.signInWithPassword({
-          email: user.email,
-          password: currentPassword,
-        });
+      showEducation:
+        settings.showEducation ??
+        settings.show_education ??
+        previous.showEducation,
 
-      if (signInError) {
-        throw new Error(
-          "Your current password is incorrect."
-        );
-      }
+      showExperience:
+        settings.showExperience ??
+        settings.show_experience ??
+        previous.showExperience,
 
-      /* -----------------------------------------------
-         Update password
-      ------------------------------------------------ */
+      showProjects:
+        settings.showProjects ??
+        settings.show_projects ??
+        previous.showProjects,
 
-      const { error: updateError } =
-        await supabase.auth.updateUser({
-          password: newPassword,
-        });
+      showCertifications:
+        settings.showCertifications ??
+        settings.show_certifications ??
+        previous.showCertifications,
 
-      if (updateError) {
-        throw updateError;
-      }
+      showLanguages:
+        settings.showLanguages ??
+        settings.show_languages ??
+        previous.showLanguages,
 
-      /* -----------------------------------------------
-         Success
-      ------------------------------------------------ */
+      showReferences:
+        settings.showReferences ??
+        settings.show_references ??
+        previous.showReferences,
 
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      autoSave:
+        settings.autoSave ??
+        settings.auto_save ??
+        previous.autoSave,
 
-      setMessage(
-        "Your password has been updated successfully."
-      );
-    } catch (err) {
-      console.error(
-        "Password update error:",
-        err
-      );
+      downloadFormat:
+        settings.downloadFormat ||
+        settings.download_format ||
+        previous.downloadFormat,
+    }));
+  }, [settings]);
 
-      setError(
-        err?.message ||
-          "Something went wrong while updating your password."
-      );
-    } finally {
-      setLoading(false);
-    }
+  /* =======================================================
+     UPDATE LOCAL SETTING
+  ======================================================= */
+
+  const updateLocalSetting = (field, value) => {
+    setDocumentSettings((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+
+    setSaved(false);
   };
 
   /* =======================================================
-     SIGN OUT OTHER SESSIONS
+     SAVE DOCUMENT SETTINGS
   ======================================================= */
 
-  const handleSignOutOtherSessions = async () => {
-    setMessage("");
-    setError("");
-
+  const handleSave = async () => {
     try {
-      setLoading(true);
+      const payload = {
+        ...documentSettings,
+
+        default_document_type:
+          documentSettings.defaultDocumentType,
+
+        default_template:
+          documentSettings.defaultTemplate,
+
+        font_size:
+          documentSettings.fontSize,
+
+        page_size:
+          documentSettings.pageSize,
+
+        color_mode:
+          documentSettings.colorMode,
+
+        show_photo:
+          documentSettings.showPhoto,
+
+        show_contact_information:
+          documentSettings.showContactInformation,
+
+        show_summary:
+          documentSettings.showSummary,
+
+        show_skills:
+          documentSettings.showSkills,
+
+        show_education:
+          documentSettings.showEducation,
+
+        show_experience:
+          documentSettings.showExperience,
+
+        show_projects:
+          documentSettings.showProjects,
+
+        show_certifications:
+          documentSettings.showCertifications,
+
+        show_languages:
+          documentSettings.showLanguages,
+
+        show_references:
+          documentSettings.showReferences,
+
+        auto_save:
+          documentSettings.autoSave,
+
+        download_format:
+          documentSettings.downloadFormat,
+      };
 
       /*
-        Supabase supports global sign-out.
-
-        This signs the user out of all sessions,
-        including the current session.
+        If your SettingsContext exposes saveSettings(),
+        use it. Otherwise updateSettings() will still
+        update the context state.
       */
 
-      const { error: signOutError } =
-        await supabase.auth.signOut({
-          scope: "global",
-        });
-
-      if (signOutError) {
-        throw signOutError;
+      if (typeof updateSettings === "function") {
+        await updateSettings(payload);
       }
 
-      setMessage(
-        "You have been signed out from all active sessions."
-      );
-    } catch (err) {
-      console.error(
-        "Global sign-out error:",
-        err
-      );
+      if (typeof saveSettings === "function") {
+        await saveSettings(payload);
+      }
 
-      setError(
-        err?.message ||
-          "Unable to sign out from other sessions."
+      setSaved(true);
+
+      window.setTimeout(() => {
+        setSaved(false);
+      }, 2500);
+    } catch (error) {
+      console.error(
+        "Failed to save document settings:",
+        error
       );
-    } finally {
-      setLoading(false);
     }
   };
+
+  /* =======================================================
+     RESET DOCUMENT SETTINGS
+  ======================================================= */
+
+  const handleReset = () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to reset your document settings?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDocumentSettings({
+      defaultDocumentType: "resume",
+      defaultTemplate: "professional",
+      fontSize: "medium",
+      pageSize: "A4",
+      colorMode: "color",
+      showPhoto: true,
+      showContactInformation: true,
+      showSummary: true,
+      showSkills: true,
+      showEducation: true,
+      showExperience: true,
+      showProjects: true,
+      showCertifications: true,
+      showLanguages: true,
+      showReferences: false,
+      autoSave: true,
+      downloadFormat: "pdf",
+    });
+
+    setSaved(false);
+  };
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
+  if (loading) {
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="animate-pulse space-y-5">
+          <div className="h-7 w-48 rounded-lg bg-slate-200" />
+          <div className="h-4 w-80 rounded bg-slate-100" />
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="h-12 rounded-xl bg-slate-100" />
+            <div className="h-12 rounded-xl bg-slate-100" />
+            <div className="h-12 rounded-xl bg-slate-100" />
+            <div className="h-12 rounded-xl bg-slate-100" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
+
       {/* =================================================
           HEADER
       ================================================= */}
 
       <div>
-        <div className="mb-2 inline-flex rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
-          Security
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">
+          <FileText size={14} />
+          Documents
         </div>
 
-        <h2 className="text-2xl font-black text-slate-900">
-          Security Settings
+        <h2 className="text-2xl font-black tracking-tight text-slate-900">
+          Document Settings
         </h2>
 
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-          Manage your password and protect access to your
-          account.
+          Customize how your resumes and other documents
+          are created, displayed, and downloaded.
         </p>
       </div>
 
       {/* =================================================
-          SECURITY STATUS
+          DEFAULT DOCUMENT
       ================================================= */}
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+        <SectionHeader
+          number="01"
+          title="Default Document"
+          description="Choose the document options used when you create a new document."
+        />
+
+        <div className="grid gap-5 md:grid-cols-2">
+
+          <SelectInput
+            label="Default Document Type"
+            value={documentSettings.defaultDocumentType}
+            onChange={(value) =>
+              updateLocalSetting(
+                "defaultDocumentType",
+                value
+              )
+            }
+            options={[
+              {
+                value: "resume",
+                label: "Resume",
+              },
+              {
+                value: "cv",
+                label: "CV",
+              },
+            ]}
+          />
+
+          <SelectInput
+            label="Default Template"
+            value={documentSettings.defaultTemplate}
+            onChange={(value) =>
+              updateLocalSetting(
+                "defaultTemplate",
+                value
+              )
+            }
+            options={[
+              {
+                value: "professional",
+                label: "Professional",
+              },
+              {
+                value: "modern",
+                label: "Modern",
+              },
+              {
+                value: "minimal",
+                label: "Minimal",
+              },
+              {
+                value: "creative",
+                label: "Creative",
+              },
+            ]}
+          />
+
+          <SelectInput
+            label="Font Size"
+            value={documentSettings.fontSize}
+            onChange={(value) =>
+              updateLocalSetting(
+                "fontSize",
+                value
+              )
+            }
+            options={[
+              {
+                value: "small",
+                label: "Small",
+              },
+              {
+                value: "medium",
+                label: "Medium",
+              },
+              {
+                value: "large",
+                label: "Large",
+              },
+            ]}
+          />
+
+          <SelectInput
+            label="Page Size"
+            value={documentSettings.pageSize}
+            onChange={(value) =>
+              updateLocalSetting(
+                "pageSize",
+                value
+              )
+            }
+            options={[
+              {
+                value: "A4",
+                label: "A4",
+              },
+              {
+                value: "letter",
+                label: "Letter",
+              },
+            ]}
+          />
+
+          <SelectInput
+            label="Document Color"
+            value={documentSettings.colorMode}
+            onChange={(value) =>
+              updateLocalSetting(
+                "colorMode",
+                value
+              )
+            }
+            options={[
+              {
+                value: "color",
+                label: "Color",
+              },
+              {
+                value: "grayscale",
+                label: "Grayscale",
+              },
+            ]}
+          />
+
+          <SelectInput
+            label="Download Format"
+            value={documentSettings.downloadFormat}
+            onChange={(value) =>
+              updateLocalSetting(
+                "downloadFormat",
+                value
+              )
+            }
+            options={[
+              {
+                value: "pdf",
+                label: "PDF",
+              },
+              {
+                value: "docx",
+                label: "DOCX",
+              },
+            ]}
+          />
+
+        </div>
+      </section>
+
+      {/* =================================================
+          DOCUMENT SECTIONS
+      ================================================= */}
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+        <SectionHeader
+          number="02"
+          title="Document Sections"
+          description="Choose which sections should be enabled by default."
+        />
+
+        <div className="grid gap-3 md:grid-cols-2">
+
+          <Toggle
+            label="Profile Photo"
+            description="Include your profile photo."
+            checked={documentSettings.showPhoto}
+            onChange={(value) =>
+              updateLocalSetting(
+                "showPhoto",
+                value
+              )
+            }
+          />
+
+          <Toggle
+            label="Contact Information"
+            description="Include email, phone, website and social links."
+            checked={
+              documentSettings.showContactInformation
+            }
+            onChange={(value) =>
+              updateLocalSetting(
+                "showContactInformation",
+                value
+              )
+            }
+          />
+
+          <Toggle
+            label="Professional Summary"
+            description="Include your professional summary."
+            checked={documentSettings.showSummary}
+            onChange={(value) =>
+              updateLocalSetting(
+                "showSummary",
+                value
+              )
+            }
+          />
+
+          <Toggle
+            label="Skills"
+            description="Include your skills section."
+            checked={documentSettings.showSkills}
+            onChange={(value) =>
+              updateLocalSetting(
+                "showSkills",
+                value
+              )
+            }
+          />
+
+          <Toggle
+            label="Education"
+            description="Include your education history."
+            checked={documentSettings.showEducation}
+            onChange={(value) =>
+              updateLocalSetting(
+                "showEducation",
+                value
+              )
+            }
+          />
+
+          <Toggle
+            label="Experience"
+            description="Include your professional experience."
+            checked={documentSettings.showExperience}
+            onChange={(value) =>
+              updateLocalSetting(
+                "showExperience",
+                value
+              )
+            }
+          />
+
+          <Toggle
+            label="Projects"
+            description="Include your projects."
+            checked={documentSettings.showProjects}
+            onChange={(value) =>
+              updateLocalSetting(
+                "showProjects",
+                value
+              )
+            }
+          />
+
+          <Toggle
+            label="Certifications"
+            description="Include your certifications."
+            checked={
+              documentSettings.showCertifications
+            }
+            onChange={(value) =>
+              updateLocalSetting(
+                "showCertifications",
+                value
+              )
+            }
+          />
+
+          <Toggle
+            label="Languages"
+            description="Include your languages."
+            checked={documentSettings.showLanguages}
+            onChange={(value) =>
+              updateLocalSetting(
+                "showLanguages",
+                value
+              )
+            }
+          />
+
+          <Toggle
+            label="References"
+            description="Include references in your document."
+            checked={documentSettings.showReferences}
+            onChange={(value) =>
+              updateLocalSetting(
+                "showReferences",
+                value
+              )
+            }
+          />
+
+        </div>
+      </section>
+
+      {/* =================================================
+          WORKFLOW
+      ================================================= */}
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+        <SectionHeader
+          number="03"
+          title="Document Workflow"
+          description="Control how the document editor behaves."
+        />
+
+        <Toggle
+          label="Auto Save"
+          description="Automatically save changes while working on a document."
+          checked={documentSettings.autoSave}
+          onChange={(value) =>
+            updateLocalSetting(
+              "autoSave",
+              value
+            )
+          }
+        />
+
+      </section>
+
+      {/* =================================================
+          DOCUMENT PREVIEW
+      ================================================= */}
+
+      <section className="rounded-3xl border border-blue-100 bg-blue-50 p-6">
+
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-xl">
-              🛡️
+
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-sm">
+              <Eye size={22} />
             </div>
 
             <div>
               <h3 className="font-black text-slate-900">
-                Account Security
+                Your document preferences are ready
               </h3>
 
-              <p className="mt-1 text-sm leading-6 text-slate-500">
-                Keep your password strong and never share it
-                with anyone.
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                New documents will use your selected
+                template, page size, sections and
+                download format.
               </p>
             </div>
+
           </div>
 
-          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-bold text-green-700">
-            <span className="h-2 w-2 rounded-full bg-green-500" />
-            Protected
+          <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm">
+            <Download size={16} />
+            {documentSettings.downloadFormat.toUpperCase()}
           </div>
+
         </div>
+
       </section>
 
       {/* =================================================
-          CHANGE PASSWORD
+          SAVE / RESET
       ================================================= */}
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-7">
-          <h3 className="text-lg font-black text-slate-900">
-            Change Password
-          </h3>
+      <section className="flex flex-col gap-4 rounded-3xl border border-blue-100 bg-blue-50 p-6 sm:flex-row sm:items-center sm:justify-between">
 
-          <p className="mt-1 text-sm text-slate-500">
-            Choose a strong password that you do not use
-            elsewhere.
-          </p>
-        </div>
+        <div>
 
-        <form
-          onSubmit={handleChangePassword}
-          className="space-y-5"
-        >
-          {/* Current Password */}
+          <div className="flex items-center gap-2">
 
-          <PasswordInput
-            label="Current Password"
-            value={currentPassword}
-            onChange={setCurrentPassword}
-            visible={showCurrentPassword}
-            onToggle={() =>
-              setShowCurrentPassword(
-                (previous) => !previous
-              )
-            }
-            placeholder="Enter your current password"
-          />
+            {saved && (
+              <CheckCircle2
+                size={18}
+                className="text-green-600"
+              />
+            )}
 
-          {/* New Password */}
-
-          <PasswordInput
-            label="New Password"
-            value={newPassword}
-            onChange={setNewPassword}
-            visible={showNewPassword}
-            onToggle={() =>
-              setShowNewPassword(
-                (previous) => !previous
-              )
-            }
-            placeholder="Enter your new password"
-          />
-
-          {/* Password requirements */}
-
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-xs font-bold text-slate-700">
-              Password requirements
-            </p>
-
-            <ul className="mt-3 space-y-2 text-xs text-slate-500">
-              <li>
-                • At least 8 characters
-              </li>
-
-              <li>
-                • Avoid using easily guessed information
-              </li>
-
-              <li>
-                • Do not reuse passwords from other accounts
-              </li>
-            </ul>
-          </div>
-
-          {/* Confirm Password */}
-
-          <PasswordInput
-            label="Confirm New Password"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            visible={showConfirmPassword}
-            onToggle={() =>
-              setShowConfirmPassword(
-                (previous) => !previous
-              )
-            }
-            placeholder="Confirm your new password"
-          />
-
-          {/* Error */}
-
-          {error && (
-            <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              {error}
-            </div>
-          )}
-
-          {/* Success */}
-
-          {message && (
-            <div className="rounded-2xl border border-green-100 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
-              {message}
-            </div>
-          )}
-
-          {/* Submit */}
-
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className="
-                rounded-xl
-                bg-gradient-to-r
-                from-blue-600
-                to-indigo-600
-                px-6
-                py-3
-                text-sm
-                font-black
-                text-white
-                shadow-md
-                shadow-blue-500/20
-                transition
-                hover:-translate-y-0.5
-                hover:shadow-lg
-                disabled:cursor-not-allowed
-                disabled:opacity-60
-              "
-            >
-              {loading
-                ? "Updating..."
-                : "Update Password"}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* =================================================
-          SESSION SECURITY
-      ================================================= */}
-
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-lg font-black text-slate-900">
-              Active Sessions
+            <h3 className="font-black text-slate-900">
+              {saved
+                ? "Document settings saved"
+                : "Keep your document preferences updated"}
             </h3>
 
-            <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
-              If you think someone else has access to your
-              account, sign out from all active sessions.
-            </p>
           </div>
+
+          <p className="mt-1 text-sm text-slate-600">
+            These preferences will be used when creating
+            and exporting your documents.
+          </p>
+
+        </div>
+
+        <div className="flex flex-wrap gap-3">
 
           <button
             type="button"
-            onClick={handleSignOutOtherSessions}
-            disabled={loading}
+            onClick={handleReset}
             className="
-              shrink-0
+              inline-flex
+              items-center
+              justify-center
+              gap-2
               rounded-xl
               border
               border-slate-200
               bg-white
               px-5
-              py-2.5
+              py-3
               text-sm
-              font-bold
+              font-black
               text-slate-700
               transition
               hover:bg-slate-50
+            "
+          >
+            <RotateCcw size={16} />
+            Reset
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="
+              inline-flex
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-gradient-to-r
+              from-blue-600
+              to-indigo-600
+              px-6
+              py-3
+              text-sm
+              font-black
+              text-white
+              shadow-md
+              shadow-blue-500/20
+              transition
+              hover:-translate-y-0.5
+              hover:shadow-lg
               disabled:cursor-not-allowed
               disabled:opacity-60
             "
           >
-            Sign Out All Sessions
+            {saved ? (
+              <>
+                <CheckCircle2 size={17} />
+                Saved
+              </>
+            ) : (
+              <>
+                <Save size={17} />
+                {saving
+                  ? "Saving..."
+                  : "Save Settings"}
+              </>
+            )}
           </button>
+
         </div>
+
       </section>
 
-      {/* =================================================
-          SECURITY TIPS
-      ================================================= */}
-
-      <section className="rounded-3xl border border-blue-100 bg-blue-50 p-6">
-        <h3 className="font-black text-slate-900">
-          Security Tips
-        </h3>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <SecurityTip
-            title="Use a strong password"
-            text="Use a password that is difficult for others to guess."
-          />
-
-          <SecurityTip
-            title="Never share your password"
-            text="Our team will never ask you for your password."
-          />
-
-          <SecurityTip
-            title="Check your account"
-            text="If something looks unusual, change your password immediately."
-          />
-        </div>
-      </section>
     </div>
   );
 }
 
 /* =========================================================
-   PASSWORD INPUT
+   SECTION HEADER
 ========================================================= */
 
-function PasswordInput({
+function SectionHeader({
+  number,
+  title,
+  description,
+}) {
+  return (
+    <div className="mb-7">
+
+      <div className="flex items-center gap-3">
+
+        <span
+          className="
+            flex
+            h-8
+            w-8
+            shrink-0
+            items-center
+            justify-center
+            rounded-lg
+            bg-blue-600
+            text-xs
+            font-black
+            text-white
+          "
+        >
+          {number}
+        </span>
+
+        <h3 className="text-lg font-black text-slate-900">
+          {title}
+        </h3>
+
+      </div>
+
+      <p className="mt-2 pl-11 text-sm leading-6 text-slate-500">
+        {description}
+      </p>
+
+    </div>
+  );
+}
+
+/* =========================================================
+   SELECT INPUT
+========================================================= */
+
+function SelectInput({
   label,
   value,
   onChange,
-  visible,
-  onToggle,
-  placeholder,
+  options,
 }) {
   return (
     <label className="block">
+
       <span className="mb-1.5 block text-sm font-bold text-slate-700">
         {label}
       </span>
 
-      <div className="relative">
-        <input
-          type={visible ? "text" : "password"}
-          value={value}
-          onChange={(event) =>
-            onChange(event.target.value)
-          }
-          placeholder={placeholder}
-          autoComplete="off"
-          className="
-            h-11
-            w-full
-            rounded-xl
-            border
-            border-slate-200
-            bg-white
-            px-4
-            pr-12
-            text-sm
-            text-slate-800
-            outline-none
-            transition
-            placeholder:text-slate-400
-            focus:border-blue-500
-            focus:ring-4
-            focus:ring-blue-100
-          "
-        />
+      <select
+        value={value || ""}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
+        className="
+          h-11
+          w-full
+          rounded-xl
+          border
+          border-slate-200
+          bg-white
+          px-4
+          text-sm
+          font-medium
+          text-slate-800
+          outline-none
+          transition
+          focus:border-blue-500
+          focus:ring-4
+          focus:ring-blue-100
+        "
+      >
+        {options.map((option) => (
+          <option
+            key={option.value}
+            value={option.value}
+          >
+            {option.label}
+          </option>
+        ))}
+      </select>
 
-        <button
-          type="button"
-          onClick={onToggle}
-          className="
-            absolute
-            right-3
-            top-1/2
-            -translate-y-1/2
-            rounded-lg
-            px-2
-            py-1
-            text-xs
-            font-bold
-            text-slate-500
-            transition
-            hover:bg-slate-100
-            hover:text-slate-800
-          "
-        >
-          {visible ? "Hide" : "Show"}
-        </button>
-      </div>
     </label>
   );
 }
 
 /* =========================================================
-   SECURITY TIP
+   TOGGLE
 ========================================================= */
 
-function SecurityTip({
-  title,
-  text,
+function Toggle({
+  label,
+  description,
+  checked,
+  onChange,
 }) {
   return (
-    <div className="rounded-2xl bg-white/70 p-4">
-      <h4 className="text-sm font-bold text-slate-800">
-        {title}
-      </h4>
+    <div className="flex items-center justify-between gap-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
 
-      <p className="mt-1 text-xs leading-5 text-slate-500">
-        {text}
-      </p>
+      <div className="min-w-0">
+
+        <h4 className="text-sm font-black text-slate-800">
+          {label}
+        </h4>
+
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          {description}
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() =>
+          onChange(!checked)
+        }
+        className={`
+          relative
+          h-6
+          w-11
+          shrink-0
+          rounded-full
+          transition
+          ${
+            checked
+              ? "bg-blue-600"
+              : "bg-slate-300"
+          }
+        `}
+      >
+        <span
+          className={`
+            absolute
+            top-1/2
+            h-4
+            w-4
+            -translate-y-1/2
+            rounded-full
+            bg-white
+            shadow-sm
+            transition
+            ${
+              checked
+                ? "left-6"
+                : "left-1"
+            }
+          `}
+        />
+      </button>
+
     </div>
   );
 }

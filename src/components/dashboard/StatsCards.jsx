@@ -22,21 +22,21 @@ export default function StatsCards() {
 
   const [loading, setLoading] = useState(true);
 
-  /* =========================================================
-     LOAD REAL DASHBOARD STATISTICS
-  ========================================================= */
-
   useEffect(() => {
+    let mounted = true;
+
     async function loadStats() {
       if (!user) {
-        setStats({
-          resumesCreated: 0,
-          atsScore: 0,
-          templatesUsed: 0,
-          profileCompletion: 0,
-        });
+        if (mounted) {
+          setStats({
+            resumesCreated: 0,
+            atsScore: 0,
+            templatesUsed: 0,
+            profileCompletion: 0,
+          });
 
-        setLoading(false);
+          setLoading(false);
+        }
 
         return;
       }
@@ -44,80 +44,81 @@ export default function StatsCards() {
       try {
         setLoading(true);
 
-        console.log(
-          "📊 Loading dashboard statistics for:",
-          user.id
-        );
+        const [
+          resumesResult,
+          profileResult,
+        ] = await Promise.all([
+          supabase
+            .from("resumes")
+            .select(
+              "id, ats_score, template, created_at"
+            )
+            .eq("user_id", user.id),
 
-        /* =====================================================
-           GET USER RESUMES
-        ===================================================== */
+          supabase
+            .from("profiles")
+            .select(`
+              full_name,
+              professional_title,
+              location,
+              summary,
+              years_of_experience,
+              desired_job_title,
+              email,
+              phone,
+              website,
+              linkedin,
+              github,
+              photo_url
+            `)
+            .eq("id", user.id)
+            .maybeSingle(),
+        ]);
 
-        const {
-          data: resumes,
-          error: resumesError,
-        } = await supabase
-          .from("resumes")
-          .select(
-            "id, ats_score, template, created_at"
-          )
-          .eq("user_id", user.id);
-
-        if (resumesError) {
-          throw resumesError;
+        if (resumesResult.error) {
+          throw resumesResult.error;
         }
 
-        console.log(
-          "✅ User resumes:",
-          resumes
-        );
+        if (profileResult.error) {
+          throw profileResult.error;
+        }
 
-        /* =====================================================
-           RESUMES CREATED
-        ===================================================== */
+        const resumes =
+          resumesResult.data || [];
+
+        const profile =
+          profileResult.data || {};
 
         const resumesCreated =
-          resumes?.length || 0;
-
-        /* =====================================================
-           AVERAGE ATS SCORE
-        ===================================================== */
+          resumes.length;
 
         let atsScore = 0;
 
-        if (resumesCreated > 0) {
-          const validScores =
-            resumes
-              .map((resume) =>
-                Number(resume.ats_score)
-              )
-              .filter(
-                (score) =>
-                  Number.isFinite(score)
-              );
+        const validScores = resumes
+          .map((resume) =>
+            Number(resume.ats_score)
+          )
+          .filter((score) =>
+            Number.isFinite(score)
+          );
 
-          if (validScores.length > 0) {
-            const totalScore =
-              validScores.reduce(
-                (total, score) =>
-                  total + score,
-                0
-              );
-
-            atsScore = Math.round(
-              totalScore /
-                validScores.length
+        if (validScores.length > 0) {
+          const totalScore =
+            validScores.reduce(
+              (total, score) =>
+                total + score,
+              0
             );
-          }
-        }
 
-        /* =====================================================
-           UNIQUE TEMPLATES USED
-        ===================================================== */
+          atsScore = Math.round(
+            totalScore /
+              validScores.length
+          );
+        }
 
         const uniqueTemplates =
           new Set(
-            (resumes || [])
+            resumes
               .map(
                 (resume) =>
                   resume.template
@@ -128,163 +129,229 @@ export default function StatsCards() {
         const templatesUsed =
           uniqueTemplates.size;
 
-        /* =====================================================
-           PROFILE COMPLETION
-           
-           IMPORTANT:
-           This is temporarily calculated from
-           Supabase Auth profile information.
-
-           If your app has a profiles table,
-           we should connect this calculation
-           directly to that table instead.
-        ===================================================== */
-
         const profileFields = [
-          user.email,
-          user.user_metadata?.full_name,
-          user.user_metadata?.avatar_url,
+          profile.full_name,
+          profile.professional_title,
+          profile.location,
+          profile.summary,
+          profile.years_of_experience,
+          profile.desired_job_title,
+          profile.email,
+          profile.phone,
+          profile.website,
+          profile.linkedin,
+          profile.github,
         ];
 
-        const completedFields =
+        const completedProfileFields =
           profileFields.filter(
-            Boolean
+            (field) =>
+              field !== null &&
+              field !== undefined &&
+              String(field).trim() !== ""
           ).length;
 
         const profileCompletion =
-          Math.round(
-            (completedFields /
-              profileFields.length) *
-              100
-          );
+          profileFields.length > 0
+            ? Math.round(
+                (completedProfileFields /
+                  profileFields.length) *
+                  100
+              )
+            : 0;
 
-        /* =====================================================
-           SAVE STATISTICS
-        ===================================================== */
-
-        setStats({
-          resumesCreated,
-          atsScore,
-          templatesUsed,
-          profileCompletion,
-        });
-
-        console.log(
-          "📊 Dashboard stats:",
-          {
+        if (mounted) {
+          setStats({
             resumesCreated,
             atsScore,
             templatesUsed,
             profileCompletion,
-          }
-        );
+          });
+        }
       } catch (error) {
         console.error(
-          "❌ Failed to load dashboard statistics:",
+          "Failed to load dashboard statistics:",
           error
         );
 
-        setStats({
-          resumesCreated: 0,
-          atsScore: 0,
-          templatesUsed: 0,
-          profileCompletion: 0,
-        });
+        if (mounted) {
+          setStats({
+            resumesCreated: 0,
+            atsScore: 0,
+            templatesUsed: 0,
+            profileCompletion: 0,
+          });
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     loadStats();
+
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
-  /* =========================================================
-     STATS CARDS
-  ========================================================= */
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    const profileChannel =
+      supabase
+        .channel(
+          `dashboard-profile-${user.id}`
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "profiles",
+            filter: `id=eq.${user.id}`,
+          },
+          async () => {
+            const {
+              data,
+              error,
+            } = await supabase
+              .from("profiles")
+              .select(`
+                full_name,
+                professional_title,
+                location,
+                summary,
+                years_of_experience,
+                desired_job_title,
+                email,
+                phone,
+                website,
+                linkedin,
+                github,
+                photo_url
+              `)
+              .eq("id", user.id)
+              .maybeSingle();
+
+            if (error) {
+              console.error(
+                "Failed to refresh profile stats:",
+                error
+              );
+
+              return;
+            }
+
+            const profile =
+              data || {};
+
+            const profileFields = [
+              profile.full_name,
+              profile.professional_title,
+              profile.location,
+              profile.summary,
+              profile.years_of_experience,
+              profile.desired_job_title,
+              profile.email,
+              profile.phone,
+              profile.website,
+              profile.linkedin,
+              profile.github,
+            ];
+
+            const completed =
+              profileFields.filter(
+                (field) =>
+                  field !== null &&
+                  field !== undefined &&
+                  String(field).trim() !== ""
+              ).length;
+
+            const profileCompletion =
+              Math.round(
+                (completed /
+                  profileFields.length) *
+                  100
+              );
+
+            setStats((previous) => ({
+              ...previous,
+              profileCompletion,
+            }));
+          }
+        )
+        .subscribe();
+
+    return () => {
+      supabase.removeChannel(
+        profileChannel
+      );
+    };
+  }, [user]);
 
   const statCards = [
     {
       title: "Resumes Created",
-
       value: loading
         ? "..."
         : stats.resumesCreated,
-
       description:
         stats.resumesCreated === 1
           ? "1 resume saved"
           : `${stats.resumesCreated} resumes saved`,
-
       icon: HiOutlineDocumentText,
-
       iconBg: "bg-blue-50",
-
       iconColor: "text-blue-600",
     },
 
     {
       title: "ATS Score",
-
       value: loading
         ? "..."
         : `${stats.atsScore}%`,
-
       description:
         stats.resumesCreated === 0
           ? "Create a resume to get your score"
           : "Average resume ATS score",
-
       icon: HiOutlineChartBar,
-
       iconBg: "bg-indigo-50",
-
       iconColor: "text-indigo-600",
     },
 
     {
       title: "Templates Used",
-
       value: loading
         ? "..."
         : stats.templatesUsed,
-
       description:
         stats.templatesUsed === 0
           ? "No templates used yet"
           : stats.templatesUsed === 1
           ? "1 template used"
           : `${stats.templatesUsed} different templates`,
-
       icon: HiOutlineSquares2X2,
-
       iconBg: "bg-emerald-50",
-
       iconColor: "text-emerald-600",
     },
 
     {
       title: "Profile",
-
       value: loading
         ? "..."
         : `${stats.profileCompletion}%`,
-
       description:
         stats.profileCompletion >= 100
           ? "Profile complete"
           : "Profile completion",
-
       icon: HiOutlineArrowTrendingUp,
-
       iconBg: "bg-purple-50",
-
       iconColor: "text-purple-600",
     },
   ];
-
-  /* =========================================================
-     RENDER
-  ========================================================= */
 
   return (
     <section>
@@ -308,33 +375,16 @@ export default function StatsCards() {
                 hover:shadow-lg
               "
             >
-              {/* Header */}
-
               <div className="flex items-start justify-between">
                 <div>
-                  <p
-                    className="
-                      text-sm
-                      font-semibold
-                      text-slate-500
-                    "
-                  >
+                  <p className="text-sm font-semibold text-slate-500">
                     {stat.title}
                   </p>
 
-                  <h3
-                    className="
-                      mt-3
-                      text-3xl
-                      font-black
-                      text-slate-900
-                    "
-                  >
+                  <h3 className="mt-3 text-3xl font-black text-slate-900">
                     {stat.value}
                   </h3>
                 </div>
-
-                {/* Icon */}
 
                 <div
                   className={`
@@ -354,18 +404,31 @@ export default function StatsCards() {
                 </div>
               </div>
 
-              {/* Description */}
-
-              <p
-                className="
-                  mt-4
-                  text-xs
-                  font-medium
-                  text-slate-400
-                "
-              >
+              <p className="mt-4 text-xs font-medium text-slate-400">
                 {stat.description}
               </p>
+
+              {stat.title === "Profile" &&
+                !loading && (
+                  <div className="mt-4">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="
+                          h-full
+                          rounded-full
+                          bg-gradient-to-r
+                          from-purple-600
+                          to-indigo-600
+                          transition-all
+                          duration-700
+                        "
+                        style={{
+                          width: `${stats.profileCompletion}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
             </div>
           );
         })}

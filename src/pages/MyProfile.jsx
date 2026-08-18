@@ -1,289 +1,474 @@
-import { useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
 import { useProfile } from "../context/ProfileContext";
+
+import DashboardHeader from "../components/layout/DashboardHeader";
+
+/* =========================================================
+   MY PROFILE
+========================================================= */
 
 export default function MyProfile() {
   const {
     profileData,
+    loading,
+    saving,
+    error,
+    saveProfile,
     updateProfile,
     updateContact,
     resetProfile,
+    uploadProfilePhoto,
+    removeProfilePhoto,
   } = useProfile();
 
   const [saved, setSaved] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState(
-    profileData?.profile?.photo || ""
-  );
+
+  const [photoPreview, setPhotoPreview] = useState("");
+
+  const [photoLoading, setPhotoLoading] =
+    useState(false);
 
   const fileInputRef = useRef(null);
 
-  const profile = profileData?.profile || {};
-  const contact = profileData?.contact || {};
+  /* =======================================================
+     PROFILE DATA
+  ======================================================= */
 
-  /* =========================================================
+  const profile =
+    profileData?.profile || {};
+
+  const contact =
+    profileData?.contact || {};
+
+  /* =======================================================
+     SYNC PHOTO WITH PROFILE CONTEXT
+  ======================================================= */
+
+  useEffect(() => {
+    setPhotoPreview(
+      profile?.photo || ""
+    );
+  }, [profile?.photo]);
+
+  /* =======================================================
      PROFILE COMPLETION
-  ========================================================= */
+  ======================================================= */
 
   const completion = useMemo(() => {
+    /*
+      These are the main fields used to calculate
+      profile completion.
+
+      Each filled field contributes equally.
+    */
+
     const fields = [
-      profile.fullName,
-      profile.professionalTitle,
-      profile.location,
-      profile.summary,
-      contact.email,
-      contact.phone,
-      contact.linkedin,
-      contact.github,
+      profile?.fullName,
+      profile?.professionalTitle,
+      profile?.location,
+      profile?.summary,
+      profile?.yearsOfExperience,
+      profile?.desiredJobTitle,
+
+      contact?.email,
+      contact?.phone,
+      contact?.website,
+      contact?.linkedin,
+      contact?.github,
     ];
 
     const completed = fields.filter(
       (field) =>
-        field &&
+        field !== null &&
+        field !== undefined &&
         String(field).trim() !== ""
     ).length;
+
+    if (fields.length === 0) {
+      return 0;
+    }
 
     return Math.round(
       (completed / fields.length) * 100
     );
   }, [profile, contact]);
 
-  /* =========================================================
+  /* =======================================================
      PROFILE CHANGE
-  ========================================================= */
+  ======================================================= */
 
-  const handleProfileChange = (field, value) => {
+  const handleProfileChange = (
+    field,
+    value
+  ) => {
     updateProfile(field, value);
+
     setSaved(false);
   };
 
-  /* =========================================================
+  /* =======================================================
      CONTACT CHANGE
-  ========================================================= */
+  ======================================================= */
 
-  const handleContactChange = (field, value) => {
+  const handleContactChange = (
+    field,
+    value
+  ) => {
     updateContact(field, value);
+
     setSaved(false);
   };
 
-  /* =========================================================
-     PHOTO UPLOAD
-  ========================================================= */
+  /* =======================================================
+     SAVE PROFILE
+  ======================================================= */
 
-  const handlePhotoUpload = (event) => {
-    const file = event.target.files?.[0];
+  const handleSave = async () => {
+    setSaved(false);
+
+    const result = await saveProfile();
+
+    if (result?.success) {
+      setSaved(true);
+
+      window.setTimeout(() => {
+        setSaved(false);
+      }, 2500);
+    }
+  };
+
+  /* =======================================================
+     PHOTO UPLOAD
+  ======================================================= */
+
+  const handlePhotoUpload = async (
+    event
+  ) => {
+    const file =
+      event.target.files?.[0];
 
     if (!file) {
       return;
     }
 
-    /* Only allow image files */
-
-    if (!file.type.startsWith("image/")) {
-      alert("Please select a valid image file.");
-      return;
-    }
-
-    /* Limit file size to 5MB */
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image size must be less than 5MB.");
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const imageData = reader.result;
-
-      setPhotoPreview(imageData);
-
-      updateProfile("photo", imageData);
-
-      setSaved(false);
-    };
-
-    reader.readAsDataURL(file);
-  };
-
-  /* =========================================================
-     REMOVE PHOTO
-  ========================================================= */
-
-  const handleRemovePhoto = () => {
-    setPhotoPreview("");
-
-    updateProfile("photo", "");
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
     setSaved(false);
+    setPhotoLoading(true);
+
+    try {
+      /*
+        The actual upload is handled by
+        ProfileContext.
+
+        It uploads the image to:
+        profile-photos/{userId}/profile.ext
+
+        Then stores the public URL inside:
+        profiles.photo_url
+      */
+
+      const result =
+        await uploadProfilePhoto(file);
+
+      if (!result?.success) {
+        return;
+      }
+
+      /*
+        ProfileContext already updates
+        profileData.profile.photo.
+      */
+
+      setPhotoPreview(
+        result.url || ""
+      );
+
+      setSaved(true);
+
+      window.setTimeout(() => {
+        setSaved(false);
+      }, 2500);
+    } catch (uploadError) {
+      console.error(
+        "Profile photo upload failed:",
+        uploadError
+      );
+    } finally {
+      setPhotoLoading(false);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
-  /* =========================================================
-     SAVE
-  ========================================================= */
+  /* =======================================================
+     REMOVE PHOTO
+  ======================================================= */
 
-  const handleSave = () => {
-    setSaved(true);
+  const handleRemovePhoto = async () => {
+    setSaved(false);
+    setPhotoLoading(true);
 
-    setTimeout(() => {
-      setSaved(false);
-    }, 2500);
+    try {
+      const result =
+        await removeProfilePhoto();
+
+      if (!result?.success) {
+        return;
+      }
+
+      setPhotoPreview("");
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
+      setSaved(true);
+
+      window.setTimeout(() => {
+        setSaved(false);
+      }, 2500);
+    } catch (removeError) {
+      console.error(
+        "Profile photo removal failed:",
+        removeError
+      );
+    } finally {
+      setPhotoLoading(false);
+    }
   };
 
-  /* =========================================================
-     RESET
-  ========================================================= */
+  /* =======================================================
+     RESET PROFILE
+  ======================================================= */
 
-  const handleReset = () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to reset your profile?"
-    );
+  const handleReset = async () => {
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to reset your profile? This will remove your saved profile information."
+      );
 
     if (!confirmed) {
       return;
     }
 
-    resetProfile();
-
-    setPhotoPreview("");
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
     setSaved(false);
+
+    const result =
+      await resetProfile();
+
+    if (result?.success) {
+      setPhotoPreview("");
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
+      setSaved(true);
+
+      window.setTimeout(() => {
+        setSaved(false);
+      }, 2500);
+    }
   };
+
+  /* =======================================================
+     HEADER ACTIONS
+  ======================================================= */
+
+  const headerActions = (
+    <div className="flex items-center gap-3">
+      {/* RESET */}
+
+      <button
+        type="button"
+        onClick={handleReset}
+        disabled={saving || loading}
+        className="
+          hidden
+          rounded-xl
+          border
+          border-slate-200
+          bg-white
+          px-4
+          py-2.5
+          text-sm
+          font-bold
+          text-slate-600
+          transition
+          hover:bg-slate-50
+          hover:text-slate-900
+          disabled:cursor-not-allowed
+          disabled:opacity-50
+          sm:block
+        "
+      >
+        Reset
+      </button>
+
+      {/* SAVE */}
+
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving || loading}
+        className="
+          rounded-xl
+          bg-gradient-to-r
+          from-blue-600
+          to-indigo-600
+          px-5
+          py-2.5
+          text-sm
+          font-bold
+          text-white
+          shadow-md
+          shadow-blue-500/20
+          transition
+          hover:-translate-y-0.5
+          hover:shadow-lg
+          active:scale-[0.98]
+          disabled:cursor-not-allowed
+          disabled:opacity-60
+        "
+      >
+        {saving
+          ? "Saving..."
+          : saved
+          ? "✓ Saved"
+          : "Save Profile"}
+      </button>
+    </div>
+  );
+
+  /* =======================================================
+     LOADING STATE
+  ======================================================= */
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <DashboardHeader
+          title="My Profile"
+          subtitle="Manage your personal and professional information."
+        />
+
+        <main
+          className="
+            mx-auto
+            max-w-[1400px]
+            px-4
+            py-8
+            sm:px-6
+            lg:px-8
+          "
+        >
+          <div
+            className="
+              flex
+              min-h-[500px]
+              items-center
+              justify-center
+            "
+          >
+            <div className="text-center">
+              <div
+                className="
+                  mx-auto
+                  h-10
+                  w-10
+                  animate-spin
+                  rounded-full
+                  border-4
+                  border-slate-200
+                  border-t-blue-600
+                "
+              />
+
+              <p className="mt-4 text-sm font-semibold text-slate-500">
+                Loading your profile...
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  /* =======================================================
+     PAGE
+  ======================================================= */
 
   return (
     <div className="min-h-screen bg-slate-50">
-
       {/* =====================================================
           HEADER
       ===================================================== */}
 
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
-
-          {/* LEFT */}
-
-          <div className="flex items-center gap-4">
-
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-xl
-                border
-                border-slate-200
-                bg-white
-                text-lg
-                text-slate-700
-                transition
-                hover:bg-slate-100
-              "
-            >
-              ←
-            </button>
-
-            <div>
-              <h1 className="text-xl font-black text-slate-900">
-                My Profile
-              </h1>
-
-              <p className="hidden text-sm text-slate-500 sm:block">
-                Manage your personal and professional information.
-              </p>
-            </div>
-
-          </div>
-
-          {/* RIGHT */}
-
-          <div className="flex items-center gap-3">
-
-            <button
-              type="button"
-              onClick={handleReset}
-              className="
-                hidden
-                rounded-xl
-                border
-                border-slate-200
-                bg-white
-                px-4
-                py-2.5
-                text-sm
-                font-bold
-                text-slate-600
-                transition
-                hover:bg-slate-50
-                sm:block
-              "
-            >
-              Reset
-            </button>
-
-            <button
-              type="button"
-              onClick={handleSave}
-              className="
-                rounded-xl
-                bg-gradient-to-r
-                from-blue-600
-                to-indigo-600
-                px-5
-                py-2.5
-                text-sm
-                font-bold
-                text-white
-                shadow-md
-                shadow-blue-500/20
-                transition
-                hover:-translate-y-0.5
-                hover:shadow-lg
-              "
-            >
-              {saved ? "✓ Saved" : "Save Profile"}
-            </button>
-
-          </div>
-
-        </div>
-
-      </header>
+      <DashboardHeader
+        title="My Profile"
+        subtitle="Manage your personal and professional information."
+        rightContent={headerActions}
+      />
 
       {/* =====================================================
           MAIN
       ===================================================== */}
 
-      <main className="mx-auto max-w-[1400px] px-6 py-8">
-
-        <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
-
+      <main
+        className="
+          mx-auto
+          max-w-[1400px]
+          px-4
+          py-6
+          sm:px-6
+          sm:py-8
+          lg:px-8
+        "
+      >
+        <div
+          className="
+            grid
+            gap-8
+            lg:grid-cols-[320px_minmax(0,1fr)]
+          "
+        >
           {/* =================================================
               SIDEBAR
           ================================================= */}
 
           <aside className="space-y-6">
+            {/* =================================================
+                PROFILE CARD
+            ================================================= */}
 
-            {/* PROFILE CARD */}
-
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
+            <section
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                p-6
+                shadow-sm
+              "
+            >
               <div className="text-center">
-
                 {/* PHOTO */}
 
-                <div className="relative mx-auto h-28 w-28">
-
+                <div
+                  className="
+                    relative
+                    mx-auto
+                    h-28
+                    w-28
+                  "
+                >
                   {photoPreview ? (
                     <img
                       src={photoPreview}
@@ -299,64 +484,115 @@ export default function MyProfile() {
                       "
                     />
                   ) : (
-                    <div className="
-                      flex
-                      h-28
-                      w-28
-                      items-center
-                      justify-center
-                      rounded-full
-                      bg-gradient-to-br
-                      from-blue-600
-                      to-indigo-600
-                      text-3xl
-                      font-black
-                      text-white
-                      shadow-lg
-                    ">
+                    <div
+                      className="
+                        flex
+                        h-28
+                        w-28
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-gradient-to-br
+                        from-blue-600
+                        to-indigo-600
+                        text-3xl
+                        font-black
+                        text-white
+                        shadow-lg
+                      "
+                    >
                       {profile.fullName
-                        ? getInitials(profile.fullName)
+                        ? getInitials(
+                            profile.fullName
+                          )
                         : "YN"}
                     </div>
                   )}
-
                 </div>
 
-                <h2 className="mt-5 text-xl font-black text-slate-900">
-                  {profile.fullName || "Your Name"}
+                {/* NAME */}
+
+                <h2
+                  className="
+                    mt-5
+                    text-xl
+                    font-black
+                    text-slate-900
+                  "
+                >
+                  {profile.fullName ||
+                    "Your Name"}
                 </h2>
 
-                <p className="mt-1 text-sm font-semibold text-blue-600">
+                {/* TITLE */}
+
+                <p
+                  className="
+                    mt-1
+                    text-sm
+                    font-semibold
+                    text-blue-600
+                  "
+                >
                   {profile.professionalTitle ||
                     "Professional Title"}
                 </p>
 
+                {/* LOCATION */}
+
                 {profile.location && (
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p
+                    className="
+                      mt-2
+                      text-xs
+                      text-slate-500
+                    "
+                  >
                     📍 {profile.location}
                   </p>
                 )}
-
               </div>
 
               {/* COMPLETION */}
 
               <div className="mt-7">
-
-                <div className="mb-2 flex items-center justify-between">
-
-                  <span className="text-xs font-bold text-slate-600">
+                <div
+                  className="
+                    mb-2
+                    flex
+                    items-center
+                    justify-between
+                  "
+                >
+                  <span
+                    className="
+                      text-xs
+                      font-bold
+                      text-slate-600
+                    "
+                  >
                     Profile Completion
                   </span>
 
-                  <span className="text-xs font-black text-blue-600">
+                  <span
+                    className="
+                      text-xs
+                      font-black
+                      text-blue-600
+                    "
+                  >
                     {completion}%
                   </span>
-
                 </div>
 
-                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-
+                <div
+                  className="
+                    h-2
+                    overflow-hidden
+                    rounded-full
+                    bg-slate-100
+                  "
+                >
                   <div
                     className="
                       h-full
@@ -371,23 +607,43 @@ export default function MyProfile() {
                       width: `${completion}%`,
                     }}
                   />
-
                 </div>
 
+                <p className="mt-3 text-xs leading-5 text-slate-400">
+                  {completion === 100
+                    ? "Your profile is complete."
+                    : "Complete more information to improve your profile."}
+                </p>
               </div>
-
             </section>
 
-            {/* PROFILE TIPS */}
+            {/* =================================================
+                PROFILE TIPS
+            ================================================= */}
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">
+            <section
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                p-6
+                shadow-sm
+              "
+            >
+              <h3
+                className="
+                  text-sm
+                  font-black
+                  uppercase
+                  tracking-widest
+                  text-slate-900
+                "
+              >
                 Profile Tips
               </h3>
 
               <div className="mt-5 space-y-4">
-
                 <Tip
                   title="Add a professional photo"
                   text="Use a clear and professional profile photo."
@@ -407,11 +663,8 @@ export default function MyProfile() {
                   title="Write a strong summary"
                   text="Keep your professional summary clear and focused."
                 />
-
               </div>
-
             </section>
-
           </aside>
 
           {/* =================================================
@@ -419,25 +672,82 @@ export default function MyProfile() {
           ================================================= */}
 
           <div className="space-y-8">
+            {/* =================================================
+                ERROR
+            ================================================= */}
+
+            {error && (
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-red-100
+                  bg-red-50
+                  px-5
+                  py-4
+                  text-sm
+                  font-medium
+                  text-red-700
+                "
+              >
+                {error}
+              </div>
+            )}
+
+            {/* =================================================
+                SUCCESS
+            ================================================= */}
+
+            {saved && (
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-green-100
+                  bg-green-50
+                  px-5
+                  py-4
+                  text-sm
+                  font-medium
+                  text-green-700
+                "
+              >
+                ✓ Your profile has been saved successfully.
+              </div>
+            )}
 
             {/* =================================================
                 PHOTO
             ================================================= */}
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
+            <section
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                p-6
+                shadow-sm
+              "
+            >
               <SectionHeader
                 number="01"
                 title="Profile Photo"
                 description="Upload a professional photo for your profile."
               />
 
-              <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-
+              <div
+                className="
+                  flex
+                  flex-col
+                  gap-6
+                  sm:flex-row
+                  sm:items-center
+                "
+              >
                 {/* PHOTO */}
 
                 <div className="shrink-0">
-
                   {photoPreview ? (
                     <img
                       src={photoPreview}
@@ -452,28 +762,28 @@ export default function MyProfile() {
                       "
                     />
                   ) : (
-                    <div className="
-                      flex
-                      h-28
-                      w-28
-                      items-center
-                      justify-center
-                      rounded-2xl
-                      bg-slate-100
-                      text-3xl
-                      font-black
-                      text-slate-400
-                    ">
+                    <div
+                      className="
+                        flex
+                        h-28
+                        w-28
+                        items-center
+                        justify-center
+                        rounded-2xl
+                        bg-slate-100
+                        text-3xl
+                        font-black
+                        text-slate-400
+                      "
+                    >
                       👤
                     </div>
                   )}
-
                 </div>
 
                 {/* UPLOAD */}
 
                 <div>
-
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -484,6 +794,7 @@ export default function MyProfile() {
 
                   <button
                     type="button"
+                    disabled={photoLoading}
                     onClick={() =>
                       fileInputRef.current?.click()
                     }
@@ -497,15 +808,22 @@ export default function MyProfile() {
                       text-white
                       transition
                       hover:bg-blue-700
+                      disabled:cursor-not-allowed
+                      disabled:opacity-60
                     "
                   >
-                    Upload Image
+                    {photoLoading
+                      ? "Uploading..."
+                      : "Upload Image"}
                   </button>
 
                   {photoPreview && (
                     <button
                       type="button"
-                      onClick={handleRemovePhoto}
+                      disabled={photoLoading}
+                      onClick={
+                        handleRemovePhoto
+                      }
                       className="
                         ml-3
                         rounded-xl
@@ -519,173 +837,217 @@ export default function MyProfile() {
                         text-red-600
                         transition
                         hover:bg-red-50
+                        disabled:cursor-not-allowed
+                        disabled:opacity-60
                       "
                     >
                       Remove
                     </button>
                   )}
 
-                  <p className="mt-3 text-xs text-slate-400">
+                  <p
+                    className="
+                      mt-3
+                      text-xs
+                      text-slate-400
+                    "
+                  >
                     JPG, PNG or WebP. Maximum size: 5MB.
                   </p>
-
                 </div>
-
               </div>
-
             </section>
 
             {/* =================================================
                 PERSONAL INFORMATION
             ================================================= */}
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
+            <section
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                p-6
+                shadow-sm
+              "
+            >
               <SectionHeader
                 number="02"
                 title="Personal Information"
                 description="Basic information that identifies you."
               />
 
-              <div className="grid gap-5 md:grid-cols-2">
-
+              <div
+                className="
+                  grid
+                  gap-5
+                  md:grid-cols-2
+                "
+              >
                 <Input
                   label="Full Name"
-                  value={profile.fullName}
+                  value={
+                    profile.fullName
+                  }
                   onChange={(value) =>
                     handleProfileChange(
                       "fullName",
                       value
                     )
                   }
-                  placeholder="Talal Hassan"
                 />
 
                 <Input
                   label="Location"
-                  value={profile.location}
+                  value={
+                    profile.location
+                  }
                   onChange={(value) =>
                     handleProfileChange(
                       "location",
                       value
                     )
                   }
-                  placeholder="Abbottabad, Pakistan"
                 />
 
                 <Input
                   label="Years of Experience"
-                  value={profile.yearsOfExperience}
+                  value={
+                    profile.yearsOfExperience
+                  }
                   onChange={(value) =>
                     handleProfileChange(
                       "yearsOfExperience",
                       value
                     )
                   }
-                  placeholder="2"
                 />
 
                 <Input
                   label="Desired Job Title"
-                  value={profile.desiredJobTitle}
+                  value={
+                    profile.desiredJobTitle
+                  }
                   onChange={(value) =>
                     handleProfileChange(
                       "desiredJobTitle",
                       value
                     )
                   }
-                  placeholder="Frontend Developer"
                 />
-
               </div>
-
             </section>
 
             {/* =================================================
                 CONTACT
             ================================================= */}
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
+            <section
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                p-6
+                shadow-sm
+              "
+            >
               <SectionHeader
                 number="03"
                 title="Contact Information"
                 description="Add the contact details employers can use."
               />
 
-              <div className="grid gap-5 md:grid-cols-2">
-
+              <div
+                className="
+                  grid
+                  gap-5
+                  md:grid-cols-2
+                "
+              >
                 <Input
                   label="Email"
                   type="email"
-                  value={contact.email}
+                  value={
+                    contact.email
+                  }
                   onChange={(value) =>
                     handleContactChange(
                       "email",
                       value
                     )
                   }
-                  placeholder="talal@example.com"
                 />
 
                 <Input
                   label="Phone"
-                  value={contact.phone}
+                  value={
+                    contact.phone
+                  }
                   onChange={(value) =>
                     handleContactChange(
                       "phone",
                       value
                     )
                   }
-                  placeholder="+92 300 1234567"
                 />
 
                 <Input
                   label="Website"
-                  value={contact.website}
+                  value={
+                    contact.website
+                  }
                   onChange={(value) =>
                     handleContactChange(
                       "website",
                       value
                     )
                   }
-                  placeholder="https://yourwebsite.com"
                 />
 
                 <Input
                   label="LinkedIn"
-                  value={contact.linkedin}
+                  value={
+                    contact.linkedin
+                  }
                   onChange={(value) =>
                     handleContactChange(
                       "linkedin",
                       value
                     )
                   }
-                  placeholder="https://linkedin.com/in/yourname"
                 />
 
                 <Input
                   label="GitHub"
-                  value={contact.github}
+                  value={
+                    contact.github
+                  }
                   onChange={(value) =>
                     handleContactChange(
                       "github",
                       value
                     )
                   }
-                  placeholder="https://github.com/username"
                 />
-
               </div>
-
             </section>
 
             {/* =================================================
                 PROFESSIONAL
             ================================================= */}
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
+            <section
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                p-6
+                shadow-sm
+              "
+            >
               <SectionHeader
                 number="04"
                 title="Professional Information"
@@ -693,22 +1055,24 @@ export default function MyProfile() {
               />
 
               <div className="space-y-5">
-
                 <Input
                   label="Professional Title"
-                  value={profile.professionalTitle}
+                  value={
+                    profile.professionalTitle
+                  }
                   onChange={(value) =>
                     handleProfileChange(
                       "professionalTitle",
                       value
                     )
                   }
-                  placeholder="Frontend Developer"
                 />
 
                 <Textarea
                   label="Professional Summary"
-                  value={profile.summary}
+                  value={
+                    profile.summary
+                  }
                   onChange={(value) =>
                     handleProfileChange(
                       "summary",
@@ -716,35 +1080,56 @@ export default function MyProfile() {
                     )
                   }
                   rows={7}
-                  placeholder="Write a short professional summary about your experience, skills, strengths, and career goals."
                 />
-
               </div>
-
             </section>
 
             {/* =================================================
                 SAVE
             ================================================= */}
 
-            <section className="flex flex-col items-center justify-between gap-4 rounded-3xl border border-blue-100 bg-blue-50 p-6 sm:flex-row">
-
+            <section
+              className="
+                flex
+                flex-col
+                items-center
+                justify-between
+                gap-4
+                rounded-3xl
+                border
+                border-blue-100
+                bg-blue-50
+                p-6
+                sm:flex-row
+              "
+            >
               <div>
-
-                <h3 className="font-black text-slate-900">
+                <h3
+                  className="
+                    font-black
+                    text-slate-900
+                  "
+                >
                   Keep your profile updated
                 </h3>
 
-                <p className="mt-1 text-sm text-slate-600">
-                  Your profile information can be reused
-                  when creating resumes and cover letters.
+                <p
+                  className="
+                    mt-1
+                    text-sm
+                    text-slate-600
+                  "
+                >
+                  Your profile information can be
+                  reused when creating resumes and
+                  cover letters.
                 </p>
-
               </div>
 
               <button
                 type="button"
                 onClick={handleSave}
+                disabled={saving}
                 className="
                   shrink-0
                   rounded-xl
@@ -759,21 +1144,20 @@ export default function MyProfile() {
                   transition
                   hover:-translate-y-0.5
                   hover:bg-blue-700
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
                 "
               >
-                {saved
+                {saving
+                  ? "Saving..."
+                  : saved
                   ? "✓ Profile Saved"
                   : "Save Changes"}
               </button>
-
             </section>
-
           </div>
-
         </div>
-
       </main>
-
     </div>
   );
 }
@@ -789,34 +1173,45 @@ function SectionHeader({
 }) {
   return (
     <div className="mb-7">
-
       <div className="flex items-center gap-3">
-
-        <span className="
-          flex
-          h-8
-          w-8
-          items-center
-          justify-center
-          rounded-lg
-          bg-blue-600
-          text-xs
-          font-black
-          text-white
-        ">
+        <span
+          className="
+            flex
+            h-8
+            w-8
+            items-center
+            justify-center
+            rounded-lg
+            bg-blue-600
+            text-xs
+            font-black
+            text-white
+          "
+        >
           {number}
         </span>
 
-        <h2 className="text-lg font-black text-slate-900">
+        <h2
+          className="
+            text-lg
+            font-black
+            text-slate-900
+          "
+        >
           {title}
         </h2>
-
       </div>
 
-      <p className="mt-2 pl-11 text-sm text-slate-500">
+      <p
+        className="
+          mt-2
+          pl-11
+          text-sm
+          text-slate-500
+        "
+      >
         {description}
       </p>
-
     </div>
   );
 }
@@ -829,13 +1224,19 @@ function Input({
   label,
   value,
   onChange,
-  placeholder,
   type = "text",
 }) {
   return (
     <label className="block">
-
-      <span className="mb-1.5 block text-sm font-bold text-slate-700">
+      <span
+        className="
+          mb-1.5
+          block
+          text-sm
+          font-bold
+          text-slate-700
+        "
+      >
         {label}
       </span>
 
@@ -843,9 +1244,10 @@ function Input({
         type={type}
         value={value || ""}
         onChange={(event) =>
-          onChange(event.target.value)
+          onChange(
+            event.target.value
+          )
         }
-        placeholder={placeholder}
         className="
           h-11
           w-full
@@ -864,7 +1266,6 @@ function Input({
           focus:ring-blue-100
         "
       />
-
     </label>
   );
 }
@@ -877,13 +1278,19 @@ function Textarea({
   label,
   value,
   onChange,
-  placeholder,
   rows = 5,
 }) {
   return (
     <label className="block">
-
-      <span className="mb-1.5 block text-sm font-bold text-slate-700">
+      <span
+        className="
+          mb-1.5
+          block
+          text-sm
+          font-bold
+          text-slate-700
+        "
+      >
         {label}
       </span>
 
@@ -891,9 +1298,10 @@ function Textarea({
         rows={rows}
         value={value || ""}
         onChange={(event) =>
-          onChange(event.target.value)
+          onChange(
+            event.target.value
+          )
         }
-        placeholder={placeholder}
         className="
           w-full
           resize-y
@@ -908,13 +1316,11 @@ function Textarea({
           text-slate-800
           outline-none
           transition
-          placeholder:text-slate-400
           focus:border-blue-500
           focus:ring-4
           focus:ring-blue-100
         "
       />
-
     </label>
   );
 }
@@ -923,18 +1329,38 @@ function Textarea({
    TIP
 ========================================================= */
 
-function Tip({ title, text }) {
+function Tip({
+  title,
+  text,
+}) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4">
-
-      <h4 className="text-sm font-bold text-slate-800">
+    <div
+      className="
+        rounded-2xl
+        bg-slate-50
+        p-4
+      "
+    >
+      <h4
+        className="
+          text-sm
+          font-bold
+          text-slate-800
+        "
+      >
         {title}
       </h4>
 
-      <p className="mt-1 text-xs leading-5 text-slate-500">
+      <p
+        className="
+          mt-1
+          text-xs
+          leading-5
+          text-slate-500
+        "
+      >
         {text}
       </p>
-
     </div>
   );
 }
@@ -944,7 +1370,7 @@ function Tip({ title, text }) {
 ========================================================= */
 
 function getInitials(name) {
-  return name
+  return String(name)
     .trim()
     .split(/\s+/)
     .slice(0, 2)

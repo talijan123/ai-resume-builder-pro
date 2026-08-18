@@ -1,18 +1,27 @@
 import { useState } from "react";
+
 import {
   User,
+  Shield,
   Palette,
   FileText,
   AlertTriangle,
 } from "lucide-react";
 
+import DashboardHeader from "../components/layout/DashboardHeader";
+
 import SettingsSidebar from "../components/settings/SettingsSidebar";
 import AccountSettings from "../components/settings/AccountSettings";
+import SecuritySettings from "../components/settings/SecuritySettings";
 import AppearanceSettings from "../components/settings/AppearanceSettings";
 import DocumentSettings from "../components/settings/DocumentSettings";
 import DangerZone from "../components/settings/DangerZone";
 
 import { useSettings } from "../context/SettingsContext";
+
+/* =========================================================
+   SETTINGS PAGE
+========================================================= */
 
 export default function Settings() {
   const { settings } = useSettings();
@@ -20,12 +29,23 @@ export default function Settings() {
   const [activeSection, setActiveSection] =
     useState("account");
 
+  /* =========================================================
+     SETTINGS SECTIONS
+  ========================================================= */
+
   const sections = [
     {
       id: "account",
       label: "Account",
       description: "Manage your account",
       icon: User,
+    },
+
+    {
+      id: "security",
+      label: "Security",
+      description: "Password and account security",
+      icon: Shield,
     },
 
     {
@@ -50,77 +70,103 @@ export default function Settings() {
     },
   ];
 
+  /* =========================================================
+     SECTION CHANGE
+  ========================================================= */
+
+  const handleSectionChange = (sectionId) => {
+    /*
+      Make sure only valid section IDs
+      can become active.
+    */
+
+    const exists = sections.some(
+      (section) =>
+        section.id === sectionId
+    );
+
+    if (!exists) {
+      setActiveSection("account");
+      return;
+    }
+
+    setActiveSection(sectionId);
+  };
+
+  /* =========================================================
+     ACTIVE SECTION
+  ========================================================= */
+
   const renderActiveSection = () => {
     switch (activeSection) {
+      /* -----------------------------------------------
+         ACCOUNT
+      ----------------------------------------------- */
+
       case "account":
         return <AccountSettings />;
+
+      /* -----------------------------------------------
+         SECURITY
+      ----------------------------------------------- */
+
+      case "security":
+        return <SecuritySettings />;
+
+      /* -----------------------------------------------
+         APPEARANCE
+      ----------------------------------------------- */
 
       case "appearance":
         return <AppearanceSettings />;
 
+      /* -----------------------------------------------
+         DOCUMENTS
+      ----------------------------------------------- */
+
       case "documents":
         return <DocumentSettings />;
 
+      /* -----------------------------------------------
+         DANGER ZONE
+      ----------------------------------------------- */
+
       case "danger":
         return <DangerZone />;
+
+      /* -----------------------------------------------
+         FALLBACK
+      ----------------------------------------------- */
 
       default:
         return <AccountSettings />;
     }
   };
 
+  /* =========================================================
+     PAGE
+  ========================================================= */
+
   return (
     <div className="min-h-screen bg-slate-50">
+
       {/* =====================================================
-          HEADER
+          SHARED DASHBOARD HEADER
       ===================================================== */}
 
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
-          {/* Left */}
-
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-xl
-                border
-                border-slate-200
-                bg-white
-                text-slate-700
-                transition
-                hover:bg-slate-100
-              "
-            >
-              ←
-            </button>
-
-            <div>
-              <h1 className="text-xl font-black text-slate-900">
-                Settings
-              </h1>
-
-              <p className="hidden text-sm text-slate-500 sm:block">
-                Manage your account, preferences, and
-                document settings.
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader
+        title="Settings"
+        subtitle="Manage your account, security, preferences, and document settings."
+      />
 
       {/* =====================================================
           MAIN
       ===================================================== */}
 
       <main className="mx-auto max-w-[1400px] px-6 py-8">
+
         <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
+
           {/* =================================================
               SIDEBAR
           ================================================= */}
@@ -129,7 +175,9 @@ export default function Settings() {
             <SettingsSidebar
               sections={sections}
               activeSection={activeSection}
-              onSectionChange={setActiveSection}
+              onSectionChange={
+                handleSectionChange
+              }
             />
           </aside>
 
@@ -138,10 +186,15 @@ export default function Settings() {
           ================================================= */}
 
           <section className="min-w-0">
+
             {renderActiveSection()}
+
           </section>
+
         </div>
+
       </main>
+
     </div>
   );
 }

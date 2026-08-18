@@ -16,6 +16,12 @@ import { supabase } from "../lib/supabase";
 const ProfileContext = createContext(null);
 
 /* =========================================================
+   STORAGE CONFIGURATION
+========================================================= */
+
+const PROFILE_PHOTO_BUCKET = "profile-photos";
+
+/* =========================================================
    INITIAL PROFILE DATA
 ========================================================= */
 
@@ -78,7 +84,7 @@ function createProfileData(data = {}) {
 }
 
 /* =========================================================
-   CONVERT SUPABASE ROW → PROFILE DATA
+   SUPABASE ROW → PROFILE DATA
 ========================================================= */
 
 function supabaseRowToProfile(row) {
@@ -89,23 +95,41 @@ function supabaseRowToProfile(row) {
   return createProfileData({
     profile: {
       photo: row.photo_url || "",
-      fullName: row.full_name || "",
+
+      fullName:
+        row.full_name || "",
+
       professionalTitle:
         row.professional_title || "",
-      location: row.location || "",
-      summary: row.summary || "",
+
+      location:
+        row.location || "",
+
+      summary:
+        row.summary || "",
+
       yearsOfExperience:
         row.years_of_experience || "",
+
       desiredJobTitle:
         row.desired_job_title || "",
     },
 
     contact: {
-      email: row.email || "",
-      phone: row.phone || "",
-      website: row.website || "",
-      linkedin: row.linkedin || "",
-      github: row.github || "",
+      email:
+        row.email || "",
+
+      phone:
+        row.phone || "",
+
+      website:
+        row.website || "",
+
+      linkedin:
+        row.linkedin || "",
+
+      github:
+        row.github || "",
     },
 
     skills: Array.isArray(row.skills)
@@ -184,12 +208,13 @@ function profileDataToSupabaseRow(
         ? profileData.experience
         : [],
 
-    updated_at: new Date().toISOString(),
+    updated_at:
+      new Date().toISOString(),
   };
 }
 
 /* =========================================================
-   PROVIDER
+   PROFILE PROVIDER
 ========================================================= */
 
 export function ProfileProvider({
@@ -206,11 +231,14 @@ export function ProfileProvider({
 
   const [user, setUser] = useState(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] =
+    useState(false);
 
-  const [error, setError] = useState(null);
+  const [error, setError] =
+    useState(null);
 
   /* =======================================================
      GET CURRENT USER
@@ -242,7 +270,7 @@ export function ProfileProvider({
   );
 
   /* =======================================================
-     LOAD PROFILE FROM SUPABASE
+     LOAD PROFILE
   ======================================================= */
 
   const loadProfile = useCallback(
@@ -252,17 +280,28 @@ export function ProfileProvider({
 
       try {
         const activeUser =
-          currentUser || (await getCurrentUser());
+          currentUser ||
+          (await getCurrentUser());
+
+        /* -----------------------------------------------
+           NO USER
+        ------------------------------------------------ */
 
         if (!activeUser) {
           setUser(null);
+
           setProfileData(
             createProfileData()
           );
+
           return;
         }
 
         setUser(activeUser);
+
+        /* -----------------------------------------------
+           GET PROFILE
+        ------------------------------------------------ */
 
         const {
           data,
@@ -278,16 +317,17 @@ export function ProfileProvider({
         }
 
         /* =================================================
-           PROFILE DOES NOT EXIST
+           CREATE PROFILE IF IT DOES NOT EXIST
         ================================================= */
 
         if (!data) {
-          const newProfile = createProfileData({
-            contact: {
-              email:
-                activeUser.email || "",
-            },
-          });
+          const newProfile =
+            createProfileData({
+              contact: {
+                email:
+                  activeUser.email || "",
+              },
+            });
 
           const row =
             profileDataToSupabaseRow(
@@ -318,7 +358,7 @@ export function ProfileProvider({
         }
 
         /* =================================================
-           PROFILE EXISTS
+           LOAD EXISTING PROFILE
         ================================================= */
 
         setProfileData(
@@ -342,59 +382,54 @@ export function ProfileProvider({
   );
 
   /* =======================================================
-     INITIAL LOAD
+     INITIAL LOAD + AUTH LISTENER
   ======================================================= */
 
   useEffect(() => {
     let mounted = true;
 
-    const initializeProfile = async () => {
-      if (!mounted) {
-        return;
-      }
-
-      await loadProfile();
-    };
-
-    initializeProfile();
-
-    /* =====================================================
-       AUTH STATE CHANGES
-    ===================================================== */
-
-    const {
-      data: authListener,
-    } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+    const initializeProfile =
+      async () => {
         if (!mounted) {
           return;
         }
 
-        const currentUser =
-          session?.user || null;
+        await loadProfile();
+      };
 
-        setUser(currentUser);
+    initializeProfile();
 
-        if (currentUser) {
-          /*
-            Delay loading slightly so Supabase
-            authentication state is fully ready.
-          */
+    const {
+      data: authListener,
+    } =
+      supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          if (!mounted) {
+            return;
+          }
 
-          setTimeout(() => {
-            if (mounted) {
-              loadProfile(currentUser);
-            }
-          }, 0);
-        } else {
-          setProfileData(
-            createProfileData()
-          );
+          const currentUser =
+            session?.user || null;
 
-          setLoading(false);
+          setUser(currentUser);
+
+          if (currentUser) {
+            setTimeout(() => {
+              if (mounted) {
+                loadProfile(
+                  currentUser
+                );
+              }
+            }, 0);
+          } else {
+            setProfileData(
+              createProfileData()
+            );
+
+            setLoading(false);
+          }
         }
-      }
-    );
+      );
 
     return () => {
       mounted = false;
@@ -404,7 +439,7 @@ export function ProfileProvider({
   }, [loadProfile]);
 
   /* =======================================================
-     SAVE PROFILE TO SUPABASE
+     SAVE PROFILE
   ======================================================= */
 
   const saveProfile = useCallback(
@@ -414,7 +449,8 @@ export function ProfileProvider({
 
       try {
         const activeUser =
-          user || (await getCurrentUser());
+          user ||
+          (await getCurrentUser());
 
         if (!activeUser) {
           throw new Error(
@@ -481,7 +517,7 @@ export function ProfileProvider({
   );
 
   /* =======================================================
-     PROFILE INFORMATION
+     UPDATE PROFILE
   ======================================================= */
 
   const updateProfile = useCallback(
@@ -499,7 +535,7 @@ export function ProfileProvider({
   );
 
   /* =======================================================
-     CONTACT INFORMATION
+     UPDATE CONTACT
   ======================================================= */
 
   const updateContact = useCallback(
@@ -522,9 +558,8 @@ export function ProfileProvider({
 
   const addSkill = useCallback(
     (skill) => {
-      const cleanSkill = String(
-        skill || ""
-      ).trim();
+      const cleanSkill =
+        String(skill || "").trim();
 
       if (!cleanSkill) {
         return;
@@ -560,11 +595,12 @@ export function ProfileProvider({
       setProfileData((prev) => ({
         ...prev,
 
-        skills: prev.skills.filter(
-          (item) =>
-            String(item).toLowerCase() !==
-            String(skill).toLowerCase()
-        ),
+        skills:
+          prev.skills.filter(
+            (item) =>
+              String(item).toLowerCase() !==
+              String(skill).toLowerCase()
+          ),
       }));
     },
     []
@@ -609,7 +645,8 @@ export function ProfileProvider({
             location: "",
             startDate: "",
             endDate: "",
-            currentlyStudying: false,
+            currentlyStudying:
+              false,
             description: "",
 
             ...(educationItem || {}),
@@ -680,7 +717,8 @@ export function ProfileProvider({
             employmentType: "",
             startDate: "",
             endDate: "",
-            currentlyWorking: false,
+            currentlyWorking:
+              false,
             description: "",
 
             ...(experienceItem || {}),
@@ -691,84 +729,90 @@ export function ProfileProvider({
     []
   );
 
-  const updateExperience = useCallback(
-    (id, field, value) => {
-      setProfileData((prev) => ({
-        ...prev,
+  const updateExperience =
+    useCallback(
+      (id, field, value) => {
+        setProfileData((prev) => ({
+          ...prev,
 
-        experience:
-          prev.experience.map(
-            (item) =>
-              item.id === id
-                ? {
-                    ...item,
-                    [field]: value,
-                  }
-                : item
-          ),
-      }));
-    },
-    []
-  );
+          experience:
+            prev.experience.map(
+              (item) =>
+                item.id === id
+                  ? {
+                      ...item,
+                      [field]: value,
+                    }
+                  : item
+            ),
+        }));
+      },
+      []
+    );
 
-  const removeExperience = useCallback(
-    (id) => {
-      setProfileData((prev) => ({
-        ...prev,
+  const removeExperience =
+    useCallback(
+      (id) => {
+        setProfileData((prev) => ({
+          ...prev,
 
-        experience:
-          prev.experience.filter(
-            (item) => item.id !== id
-          ),
-      }));
-    },
-    []
-  );
+          experience:
+            prev.experience.filter(
+              (item) =>
+                item.id !== id
+            ),
+        }));
+      },
+      []
+    );
 
   /* =======================================================
      UPDATE ENTIRE PROFILE
   ======================================================= */
 
-  const updateProfileData = useCallback(
-    (updatedData) => {
-      if (!updatedData) {
-        return;
-      }
+  const updateProfileData =
+    useCallback(
+      (updatedData) => {
+        if (!updatedData) {
+          return;
+        }
 
-      setProfileData((prev) => ({
-        ...prev,
+        setProfileData((prev) => ({
+          ...prev,
 
-        profile: {
-          ...prev.profile,
-          ...(updatedData.profile || {}),
-        },
+          profile: {
+            ...prev.profile,
+            ...(updatedData.profile ||
+              {}),
+          },
 
-        contact: {
-          ...prev.contact,
-          ...(updatedData.contact || {}),
-        },
+          contact: {
+            ...prev.contact,
+            ...(updatedData.contact ||
+              {}),
+          },
 
-        skills: Array.isArray(
-          updatedData.skills
-        )
-          ? updatedData.skills
-          : prev.skills,
+          skills: Array.isArray(
+            updatedData.skills
+          )
+            ? updatedData.skills
+            : prev.skills,
 
-        education: Array.isArray(
-          updatedData.education
-        )
-          ? updatedData.education
-          : prev.education,
+          education: Array.isArray(
+            updatedData.education
+          )
+            ? updatedData.education
+            : prev.education,
 
-        experience: Array.isArray(
-          updatedData.experience
-        )
-          ? updatedData.experience
-          : prev.experience,
-      }));
-    },
-    []
-  );
+          experience: Array.isArray(
+            updatedData.experience
+          )
+            ? updatedData.experience
+            : prev.experience,
+        }));
+      },
+      []
+    );
 
   /* =======================================================
      RESET PROFILE
@@ -780,7 +824,8 @@ export function ProfileProvider({
 
       try {
         const activeUser =
-          user || (await getCurrentUser());
+          user ||
+          (await getCurrentUser());
 
         if (!activeUser) {
           setProfileData(
@@ -792,16 +837,53 @@ export function ProfileProvider({
           };
         }
 
-        const {
-          error: deleteError,
-        } = await supabase
-          .from("profiles")
-          .delete()
-          .eq("id", activeUser.id);
+        /* -----------------------------------------------
+           Try to remove profile photos
+        ------------------------------------------------ */
 
-        if (deleteError) {
-          throw deleteError;
+        try {
+          const {
+            data: existingFiles,
+          } =
+            await supabase.storage
+              .from(
+                PROFILE_PHOTO_BUCKET
+              )
+              .list(activeUser.id);
+
+          if (
+            existingFiles &&
+            existingFiles.length > 0
+          ) {
+            const files =
+              existingFiles
+                .filter(
+                  (item) =>
+                    item?.name
+                )
+                .map(
+                  (item) =>
+                    `${activeUser.id}/${item.name}`
+                );
+
+            if (files.length > 0) {
+              await supabase.storage
+                .from(
+                  PROFILE_PHOTO_BUCKET
+                )
+                .remove(files);
+            }
+          }
+        } catch (storageError) {
+          console.warn(
+            "Could not remove profile photos during reset:",
+            storageError
+          );
         }
+
+        /* -----------------------------------------------
+           Reset database profile
+        ------------------------------------------------ */
 
         const emptyProfile =
           createProfileData({
@@ -819,15 +901,17 @@ export function ProfileProvider({
 
         const {
           data,
-          error: insertError,
+          error: resetError,
         } = await supabase
           .from("profiles")
-          .insert(row)
+          .upsert(row, {
+            onConflict: "id",
+          })
           .select()
           .single();
 
-        if (insertError) {
-          throw insertError;
+        if (resetError) {
+          throw resetError;
         }
 
         setProfileData(
@@ -858,7 +942,7 @@ export function ProfileProvider({
   );
 
   /* =======================================================
-     SET PROFILE DATA
+     SET PROFILE
   ======================================================= */
 
   const setProfile = useCallback(
@@ -878,181 +962,326 @@ export function ProfileProvider({
      UPLOAD PROFILE PHOTO
   ======================================================= */
 
-  const uploadProfilePhoto = useCallback(
-    async (file) => {
-      setError(null);
+  const uploadProfilePhoto =
+    useCallback(
+      async (file) => {
+        setError(null);
 
-      try {
-        if (!file) {
-          throw new Error(
-            "Please select an image."
-          );
-        }
+        try {
+          /* =================================================
+             VALIDATE FILE
+          ================================================= */
 
-        const activeUser =
-          user || (await getCurrentUser());
+          if (!file) {
+            throw new Error(
+              "Please select an image."
+            );
+          }
 
-        if (!activeUser) {
-          throw new Error(
-            "You must be logged in to upload a profile photo."
-          );
-        }
+          if (
+            !file.type.startsWith(
+              "image/"
+            )
+          ) {
+            throw new Error(
+              "Please select a valid image file."
+            );
+          }
 
-        /* =================================================
-           VALIDATE FILE
-        ================================================= */
+          if (
+            file.size >
+            5 * 1024 * 1024
+          ) {
+            throw new Error(
+              "Profile image must be smaller than 5MB."
+            );
+          }
 
-        if (!file.type.startsWith("image/")) {
-          throw new Error(
-            "Please select a valid image file."
-          );
-        }
+          /* =================================================
+             GET USER
+          ================================================= */
 
-        const maxSize =
-          5 * 1024 * 1024;
+          const activeUser =
+            user ||
+            (await getCurrentUser());
 
-        if (file.size > maxSize) {
-          throw new Error(
-            "Profile image must be smaller than 5MB."
-          );
-        }
+          if (!activeUser) {
+            throw new Error(
+              "You must be logged in to upload a profile photo."
+            );
+          }
 
-        /* =================================================
-           CREATE FILE PATH
-        ================================================= */
+          /* =================================================
+             FILE EXTENSION
+          ================================================= */
 
-        const fileExtension =
-          file.name
-            .split(".")
-            .pop()
-            ?.toLowerCase() || "jpg";
+          const fileExtension =
+            file.name
+              .split(".")
+              .pop()
+              ?.toLowerCase() ||
+            "jpg";
 
-        const filePath = `${activeUser.id}/profile.${fileExtension}`;
+          /* =================================================
+             UNIQUE FILE PATH
+          ================================================= */
 
-        /* =================================================
-           REMOVE OLD PROFILE PHOTOS
-        ================================================= */
+          const filePath =
+            `${activeUser.id}/profile-${Date.now()}.${fileExtension}`;
 
-        const {
-          data: existingFiles,
-          error: listError,
-        } = await supabase.storage
-          .from("profile-photos")
-          .list(activeUser.id);
+          /* =================================================
+             REMOVE OLD PROFILE IMAGES
+          ================================================= */
 
-        if (listError) {
-          console.warn(
-            "Could not list old profile photos:",
-            listError
-          );
-        }
+          const {
+            data: existingFiles,
+            error: listError,
+          } =
+            await supabase.storage
+              .from(
+                PROFILE_PHOTO_BUCKET
+              )
+              .list(activeUser.id);
 
-        if (
-          existingFiles &&
-          existingFiles.length > 0
-        ) {
-          const oldFiles =
-            existingFiles.map(
-              (item) =>
-                `${activeUser.id}/${item.name}`
+          /*
+            Don't use listBuckets() here.
+
+            The bucket can exist while the current user
+            does not have permission to list all buckets.
+          */
+
+          if (listError) {
+            console.warn(
+              "Could not list previous profile images:",
+              listError
+            );
+          }
+
+          if (
+            existingFiles &&
+            existingFiles.length > 0
+          ) {
+            const oldFiles =
+              existingFiles
+                .filter(
+                  (item) =>
+                    item?.name &&
+                    item.name.startsWith(
+                      "profile-"
+                    )
+                )
+                .map(
+                  (item) =>
+                    `${activeUser.id}/${item.name}`
+                );
+
+            if (
+              oldFiles.length > 0
+            ) {
+              const {
+                error:
+                  removeOldError,
+              } =
+                await supabase.storage
+                  .from(
+                    PROFILE_PHOTO_BUCKET
+                  )
+                  .remove(
+                    oldFiles
+                  );
+
+              if (
+                removeOldError
+              ) {
+                console.warn(
+                  "Could not remove previous profile images:",
+                  removeOldError
+                );
+              }
+            }
+          }
+
+          /* =================================================
+             UPLOAD IMAGE
+          ================================================= */
+
+          const {
+            data: uploadData,
+            error: uploadError,
+          } =
+            await supabase.storage
+              .from(
+                PROFILE_PHOTO_BUCKET
+              )
+              .upload(
+                filePath,
+                file,
+                {
+                  cacheControl:
+                    "3600",
+
+                  upsert: false,
+
+                  contentType:
+                    file.type,
+                }
+              );
+
+          if (uploadError) {
+            console.error(
+              "Supabase upload error:",
+              uploadError
             );
 
-          await supabase.storage
-            .from("profile-photos")
-            .remove(oldFiles);
-        }
+            throw uploadError;
+          }
 
-        /* =================================================
-           UPLOAD
-        ================================================= */
+          /* =================================================
+             GET PUBLIC URL
+          ================================================= */
 
-        const {
-          error: uploadError,
-        } = await supabase.storage
-          .from("profile-photos")
-          .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: true,
-          });
+          const {
+            data:
+              publicUrlData,
+          } =
+            supabase.storage
+              .from(
+                PROFILE_PHOTO_BUCKET
+              )
+              .getPublicUrl(
+                filePath
+              );
 
-        if (uploadError) {
-          throw uploadError;
-        }
+          const photoUrl =
+            publicUrlData?.publicUrl ||
+            "";
 
-        /* =================================================
-           GET PUBLIC URL
-        ================================================= */
+          if (!photoUrl) {
+            throw new Error(
+              "Could not generate the profile image URL."
+            );
+          }
 
-        const {
-          data: publicUrlData,
-        } = supabase.storage
-          .from("profile-photos")
-          .getPublicUrl(filePath);
+          /* =================================================
+             SAVE PHOTO URL TO PROFILE
+          ================================================= */
 
-        const photoUrl =
-          publicUrlData?.publicUrl || "";
+          const {
+            data:
+              updatedProfile,
+            error:
+              databaseError,
+          } =
+            await supabase
+              .from("profiles")
+              .update({
+                photo_url:
+                  photoUrl,
 
-        if (!photoUrl) {
-          throw new Error(
-            "Could not generate profile photo URL."
+                updated_at:
+                  new Date().toISOString(),
+              })
+              .eq(
+                "id",
+                activeUser.id
+              )
+              .select()
+              .single();
+
+          if (databaseError) {
+            /*
+              Clean up uploaded file if
+              database update fails.
+            */
+
+            try {
+              await supabase.storage
+                .from(
+                  PROFILE_PHOTO_BUCKET
+                )
+                .remove([
+                  filePath,
+                ]);
+            } catch (cleanupError) {
+              console.warn(
+                "Could not clean up uploaded image:",
+                cleanupError
+              );
+            }
+
+            throw databaseError;
+          }
+
+          /* =================================================
+             UPDATE REACT STATE
+          ================================================= */
+
+          setProfileData((prev) => ({
+            ...prev,
+
+            profile: {
+              ...prev.profile,
+
+              photo:
+                updatedProfile?.photo_url ||
+                photoUrl,
+            },
+          }));
+
+          return {
+            success: true,
+            url: photoUrl,
+            path: filePath,
+            data: uploadData,
+          };
+        } catch (uploadError) {
+          console.error(
+            "Failed to upload profile photo:",
+            uploadError
           );
+
+          let message =
+            uploadError?.message ||
+            "Failed to upload profile photo.";
+
+          /*
+            Make common Supabase errors
+            easier to understand.
+          */
+
+          if (
+            message
+              .toLowerCase()
+              .includes("bucket not found")
+          ) {
+            message =
+              `The "${PROFILE_PHOTO_BUCKET}" bucket could not be accessed. Check that the bucket name is exactly "${PROFILE_PHOTO_BUCKET}" and that your Storage policies allow authenticated users to upload files.`;
+          }
+
+          if (
+            message
+              .toLowerCase()
+              .includes(
+                "row-level security"
+              )
+          ) {
+            message =
+              "Supabase Storage blocked the upload because of Row Level Security policies. Add an INSERT policy for authenticated users.";
+          }
+
+          setError(message);
+
+          return {
+            success: false,
+            error: uploadError,
+          };
         }
-
-        /* =================================================
-           SAVE URL TO DATABASE
-        ================================================= */
-
-        const {
-          error: updateError,
-        } = await supabase
-          .from("profiles")
-          .update({
-            photo_url: photoUrl,
-            updated_at:
-              new Date().toISOString(),
-          })
-          .eq("id", activeUser.id);
-
-        if (updateError) {
-          throw updateError;
-        }
-
-        /* =================================================
-           UPDATE LOCAL REACT STATE
-        ================================================= */
-
-        setProfileData((prev) => ({
-          ...prev,
-
-          profile: {
-            ...prev.profile,
-            photo: photoUrl,
-          },
-        }));
-
-        return {
-          success: true,
-          url: photoUrl,
-        };
-      } catch (uploadError) {
-        console.error(
-          "Failed to upload profile photo:",
-          uploadError
-        );
-
-        setError(
-          uploadError?.message ||
-            "Failed to upload profile photo."
-        );
-
-        return {
-          success: false,
-          error: uploadError,
-        };
-      }
-    },
-    [user, getCurrentUser]
-  );
+      },
+      [
+        user,
+        getCurrentUser,
+      ]
+    );
 
   /* =======================================================
      REMOVE PROFILE PHOTO
@@ -1064,7 +1293,8 @@ export function ProfileProvider({
 
       try {
         const activeUser =
-          user || (await getCurrentUser());
+          user ||
+          (await getCurrentUser());
 
         if (!activeUser) {
           throw new Error(
@@ -1072,54 +1302,105 @@ export function ProfileProvider({
           );
         }
 
+        /* =================================================
+           GET USER FILES
+        ================================================= */
+
         const {
           data: existingFiles,
-        } = await supabase.storage
-          .from("profile-photos")
-          .list(activeUser.id);
+          error: listError,
+        } =
+          await supabase.storage
+            .from(
+              PROFILE_PHOTO_BUCKET
+            )
+            .list(activeUser.id);
+
+        if (listError) {
+          throw listError;
+        }
+
+        /* =================================================
+           DELETE PROFILE IMAGES
+        ================================================= */
 
         if (
           existingFiles &&
           existingFiles.length > 0
         ) {
           const files =
-            existingFiles.map(
-              (item) =>
-                `${activeUser.id}/${item.name}`
-            );
+            existingFiles
+              .filter(
+                (item) =>
+                  item?.name &&
+                  item.name.startsWith(
+                    "profile-"
+                  )
+              )
+              .map(
+                (item) =>
+                  `${activeUser.id}/${item.name}`
+              );
 
-          const {
-            error: removeError,
-          } = await supabase.storage
-            .from("profile-photos")
-            .remove(files);
+          if (files.length > 0) {
+            const {
+              error:
+                removeError,
+            } =
+              await supabase.storage
+                .from(
+                  PROFILE_PHOTO_BUCKET
+                )
+                .remove(files);
 
-          if (removeError) {
-            throw removeError;
+            if (removeError) {
+              throw removeError;
+            }
           }
         }
 
+        /* =================================================
+           CLEAR DATABASE URL
+        ================================================= */
+
         const {
-          error: updateError,
-        } = await supabase
-          .from("profiles")
-          .update({
-            photo_url: "",
-            updated_at:
-              new Date().toISOString(),
-          })
-          .eq("id", activeUser.id);
+          data:
+            updatedProfile,
+          error:
+            updateError,
+        } =
+          await supabase
+            .from("profiles")
+            .update({
+              photo_url: "",
+
+              updated_at:
+                new Date().toISOString(),
+            })
+            .eq(
+              "id",
+              activeUser.id
+            )
+            .select()
+            .single();
 
         if (updateError) {
           throw updateError;
         }
+
+        /* =================================================
+           UPDATE LOCAL STATE
+        ================================================= */
 
         setProfileData((prev) => ({
           ...prev,
 
           profile: {
             ...prev.profile,
-            photo: "",
+
+            photo:
+              updatedProfile?.photo_url ||
+              "",
           },
         }));
 

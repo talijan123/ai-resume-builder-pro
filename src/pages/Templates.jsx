@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import {
-  HiArrowLeft,
   HiCheck,
   HiEye,
   HiMagnifyingGlass,
   HiSparkles,
   HiAdjustmentsHorizontal,
 } from "react-icons/hi2";
+
+import DashboardHeader from "../components/layout/DashboardHeader";
 
 import ModernTemplate from "../components/templates/ModernTemplate";
 import ProfessionalTemplate from "../components/templates/ProfessionalTemplate";
@@ -18,6 +19,10 @@ import MinimalTemplate from "../components/templates/MinimalTemplate";
 
 import { ResumeProvider } from "../context/ResumeContext";
 import { templatePreviewData } from "../data/templatePreviewData";
+
+/* =========================================================
+   Templates
+========================================================= */
 
 const templates = [
   {
@@ -76,6 +81,10 @@ const templates = [
   },
 ];
 
+/* =========================================================
+   Categories
+========================================================= */
+
 const categories = [
   "All",
   "Modern",
@@ -83,6 +92,10 @@ const categories = [
   "Creative",
   "ATS Friendly",
 ];
+
+/* =========================================================
+   Templates Page
+========================================================= */
 
 export default function Templates() {
   const navigate = useNavigate();
@@ -98,9 +111,9 @@ export default function Templates() {
   const [previewTemplate, setPreviewTemplate] =
     useState(null);
 
-  /* ==========================================
+  /* =======================================================
      Filter Templates
-  ========================================== */
+  ======================================================= */
 
   const filteredTemplates = useMemo(() => {
     return templates.filter((template) => {
@@ -108,7 +121,8 @@ export default function Templates() {
         activeCategory === "All" ||
         template.category === activeCategory;
 
-      const searchText = search.toLowerCase().trim();
+      const searchText =
+        search.toLowerCase().trim();
 
       const matchesSearch =
         !searchText ||
@@ -122,87 +136,39 @@ export default function Templates() {
           .toLowerCase()
           .includes(searchText);
 
-      return matchesCategory && matchesSearch;
+      return (
+        matchesCategory &&
+        matchesSearch
+      );
     });
   }, [activeCategory, search]);
 
-  /* ==========================================
+  /* =======================================================
      Use Template
-  ========================================== */
+  ======================================================= */
 
   function handleUseTemplate(templateId) {
     navigate(`/builder?template=${templateId}`);
   }
 
+  /* =======================================================
+     Page
+  ======================================================= */
+
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
+      {/* ===================================================
+          PROFESSIONAL GLOBAL HEADER
+      =================================================== */}
 
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-6 py-4">
-          {/* Left */}
+      <DashboardHeader
+        title="Resume Templates"
+        subtitle="Choose a professional design for your resume"
+      />
 
-          <div className="flex items-center gap-4">
-            <Link
-              to="/dashboard"
-              className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-xl
-                border
-                border-slate-200
-                bg-white
-                text-slate-700
-                transition
-                hover:bg-slate-100
-              "
-            >
-              <HiArrowLeft size={20} />
-            </Link>
-
-            <div>
-              <h1 className="text-xl font-black text-slate-900">
-                Resume Templates
-              </h1>
-
-              <p className="hidden text-sm text-slate-500 sm:block">
-                Choose a design and start building your resume.
-              </p>
-            </div>
-          </div>
-
-          {/* Right */}
-
-          <div
-            className="
-              hidden
-              items-center
-              gap-2
-              rounded-full
-              bg-blue-50
-              px-4
-              py-2
-              text-sm
-              font-bold
-              text-blue-700
-              md:flex
-            "
-          >
-            <HiSparkles size={18} />
-
-            5 Professional Templates
-          </div>
-        </div>
-      </header>
-
-      {/* =====================================================
+      {/* ===================================================
           MAIN
-      ===================================================== */}
+      =================================================== */}
 
       <main className="mx-auto max-w-[1500px] px-6 py-10">
         {/* =================================================
@@ -211,13 +177,35 @@ export default function Templates() {
 
         <section className="mb-10">
           <div className="max-w-3xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
+            <div
+              className="
+                mb-3
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                bg-blue-50
+                px-4
+                py-2
+                text-sm
+                font-bold
+                text-blue-700
+              "
+            >
               <HiSparkles size={17} />
 
               Professional Resume Designs
             </div>
 
-            <h2 className="text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
+            <h2
+              className="
+                text-4xl
+                font-black
+                tracking-tight
+                text-slate-900
+                md:text-5xl
+              "
+            >
               Choose a template that
               <span className="text-blue-600">
                 {" "}
@@ -225,10 +213,18 @@ export default function Templates() {
               </span>
             </h2>
 
-            <p className="mt-4 text-lg leading-8 text-slate-500">
-              Start with a professionally designed layout and
-              customize your resume with your own experience,
-              education, skills, projects, and achievements.
+            <p
+              className="
+                mt-4
+                text-lg
+                leading-8
+                text-slate-500
+              "
+            >
+              Start with a professionally designed
+              layout and customize your resume with
+              your own experience, education, skills,
+              projects, and achievements.
             </p>
           </div>
         </section>
@@ -238,7 +234,16 @@ export default function Templates() {
         ================================================= */}
 
         <section className="mb-10">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            className="
+              flex
+              flex-col
+              gap-5
+              lg:flex-row
+              lg:items-center
+              lg:justify-between
+            "
+          >
             {/* Search */}
 
             <div className="relative w-full lg:max-w-md">
@@ -282,8 +287,26 @@ export default function Templates() {
 
             {/* Categories */}
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="mr-1 hidden items-center gap-2 text-sm font-semibold text-slate-500 xl:flex">
+            <div
+              className="
+                flex
+                flex-wrap
+                items-center
+                gap-2
+              "
+            >
+              <div
+                className="
+                  mr-1
+                  hidden
+                  items-center
+                  gap-2
+                  text-sm
+                  font-semibold
+                  text-slate-500
+                  xl:flex
+                "
+              >
                 <HiAdjustmentsHorizontal size={18} />
 
                 Filter:
@@ -327,13 +350,32 @@ export default function Templates() {
             RESULTS HEADER
         ================================================= */}
 
-        <div className="mb-6 flex items-center justify-between">
+        <div
+          className="
+            mb-6
+            flex
+            items-center
+            justify-between
+          "
+        >
           <div>
-            <h3 className="text-xl font-black text-slate-900">
+            <h3
+              className="
+                text-xl
+                font-black
+                text-slate-900
+              "
+            >
               Resume templates
             </h3>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p
+              className="
+                mt-1
+                text-sm
+                text-slate-500
+              "
+            >
               {filteredTemplates.length} template
               {filteredTemplates.length !== 1
                 ? "s"
@@ -343,15 +385,34 @@ export default function Templates() {
           </div>
 
           {selectedTemplate && (
-            <div className="hidden items-center gap-2 text-sm font-semibold text-slate-500 sm:flex">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
+            <div
+              className="
+                hidden
+                items-center
+                gap-2
+                text-sm
+                font-semibold
+                text-slate-500
+                sm:flex
+              "
+            >
+              <span
+                className="
+                  h-2
+                  w-2
+                  rounded-full
+                  bg-green-500
+                "
+              />
 
               Selected:{" "}
+
               <span className="text-slate-900">
                 {
                   templates.find(
                     (template) =>
-                      template.id === selectedTemplate
+                      template.id ===
+                      selectedTemplate
                   )?.name
                 }
               </span>
@@ -364,13 +425,21 @@ export default function Templates() {
         ================================================= */}
 
         {filteredTemplates.length > 0 ? (
-          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            className="
+              grid
+              gap-8
+              md:grid-cols-2
+              xl:grid-cols-3
+            "
+          >
             {filteredTemplates.map((template) => {
               const TemplateComponent =
                 template.component;
 
               const selected =
-                selectedTemplate === template.id;
+                selectedTemplate ===
+                template.id;
 
               return (
                 <article
@@ -403,9 +472,16 @@ export default function Templates() {
                       bg-slate-100
                     "
                   >
-                    {/* Top Badge */}
+                    {/* Badge */}
 
-                    <div className="absolute left-5 top-5 z-20">
+                    <div
+                      className="
+                        absolute
+                        left-5
+                        top-5
+                        z-20
+                      "
+                    >
                       <span
                         className={`
                           inline-flex
@@ -550,14 +626,40 @@ export default function Templates() {
                       TEMPLATE INFO
                   ===================================== */}
 
-                  <div className="border-t border-slate-100 p-6">
-                    <div className="flex items-start justify-between gap-4">
+                  <div
+                    className="
+                      border-t
+                      border-slate-100
+                      p-6
+                    "
+                  >
+                    <div
+                      className="
+                        flex
+                        items-start
+                        justify-between
+                        gap-4
+                      "
+                    >
                       <div>
-                        <h3 className="text-xl font-black text-slate-900">
+                        <h3
+                          className="
+                            text-xl
+                            font-black
+                            text-slate-900
+                          "
+                        >
                           {template.name}
                         </h3>
 
-                        <p className="mt-2 text-sm leading-6 text-slate-500">
+                        <p
+                          className="
+                            mt-2
+                            text-sm
+                            leading-6
+                            text-slate-500
+                          "
+                        >
                           {template.description}
                         </p>
                       </div>
@@ -668,17 +770,45 @@ export default function Templates() {
               text-center
             "
           >
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+            <div
+              className="
+                mx-auto
+                flex
+                h-16
+                w-16
+                items-center
+                justify-center
+                rounded-2xl
+                bg-slate-100
+                text-slate-400
+              "
+            >
               <HiMagnifyingGlass size={28} />
             </div>
 
-            <h3 className="mt-5 text-xl font-black text-slate-900">
+            <h3
+              className="
+                mt-5
+                text-xl
+                font-black
+                text-slate-900
+              "
+            >
               No templates found
             </h3>
 
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-              Try another search term or select a different
-              category.
+            <p
+              className="
+                mx-auto
+                mt-2
+                max-w-md
+                text-sm
+                leading-6
+                text-slate-500
+              "
+            >
+              Try another search term or select a
+              different category.
             </p>
 
             <button
@@ -723,9 +853,25 @@ export default function Templates() {
             md:p-9
           "
         >
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            className="
+              flex
+              flex-col
+              gap-6
+              lg:flex-row
+              lg:items-center
+              lg:justify-between
+            "
+          >
             <div className="max-w-3xl">
-              <div className="flex items-center gap-2 text-blue-700">
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  text-blue-700
+                "
+              >
                 <HiSparkles size={20} />
 
                 <span className="text-sm font-bold">
@@ -733,15 +879,31 @@ export default function Templates() {
                 </span>
               </div>
 
-              <h3 className="mt-2 text-2xl font-black text-slate-900">
+              <h3
+                className="
+                  mt-2
+                  text-2xl
+                  font-black
+                  text-slate-900
+                "
+              >
                 Choose based on your career.
               </h3>
 
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Use Modern for technology and startups,
-                Professional or Executive for corporate roles,
-                Creative for design-focused careers, and Minimal
-                when you want a simple ATS-friendly resume.
+              <p
+                className="
+                  mt-2
+                  text-sm
+                  leading-6
+                  text-slate-600
+                "
+              >
+                Use Modern for technology and
+                startups, Professional or Executive
+                for corporate roles, Creative for
+                design-focused careers, and Minimal
+                when you want a simple ATS-friendly
+                resume.
               </p>
             </div>
 
@@ -773,9 +935,9 @@ export default function Templates() {
         </section>
       </main>
 
-      {/* =====================================================
+      {/* ===================================================
           FULL PREVIEW MODAL
-      ===================================================== */}
+      =================================================== */}
 
       {previewTemplate && (
         <div
@@ -813,13 +975,34 @@ export default function Templates() {
           >
             {/* Modal Header */}
 
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+            <div
+              className="
+                flex
+                items-center
+                justify-between
+                border-b
+                border-slate-200
+                px-6
+                py-4
+              "
+            >
               <div>
-                <h3 className="text-lg font-black text-slate-900">
+                <h3
+                  className="
+                    text-lg
+                    font-black
+                    text-slate-900
+                  "
+                >
                   {previewTemplate.name} Template
                 </h3>
 
-                <p className="text-sm text-slate-500">
+                <p
+                  className="
+                    text-sm
+                    text-slate-500
+                  "
+                >
                   Preview
                 </p>
               </div>
@@ -848,8 +1031,22 @@ export default function Templates() {
 
             {/* Modal Content */}
 
-            <div className="flex-1 overflow-auto bg-slate-100 p-8">
-              <div className="mx-auto w-[794px] bg-white shadow-2xl">
+            <div
+              className="
+                flex-1
+                overflow-auto
+                bg-slate-100
+                p-8
+              "
+            >
+              <div
+                className="
+                  mx-auto
+                  w-[794px]
+                  bg-white
+                  shadow-2xl
+                "
+              >
                 {(() => {
                   const PreviewComponent =
                     previewTemplate.component;
@@ -871,7 +1068,19 @@ export default function Templates() {
 
             {/* Modal Footer */}
 
-            <div className="flex items-center justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
+            <div
+              className="
+                flex
+                items-center
+                justify-end
+                gap-3
+                border-t
+                border-slate-200
+                bg-white
+                px-6
+                py-4
+              "
+            >
               <button
                 type="button"
                 onClick={() =>

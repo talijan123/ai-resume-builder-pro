@@ -1,153 +1,576 @@
-import { useCoverLetter } from "../context/CoverLetterContext";
-import CoverLetterTemplates from "../components/coverLetter/CoverLetterTemplates";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  HiCheck,
+  HiChevronDown,
+  HiDocumentText,
+  HiLockClosed,
+  HiPencilSquare,
+  HiPrinter,
+  HiSparkles,
+  HiStar,
+} from "react-icons/hi2";
+
+import DashboardHeader from "../components/layout/DashboardHeader";
+
+import { usePricing } from "../context/PricingContext";
+
+import { useProfile } from "../context/ProfileContext";
+
+/* =========================================================
+   COVER LETTER TEMPLATES
+========================================================= */
+
+const COVER_LETTER_TEMPLATES = [
+  {
+    id: "professional",
+    name: "Professional",
+    description:
+      "Clean and traditional cover letter for corporate applications.",
+  },
+
+  {
+    id: "modern",
+    name: "Modern",
+    description:
+      "Contemporary layout with a strong professional tone.",
+  },
+
+  {
+    id: "minimal",
+    name: "Minimal",
+    description:
+      "Simple and elegant cover letter focused on content.",
+  },
+];
+
+/* =========================================================
+   DEFAULT COVER LETTER
+========================================================= */
+
+const defaultLetter = {
+  recipientName: "",
+  companyName: "",
+  jobTitle: "",
+  jobDescription: "",
+  subject: "",
+  greeting: "Dear Hiring Manager,",
+  opening: "",
+  body: "",
+  closing:
+    "Thank you for considering my application. I would welcome the opportunity to discuss how my skills and experience can contribute to your team.",
+  signOff: "Sincerely,",
+};
+
+/* =========================================================
+   COVER LETTER PAGE
+========================================================= */
 
 export default function CoverLetter() {
-  const {
-    coverLetterData,
-    updatePersonalInfo,
-    updateRecipient,
-    updateLetter,
-    resetCoverLetter,
-  } = useCoverLetter();
+  /* =======================================================
+     PRICING
+  ======================================================= */
 
   const {
-    personalInfo,
-    recipient,
-    letter,
-    template,
-  } = coverLetterData;
+    planSlug,
+    planName,
+    canUseCoverLetters,
+    loading: pricingLoading,
+  } = usePricing();
 
-  /* =====================================================
-     DOWNLOAD / PRINT ONLY COVER LETTER
-  ===================================================== */
+  /* =======================================================
+     PROFILE
+  ======================================================= */
 
-  function handleDownload() {
-    const printStyle = document.createElement("style");
+  const {
+    profileData,
+    loading: profileLoading,
+  } = useProfile();
 
-    printStyle.id = "cover-letter-print-style";
+  /* =======================================================
+     PROFILE DATA
+  ======================================================= */
 
-    printStyle.innerHTML = `
-      @media print {
+  const profile =
+    profileData?.profile || {};
 
-        @page {
-          size: A4;
-          margin: 0;
-        }
+  const contact =
+    profileData?.contact || {};
 
-        html,
-        body {
-          margin: 0 !important;
-          padding: 0 !important;
-          background: white !important;
-        }
+  /* =======================================================
+     PLAN ACCESS
+  ======================================================= */
 
-        body * {
-          visibility: hidden !important;
-        }
+  const hasAccess =
+    planSlug === "pro" ||
+    planSlug === "team";
 
-        #cover-letter-preview,
-        #cover-letter-preview * {
-          visibility: visible !important;
-        }
+  /*
+    We intentionally use the explicit Pro/Team check.
 
-        #cover-letter-preview {
-          position: absolute !important;
-          left: 0 !important;
-          top: 0 !important;
+    This prevents a Starter user from getting access simply
+    because the database contains an incorrect cover_letters
+    value.
+  */
 
-          width: 794px !important;
-          min-height: 1123px !important;
+  const isStarter =
+    planSlug === "starter" ||
+    !planSlug;
 
-          margin: 0 !important;
-          padding: 0 !important;
+  /* =======================================================
+     STATE
+  ======================================================= */
 
-          background: white !important;
-          box-shadow: none !important;
+  const [selectedTemplate, setSelectedTemplate] =
+    useState("professional");
 
-          overflow: visible !important;
-        }
+  const [letter, setLetter] =
+    useState(defaultLetter);
 
-        #cover-letter-preview > div {
-          width: 794px !important;
-          min-height: 1123px !important;
-          box-shadow: none !important;
-        }
+  const [saved, setSaved] =
+    useState(false);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [templateOpen, setTemplateOpen] =
+    useState(false);
+
+  const [showJobDescription, setShowJobDescription] =
+    useState(false);
+
+  /* =======================================================
+     LOAD SAVED LETTER
+  ======================================================= */
+
+  useEffect(() => {
+    if (!hasAccess) {
+      return;
+    }
+
+    try {
+      const savedLetter =
+        localStorage.getItem(
+          "cover_letter_data"
+        );
+
+      const savedTemplate =
+        localStorage.getItem(
+          "cover_letter_template"
+        );
+
+      if (savedLetter) {
+        const parsed =
+          JSON.parse(savedLetter);
+
+        setLetter({
+          ...defaultLetter,
+          ...parsed,
+        });
       }
-    `;
 
-    document.head.appendChild(printStyle);
+      if (savedTemplate) {
+        setSelectedTemplate(
+          savedTemplate
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Failed to load saved cover letter:",
+        error
+      );
+    }
+  }, [hasAccess]);
 
-    // Open browser print dialog
-    window.print();
+  /* =======================================================
+     AUTO PROFILE INFORMATION
+  ======================================================= */
 
-    // Remove print styles after printing
-    setTimeout(() => {
-      const style = document.getElementById(
-        "cover-letter-print-style"
+  useEffect(() => {
+    if (!hasAccess) {
+      return;
+    }
+
+    setLetter((previous) => {
+      const hasExistingOpening =
+        Boolean(
+          previous.opening?.trim()
+        );
+
+      const hasExistingBody =
+        Boolean(
+          previous.body?.trim()
+        );
+
+      return {
+        ...previous,
+
+        opening:
+          hasExistingOpening
+            ? previous.opening
+            : buildOpening(profile),
+
+        body:
+          hasExistingBody
+            ? previous.body
+            : buildBody(profile),
+      };
+    });
+  }, [
+    hasAccess,
+    profile,
+  ]);
+
+  /* =======================================================
+     BUILD OPENING
+  ======================================================= */
+
+  function buildOpening(currentProfile) {
+    const name =
+      currentProfile?.fullName ||
+      "I am";
+
+    const title =
+      currentProfile?.professionalTitle ||
+      currentProfile?.desiredJobTitle ||
+      "professional";
+
+    return `I am excited to apply for the ${letter.jobTitle || "position"} at ${letter.companyName || "your company"}. As ${name}, a ${title}, I believe my technical skills, experience, and commitment to continuous learning would allow me to contribute effectively to your team.`;
+  }
+
+  /* =======================================================
+     BUILD BODY
+  ======================================================= */
+
+  function buildBody(currentProfile) {
+    const summary =
+      currentProfile?.summary;
+
+    const experience =
+      currentProfile?.yearsOfExperience;
+
+    if (summary) {
+      return summary;
+    }
+
+    if (experience) {
+      return `With ${experience} years of experience, I have developed a strong foundation in problem solving, technology, and professional development. I am comfortable learning new tools, working collaboratively, and taking responsibility for delivering high-quality results.`;
+    }
+
+    return "Throughout my academic and professional journey, I have developed strong problem-solving abilities, technical skills, and a commitment to learning. I am eager to bring these strengths to your organization and contribute positively to your team.";
+  }
+
+  /* =======================================================
+     SELECTED TEMPLATE
+  ======================================================= */
+
+  const currentTemplate =
+    useMemo(() => {
+      return (
+        COVER_LETTER_TEMPLATES.find(
+          (template) =>
+            template.id ===
+            selectedTemplate
+        ) ||
+        COVER_LETTER_TEMPLATES[0]
+      );
+    }, [selectedTemplate]);
+
+  /* =======================================================
+     UPDATE LETTER
+  ======================================================= */
+
+  const updateLetter = (
+    field,
+    value
+  ) => {
+    setLetter((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+
+    setSaved(false);
+  };
+
+  /* =======================================================
+     SAVE LETTER
+  ======================================================= */
+
+  const handleSave = async () => {
+    setSaving(true);
+
+    try {
+      localStorage.setItem(
+        "cover_letter_data",
+        JSON.stringify(letter)
       );
 
-      if (style) {
-        style.remove();
-      }
-    }, 1000);
+      localStorage.setItem(
+        "cover_letter_template",
+        selectedTemplate
+      );
+
+      setSaved(true);
+
+      window.setTimeout(() => {
+        setSaved(false);
+      }, 2500);
+    } catch (error) {
+      console.error(
+        "Failed to save cover letter:",
+        error
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* =======================================================
+     RESET LETTER
+  ======================================================= */
+
+  const handleReset = () => {
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to start a new cover letter?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setLetter({
+      ...defaultLetter,
+      opening: buildOpening(profile),
+      body: buildBody(profile),
+    });
+
+    setSelectedTemplate(
+      "professional"
+    );
+
+    setSaved(false);
+  };
+
+  /* =======================================================
+     DOWNLOAD TXT
+  ======================================================= */
+
+  const handleDownload = () => {
+    const fullText =
+      buildPlainText(
+        letter,
+        profile,
+        contact
+      );
+
+    const blob =
+      new Blob(
+        [fullText],
+        {
+          type: "text/plain;charset=utf-8",
+        }
+      );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+      `${sanitizeFilename(
+        letter.jobTitle ||
+          "cover-letter"
+      )}.txt`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
+
+  /* =======================================================
+     PRINT / PDF
+  ======================================================= */
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
+  if (
+    pricingLoading ||
+    profileLoading
+  ) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <DashboardHeader
+          title="Cover Letter"
+          subtitle="Create a professional cover letter for your next application."
+        />
+
+        <main className="mx-auto flex min-h-[70vh] max-w-[1400px] items-center justify-center px-6">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+
+            <p className="mt-4 text-sm font-semibold text-slate-500">
+              Loading cover letter builder...
+            </p>
+          </div>
+        </main>
+      </div>
+    );
   }
+
+  /* =======================================================
+     LOCK SCREEN
+  ======================================================= */
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <DashboardHeader
+          title="Cover Letter"
+          subtitle="Create a professional cover letter for your next application."
+        />
+
+        <main className="mx-auto flex min-h-[calc(100vh-76px)] max-w-[1200px] items-center justify-center px-6 py-12">
+          <div className="w-full max-w-2xl rounded-[32px] border border-slate-200 bg-white p-8 text-center shadow-sm sm:p-12">
+
+            {/* ICON */}
+
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/20">
+              <HiLockClosed size={34} />
+            </div>
+
+            {/* BADGE */}
+
+            <div className="mt-7 inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-black uppercase tracking-widest text-amber-700">
+              <HiSparkles size={14} />
+              Pro Feature
+            </div>
+
+            {/* TITLE */}
+
+            <h1 className="mt-5 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+              Cover letters are available on Pro & Team
+            </h1>
+
+            {/* DESCRIPTION */}
+
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-slate-500 sm:text-base">
+              Your current plan is{" "}
+              <span className="font-bold text-slate-700">
+                {planName || "Starter"}
+              </span>
+              . Upgrade your plan to unlock the
+              cover letter builder, professional
+              templates, editing tools, and downloads.
+            </p>
+
+            {/* FEATURES */}
+
+            <div className="mx-auto mt-8 max-w-md space-y-3 text-left">
+
+              <LockedFeature text="Professional cover letter templates" />
+
+              <LockedFeature text="Profile-powered cover letter content" />
+
+              <LockedFeature text="Live cover letter editor and preview" />
+
+              <LockedFeature text="Download and print your cover letters" />
+
+            </div>
+
+            {/* BUTTON */}
+
+            <button
+              type="button"
+              onClick={() =>
+                window.location.href =
+                  "/checkout"
+              }
+              className="
+                mt-9
+                inline-flex
+                items-center
+                justify-center
+                gap-2
+
+                rounded-2xl
+
+                bg-gradient-to-r
+                from-blue-600
+                to-indigo-600
+
+                px-7
+                py-3.5
+
+                text-sm
+                font-black
+                text-white
+
+                shadow-lg
+                shadow-blue-500/20
+
+                transition
+
+                hover:-translate-y-0.5
+                hover:shadow-xl
+
+                active:scale-[0.98]
+              "
+            >
+              <HiSparkles size={18} />
+
+              Upgrade to Pro
+            </button>
+
+            {/* CURRENT PLAN */}
+
+            <p className="mt-5 text-xs font-semibold text-slate-400">
+              Pro and Team plans include cover letter access.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  /* =======================================================
+     MAIN COVER LETTER BUILDER
+  ======================================================= */
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* =====================================================
+
+      {/* ===================================================
           HEADER
-      ===================================================== */}
+      =================================================== */}
 
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur print:hidden">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-6 py-4">
-
-          {/* Left */}
-
-          <div className="flex items-center gap-4">
-
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-xl
-                border
-                border-slate-200
-                bg-white
-                text-slate-700
-                transition
-                hover:bg-slate-100
-              "
-            >
-              ←
-            </button>
-
-            <div>
-              <h1 className="text-xl font-black text-slate-900">
-                Cover Letter Builder
-              </h1>
-
-              <p className="hidden text-sm text-slate-500 sm:block">
-                Choose a design, fill in your information, and
-                create a professional cover letter.
-              </p>
-            </div>
-
-          </div>
-
-          {/* Right */}
-
-          <div className="flex items-center gap-3">
+      <DashboardHeader
+        title="Cover Letter"
+        subtitle="Create a professional cover letter for your next application."
+        rightContent={
+          <div className="flex items-center gap-2">
 
             <button
               type="button"
-              onClick={resetCoverLetter}
+              onClick={handleReset}
               className="
-                hidden
                 rounded-xl
                 border
                 border-slate-200
@@ -159,809 +582,1136 @@ export default function CoverLetter() {
                 text-slate-600
                 transition
                 hover:bg-slate-50
-                sm:block
+                hover:text-slate-900
               "
             >
-              Reset
+              New Letter
             </button>
 
             <button
               type="button"
-              onClick={handleDownload}
+              onClick={handleSave}
+              disabled={saving}
               className="
+                inline-flex
+                items-center
+                gap-2
+
                 rounded-xl
+
                 bg-gradient-to-r
                 from-blue-600
                 to-indigo-600
+
                 px-5
                 py-2.5
+
                 text-sm
-                font-bold
+                font-black
                 text-white
+
                 shadow-md
                 shadow-blue-500/20
+
                 transition
+
                 hover:-translate-y-0.5
                 hover:shadow-lg
+
+                disabled:cursor-not-allowed
+                disabled:opacity-60
               "
             >
-              Download / PDF
+              <HiCheck size={17} />
+
+              {saving
+                ? "Saving..."
+                : saved
+                  ? "Saved"
+                  : "Save"}
             </button>
 
           </div>
-        </div>
-      </header>
+        }
+      />
 
-      {/* =====================================================
+      {/* ===================================================
           MAIN
-      ===================================================== */}
+      =================================================== */}
 
-      <main className="mx-auto max-w-[1500px] px-6 py-8">
+      <main className="mx-auto max-w-[1800px] px-4 py-6 sm:px-6 lg:px-8">
 
-        {/* ===================================================
-            TEMPLATE SELECTION
-        =================================================== */}
-
-        <div className="print:hidden">
-          <CoverLetterTemplates />
-        </div>
-
-        {/* ===================================================
-            BUILDER
-        =================================================== */}
-
-        <div className="grid gap-8 xl:grid-cols-[460px_minmax(0,1fr)]">
+        <div className="grid gap-6 xl:grid-cols-[390px_minmax(0,1fr)]">
 
           {/* =================================================
-              EDITOR
+              EDITOR SIDEBAR
           ================================================= */}
 
-          <section
-            className="
-              rounded-3xl
-              border
-              border-slate-200
-              bg-white
-              p-6
-              shadow-sm
-              print:hidden
-            "
-          >
-
-            {/* Header */}
-
-            <div className="mb-8">
-
-              <div className="mb-2 inline-flex rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
-                Cover Letter Editor
-              </div>
-
-              <h2 className="text-2xl font-black text-slate-900">
-                Fill in your information
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Your information will automatically appear in
-                the selected cover letter template.
-              </p>
-
-            </div>
+          <aside className="space-y-5">
 
             {/* =================================================
-                PERSONAL INFORMATION
+                TEMPLATE SELECTOR
             ================================================= */}
 
-            <div className="mb-8">
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
 
-              <SectionTitle
-                number="01"
-                title="Your Information"
-              />
+              <div className="flex items-start justify-between gap-4">
 
-              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest text-blue-600">
+                    Step 01
+                  </p>
 
-                <Input
-                  label="Full Name"
-                  value={personalInfo.fullName}
-                  onChange={(value) =>
-                    updatePersonalInfo(
-                      "fullName",
-                      value
-                    )
-                  }
-                  placeholder="Talal Hassan"
-                />
+                  <h2 className="mt-1 text-lg font-black text-slate-900">
+                    Choose Template
+                  </h2>
 
-                <Input
-                  label="Email"
-                  type="email"
-                  value={personalInfo.email}
-                  onChange={(value) =>
-                    updatePersonalInfo(
-                      "email",
-                      value
-                    )
-                  }
-                  placeholder="talal@example.com"
-                />
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Select a professional design for your cover letter.
+                  </p>
+                </div>
 
-                <Input
-                  label="Phone"
-                  value={personalInfo.phone}
-                  onChange={(value) =>
-                    updatePersonalInfo(
-                      "phone",
-                      value
-                    )
-                  }
-                  placeholder="+92 300 1234567"
-                />
-
-                <Input
-                  label="Location"
-                  value={personalInfo.location}
-                  onChange={(value) =>
-                    updatePersonalInfo(
-                      "location",
-                      value
-                    )
-                  }
-                  placeholder="Abbottabad, Pakistan"
-                />
-
-                <Input
-                  label="Website"
-                  value={personalInfo.website}
-                  onChange={(value) =>
-                    updatePersonalInfo(
-                      "website",
-                      value
-                    )
-                  }
-                  placeholder="yourwebsite.com"
-                />
-
-                <Input
-                  label="LinkedIn"
-                  value={personalInfo.linkedin}
-                  onChange={(value) =>
-                    updatePersonalInfo(
-                      "linkedin",
-                      value
-                    )
-                  }
-                  placeholder="linkedin.com/in/yourname"
+                <HiDocumentText
+                  size={22}
+                  className="text-slate-400"
                 />
 
               </div>
-            </div>
+
+              {/* TEMPLATE BUTTON */}
+
+              <div className="relative mt-5">
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTemplateOpen(
+                      (previous) =>
+                        !previous
+                    )
+                  }
+                  className="
+                    flex
+                    w-full
+                    items-center
+                    justify-between
+
+                    rounded-2xl
+
+                    border
+                    border-slate-200
+
+                    bg-slate-50
+
+                    px-4
+                    py-3.5
+
+                    text-left
+
+                    transition
+
+                    hover:border-blue-200
+                    hover:bg-blue-50
+                  "
+                >
+                  <div>
+
+                    <p className="text-sm font-black text-slate-900">
+                      {currentTemplate.name}
+                    </p>
+
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {currentTemplate.description}
+                    </p>
+
+                  </div>
+
+                  <HiChevronDown
+                    size={18}
+                    className={`text-slate-400 transition ${
+                      templateOpen
+                        ? "rotate-180"
+                        : ""
+                    }`}
+                  />
+                </button>
+
+                {templateOpen && (
+                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+
+                    {COVER_LETTER_TEMPLATES.map(
+                      (template) => (
+                        <button
+                          key={
+                            template.id
+                          }
+                          type="button"
+                          onClick={() => {
+                            setSelectedTemplate(
+                              template.id
+                            );
+
+                            setTemplateOpen(
+                              false
+                            );
+
+                            setSaved(
+                              false
+                            );
+                          }}
+                          className="
+                            flex
+                            w-full
+                            items-start
+                            gap-3
+
+                            rounded-xl
+
+                            px-3
+                            py-3
+
+                            text-left
+
+                            transition
+
+                            hover:bg-slate-50
+                          "
+                        >
+                          <div
+                            className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${
+                              selectedTemplate ===
+                              template.id
+                                ? "bg-blue-600 text-white"
+                                : "bg-slate-100 text-slate-400"
+                            }`}
+                          >
+                            {selectedTemplate ===
+                              template.id && (
+                              <HiCheck
+                                size={14}
+                              />
+                            )}
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">
+                              {
+                                template.name
+                              }
+                            </p>
+
+                            <p className="mt-0.5 text-xs leading-5 text-slate-500">
+                              {
+                                template.description
+                              }
+                            </p>
+                          </div>
+                        </button>
+                      )
+                    )}
+
+                  </div>
+                )}
+
+              </div>
+
+            </section>
 
             {/* =================================================
-                RECIPIENT
+                JOB INFORMATION
             ================================================= */}
 
-            <div className="mb-8">
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
 
-              <SectionTitle
+              <EditorSectionHeader
                 number="02"
-                title="Recipient"
+                title="Job Information"
+                description="Add the position and company information."
               />
 
               <div className="space-y-4">
 
-                <Input
-                  label="Hiring Manager"
-                  value={recipient.hiringManager}
-                  onChange={(value) =>
-                    updateRecipient(
-                      "hiringManager",
-                      value
-                    )
-                  }
-                  placeholder="Sarah Johnson"
-                />
-
-                <Input
-                  label="Company"
-                  value={recipient.company}
-                  onChange={(value) =>
-                    updateRecipient(
-                      "company",
-                      value
-                    )
-                  }
-                  placeholder="Acme Technologies"
-                />
-
-                <Input
+                <Field
                   label="Job Title"
-                  value={recipient.jobTitle}
+                  value={
+                    letter.jobTitle
+                  }
                   onChange={(value) =>
-                    updateRecipient(
+                    updateLetter(
                       "jobTitle",
                       value
                     )
                   }
-                  placeholder="Frontend Developer"
                 />
 
-                <Input
-                  label="Company Address"
-                  value={recipient.companyAddress}
-                  onChange={(value) =>
-                    updateRecipient(
-                      "companyAddress",
-                      value
-                    )
+                <Field
+                  label="Company Name"
+                  value={
+                    letter.companyName
                   }
-                  placeholder="Islamabad, Pakistan"
-                />
-
-              </div>
-            </div>
-
-            {/* =================================================
-                LETTER CONTENT
-            ================================================= */}
-
-            <div>
-
-              <SectionTitle
-                number="03"
-                title="Letter Content"
-              />
-
-              <div className="space-y-4">
-
-                <Input
-                  label="Date"
-                  type="date"
-                  value={letter.date}
                   onChange={(value) =>
                     updateLetter(
-                      "date",
+                      "companyName",
                       value
                     )
                   }
                 />
 
-                <Input
+                <Field
+                  label="Recipient Name"
+                  value={
+                    letter.recipientName
+                  }
+                  onChange={(value) =>
+                    updateLetter(
+                      "recipientName",
+                      value
+                    )
+                  }
+                />
+
+                <Field
+                  label="Subject"
+                  value={
+                    letter.subject
+                  }
+                  onChange={(value) =>
+                    updateLetter(
+                      "subject",
+                      value
+                    )
+                  }
+                />
+
+                <Field
                   label="Greeting"
-                  value={letter.greeting}
+                  value={
+                    letter.greeting
+                  }
                   onChange={(value) =>
                     updateLetter(
                       "greeting",
                       value
                     )
                   }
-                  placeholder="Dear Hiring Manager,"
                 />
 
-                <Textarea
-                  label="Opening Paragraph"
-                  value={letter.opening}
+              </div>
+
+            </section>
+
+            {/* =================================================
+                CONTENT
+            ================================================= */}
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+
+              <EditorSectionHeader
+                number="03"
+                title="Letter Content"
+                description="Write and refine the main content of your letter."
+              />
+
+              <div className="space-y-4">
+
+                <TextareaField
+                  label="Opening"
+                  value={
+                    letter.opening
+                  }
                   onChange={(value) =>
                     updateLetter(
                       "opening",
                       value
                     )
                   }
-                  placeholder="Introduce yourself and explain why you are interested in the position."
+                  rows={6}
                 />
 
-                <Textarea
+                <TextareaField
                   label="Main Body"
-                  rows={8}
-                  value={letter.body}
+                  value={
+                    letter.body
+                  }
                   onChange={(value) =>
                     updateLetter(
                       "body",
                       value
                     )
                   }
-                  placeholder="Explain your relevant experience, skills, achievements, and why you would be a strong fit for the company."
+                  rows={8}
                 />
 
-                <Textarea
+                <TextareaField
                   label="Closing"
-                  rows={5}
-                  value={letter.closing}
+                  value={
+                    letter.closing
+                  }
                   onChange={(value) =>
                     updateLetter(
                       "closing",
                       value
                     )
                   }
-                  placeholder="Thank the employer and express your interest in discussing the opportunity."
+                  rows={5}
                 />
 
-                <Input
-                  label="Signature"
-                  value={letter.signature}
+                <TextareaField
+                  label="Sign Off"
+                  value={
+                    letter.signOff
+                  }
                   onChange={(value) =>
                     updateLetter(
-                      "signature",
+                      "signOff",
                       value
                     )
                   }
-                  placeholder="Talal Hassan"
+                  rows={2}
                 />
 
               </div>
-            </div>
-          </section>
+
+            </section>
+
+            {/* =================================================
+                JOB DESCRIPTION
+            ================================================= */}
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowJobDescription(
+                    (previous) =>
+                      !previous
+                  )
+                }
+                className="flex w-full items-center justify-between text-left"
+              >
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    Optional
+                  </p>
+
+                  <h2 className="mt-1 text-sm font-black text-slate-900">
+                    Job Description
+                  </h2>
+                </div>
+
+                <HiChevronDown
+                  size={18}
+                  className={`text-slate-400 transition ${
+                    showJobDescription
+                      ? "rotate-180"
+                      : ""
+                  }`}
+                />
+              </button>
+
+              {showJobDescription && (
+                <div className="mt-4">
+                  <TextareaField
+                    label="Job Description"
+                    value={
+                      letter.jobDescription
+                    }
+                    onChange={(
+                      value
+                    ) =>
+                      updateLetter(
+                        "jobDescription",
+                        value
+                      )
+                    }
+                    rows={8}
+                  />
+                </div>
+              )}
+
+            </section>
+
+            {/* =================================================
+                ACTIONS
+            ================================================= */}
+
+            <section className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
+
+              <div className="flex items-start gap-3">
+
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+                  <HiStar size={17} />
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    Pro / Team feature
+                  </h3>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-600">
+                    Your cover letter is available
+                    because your current plan is{" "}
+                    <span className="font-black">
+                      {planName}
+                    </span>
+                    .
+                  </p>
+                </div>
+
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-2">
+
+                <button
+                  type="button"
+                  onClick={
+                    handleDownload
+                  }
+                  className="
+                    rounded-xl
+                    border
+                    border-slate-200
+                    bg-white
+                    px-3
+                    py-2.5
+                    text-xs
+                    font-black
+                    text-slate-700
+                    transition
+                    hover:bg-slate-50
+                  "
+                >
+                  Download TXT
+                </button>
+
+                <button
+                  type="button"
+                  onClick={
+                    handlePrint
+                  }
+                  className="
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-2
+
+                    rounded-xl
+
+                    bg-slate-900
+
+                    px-3
+                    py-2.5
+
+                    text-xs
+                    font-black
+                    text-white
+
+                    transition
+
+                    hover:bg-slate-800
+                  "
+                >
+                  <HiPrinter
+                    size={14}
+                  />
+
+                  Print / PDF
+                </button>
+
+              </div>
+
+            </section>
+
+          </aside>
 
           {/* =================================================
-              LIVE PREVIEW
+              PREVIEW
           ================================================= */}
 
           <section className="min-w-0">
 
-            <div className="sticky top-24">
+            <div className="sticky top-[92px]">
 
-              {/* Preview Header */}
+              {/* PREVIEW TOOLBAR */}
 
-              <div className="mb-4 flex items-center justify-between print:hidden">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
 
                 <div>
-
-                  <h2 className="text-xl font-black text-slate-900">
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">
                     Live Preview
-                  </h2>
+                  </p>
 
-                  <p className="mt-1 text-sm text-slate-500">
-                    {getTemplateName(template)} template
+                  <p className="mt-1 text-sm font-bold text-slate-700">
+                    {currentTemplate.name}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+
+                  <button
+                    type="button"
+                    onClick={
+                      handleSave
+                    }
+                    className="
+                      inline-flex
+                      items-center
+                      gap-2
+
+                      rounded-xl
+
+                      border
+                      border-slate-200
+
+                      bg-white
+
+                      px-4
+                      py-2.5
+
+                      text-xs
+                      font-black
+                      text-slate-700
+
+                      shadow-sm
+
+                      transition
+
+                      hover:bg-slate-50
+                    "
+                  >
+                    <HiCheck
+                      size={15}
+                    />
+
+                    {saved
+                      ? "Saved"
+                      : "Save"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={
+                      handlePrint
+                    }
+                    className="
+                      inline-flex
+                      items-center
+                      gap-2
+
+                      rounded-xl
+
+                      bg-slate-900
+
+                      px-4
+                      py-2.5
+
+                      text-xs
+                      font-black
+                      text-white
+
+                      transition
+
+                      hover:bg-slate-800
+                    "
+                  >
+                    <HiPrinter
+                      size={15}
+                    />
+
+                    Print
+                  </button>
+
+                </div>
+
+              </div>
+
+              {/* PAPER */}
+
+              <div className="overflow-auto rounded-3xl border border-slate-200 bg-slate-200/70 p-4 shadow-inner sm:p-8">
+
+                <CoverLetterPaper
+                  template={
+                    selectedTemplate
+                  }
+                  letter={letter}
+                  profile={profile}
+                  contact={contact}
+                />
+
+              </div>
+
+            </div>
+
+          </section>
+
+        </div>
+
+      </main>
+
+      {/* ===================================================
+          PRINT STYLES
+      =================================================== */}
+
+      <style>
+        {`
+          @media print {
+            body {
+              background: white !important;
+            }
+
+            header,
+            aside,
+            .no-print {
+              display: none !important;
+            }
+
+            main {
+              display: block !important;
+              max-width: none !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+
+            main > div {
+              display: block !important;
+            }
+
+            section {
+              display: block !important;
+            }
+
+            .print-paper {
+              box-shadow: none !important;
+              border: none !important;
+              border-radius: 0 !important;
+              width: 100% !important;
+              min-height: auto !important;
+              margin: 0 !important;
+            }
+
+            @page {
+              size: A4;
+              margin: 18mm;
+            }
+          }
+        `}
+      </style>
+    </div>
+  );
+}
+
+/* =========================================================
+   COVER LETTER PAPER
+========================================================= */
+
+function CoverLetterPaper({
+  template,
+  letter,
+  profile,
+  contact,
+}) {
+  const fullName =
+    profile?.fullName ||
+    "Your Name";
+
+  const professionalTitle =
+    profile?.professionalTitle ||
+    profile?.desiredJobTitle ||
+    "";
+
+  const email =
+    contact?.email ||
+    "";
+
+  const phone =
+    contact?.phone ||
+    "";
+
+  const website =
+    contact?.website ||
+    "";
+
+  const linkedin =
+    contact?.linkedin ||
+    "";
+
+  const github =
+    contact?.github ||
+    "";
+
+  /* =======================================================
+     PROFESSIONAL
+  ======================================================= */
+
+  if (template === "professional") {
+    return (
+      <article className="print-paper mx-auto min-h-[1120px] w-full max-w-[820px] bg-white px-8 py-10 shadow-2xl sm:px-14 sm:py-14">
+
+        <div className="border-b-2 border-slate-900 pb-7">
+
+          <h1 className="text-3xl font-black tracking-tight text-slate-950">
+            {fullName}
+          </h1>
+
+          {professionalTitle && (
+            <p className="mt-1 text-sm font-bold text-slate-600">
+              {professionalTitle}
+            </p>
+          )}
+
+          <ContactLine
+            email={email}
+            phone={phone}
+            website={website}
+            linkedin={linkedin}
+            github={github}
+          />
+
+        </div>
+
+        <div className="mt-9">
+
+          <p className="text-sm font-semibold text-slate-600">
+            {letter.recipientName ||
+              "Hiring Manager"}
+          </p>
+
+          <p className="mt-1 text-sm text-slate-500">
+            {letter.companyName ||
+              "Company Name"}
+          </p>
+
+          <p className="mt-6 text-sm font-bold text-slate-900">
+            {letter.subject ||
+              `Application for ${
+                letter.jobTitle ||
+                "the position"
+              }`}
+          </p>
+
+        </div>
+
+        <div className="mt-8 space-y-5 text-[15px] leading-7 text-slate-700">
+
+          <p>
+            {letter.greeting}
+          </p>
+
+          <p>
+            {letter.opening}
+          </p>
+
+          <p>
+            {letter.body}
+          </p>
+
+          {letter.jobDescription && (
+            <p>
+              I am particularly interested in this opportunity because my background aligns well with the requirements of the role.
+            </p>
+          )}
+
+          <p>
+            {letter.closing}
+          </p>
+
+          <div className="pt-4">
+
+            <p>
+              {letter.signOff}
+            </p>
+
+            <p className="mt-5 font-black text-slate-950">
+              {fullName}
+            </p>
+
+          </div>
+
+        </div>
+
+      </article>
+    );
+  }
+
+  /* =======================================================
+     MODERN
+  ======================================================= */
+
+  if (template === "modern") {
+    return (
+      <article className="print-paper mx-auto min-h-[1120px] w-full max-w-[820px] bg-white shadow-2xl">
+
+        <div className="bg-gradient-to-r from-blue-700 to-indigo-700 px-8 py-10 text-white sm:px-14">
+
+          <h1 className="text-3xl font-black tracking-tight">
+            {fullName}
+          </h1>
+
+          {professionalTitle && (
+            <p className="mt-2 text-sm font-semibold text-blue-100">
+              {professionalTitle}
+            </p>
+          )}
+
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-blue-100">
+
+            {email && (
+              <span>
+                {email}
+              </span>
+            )}
+
+            {phone && (
+              <span>
+                {phone}
+              </span>
+            )}
+
+            {website && (
+              <span>
+                {website}
+              </span>
+            )}
+
+          </div>
+
+        </div>
+
+        <div className="px-8 py-10 sm:px-14">
+
+          <div className="grid gap-8 sm:grid-cols-[180px_minmax(0,1fr)]">
+
+            <div className="text-sm">
+
+              <p className="font-black text-slate-900">
+                To
+              </p>
+
+              <p className="mt-2 font-bold text-slate-700">
+                {letter.recipientName ||
+                  "Hiring Manager"}
+              </p>
+
+              <p className="mt-1 text-slate-500">
+                {letter.companyName ||
+                  "Company Name"}
+              </p>
+
+              <p className="mt-6 font-black text-slate-900">
+                Role
+              </p>
+
+              <p className="mt-2 text-slate-500">
+                {letter.jobTitle ||
+                  "Position"}
+              </p>
+
+            </div>
+
+            <div>
+
+              <p className="text-sm font-bold text-blue-700">
+                {letter.subject ||
+                  `Application for ${
+                    letter.jobTitle ||
+                    "the position"
+                  }`}
+              </p>
+
+              <div className="mt-7 space-y-5 text-[15px] leading-7 text-slate-700">
+
+                <p>
+                  {letter.greeting}
+                </p>
+
+                <p>
+                  {letter.opening}
+                </p>
+
+                <p>
+                  {letter.body}
+                </p>
+
+                <p>
+                  {letter.closing}
+                </p>
+
+                <div className="pt-4">
+
+                  <p>
+                    {letter.signOff}
+                  </p>
+
+                  <p className="mt-5 font-black text-slate-950">
+                    {fullName}
                   </p>
 
                 </div>
 
-                <div className="rounded-full bg-green-50 px-3 py-1.5 text-xs font-bold text-green-700">
-                  Live
-                </div>
-
               </div>
 
-              {/* =================================================
-                  PREVIEW AREA
-              ================================================= */}
-
-              <div
-                className="
-                  overflow-auto
-                  rounded-3xl
-                  border
-                  border-slate-200
-                  bg-slate-200
-                  p-6
-                  shadow-sm
-                  print:overflow-visible
-                  print:border-0
-                  print:bg-white
-                  print:p-0
-                  print:shadow-none
-                "
-              >
-
-                <div
-                  id="cover-letter-preview"
-                  className="
-                    mx-auto
-                    w-[794px]
-                    bg-white
-                    shadow-2xl
-                    print:mx-0
-                    print:w-[794px]
-                    print:shadow-none
-                  "
-                >
-
-                  {/* =============================================
-                      SELECTED TEMPLATE
-                  ============================================= */}
-
-                  {template === "professional" && (
-                    <ProfessionalTemplate
-                      personalInfo={personalInfo}
-                      recipient={recipient}
-                      letter={letter}
-                    />
-                  )}
-
-                  {template === "minimal" && (
-                    <MinimalTemplate
-                      personalInfo={personalInfo}
-                      recipient={recipient}
-                      letter={letter}
-                    />
-                  )}
-
-                  {template === "modern" && (
-                    <ModernTemplate
-                      personalInfo={personalInfo}
-                      recipient={recipient}
-                      letter={letter}
-                    />
-                  )}
-
-                </div>
-
-              </div>
             </div>
-          </section>
+
+          </div>
+
         </div>
-      </main>
-    </div>
-  );
-}
 
-/* =========================================================
-   MODERN TEMPLATE
-========================================================= */
+      </article>
+    );
+  }
 
-function ModernTemplate({
-  personalInfo,
-  recipient,
-  letter,
-}) {
+  /* =======================================================
+     MINIMAL
+  ======================================================= */
+
   return (
-    <div className="min-h-[1123px] bg-white px-[72px] py-[70px] text-slate-900">
+    <article className="print-paper mx-auto min-h-[1120px] w-full max-w-[820px] bg-white px-8 py-12 shadow-2xl sm:px-16 sm:py-16">
 
-      <div className="border-b-[3px] border-blue-600 pb-7">
+      <header>
 
-        <h1 className="text-4xl font-black tracking-tight">
-          {personalInfo.fullName || "Your Name"}
+        <h1 className="text-2xl font-black text-slate-950">
+          {fullName}
         </h1>
 
-        {recipient.jobTitle && (
-          <p className="mt-2 text-sm font-bold uppercase tracking-[0.18em] text-blue-600">
-            {recipient.jobTitle}
+        {professionalTitle && (
+          <p className="mt-1 text-sm text-slate-500">
+            {professionalTitle}
           </p>
         )}
 
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
+        <div className="mt-4 h-px bg-slate-200" />
 
-          {personalInfo.email && (
-            <span>{personalInfo.email}</span>
-          )}
+        <ContactLine
+          email={email}
+          phone={phone}
+          website={website}
+          linkedin={linkedin}
+          github={github}
+        />
 
-          {personalInfo.phone && (
-            <span>{personalInfo.phone}</span>
-          )}
+      </header>
 
-          {personalInfo.location && (
-            <span>{personalInfo.location}</span>
-          )}
+      <div className="mt-12">
 
-        </div>
+        <p className="text-sm text-slate-500">
+          {letter.recipientName ||
+            "Hiring Manager"}
+        </p>
 
-        {(personalInfo.website ||
-          personalInfo.linkedin) && (
-          <div className="mt-1 flex flex-wrap gap-x-5 text-xs text-blue-600">
+        <p className="mt-1 text-sm text-slate-500">
+          {letter.companyName ||
+            "Company Name"}
+        </p>
 
-            {personalInfo.website && (
-              <span>{personalInfo.website}</span>
-            )}
+        <h2 className="mt-9 text-base font-black text-slate-950">
+          {letter.subject ||
+            `Application for ${
+              letter.jobTitle ||
+              "the position"
+            }`}
+        </h2>
 
-            {personalInfo.linkedin && (
-              <span>{personalInfo.linkedin}</span>
-            )}
+        <div className="mt-7 space-y-6 text-[15px] leading-8 text-slate-700">
 
-          </div>
-        )}
-
-      </div>
-
-      <div className="mt-10 text-sm text-slate-500">
-        {formatDate(letter.date)}
-      </div>
-
-      <div className="mt-8 space-y-1 text-sm leading-6 text-slate-700">
-
-        {recipient.hiringManager && (
-          <div className="font-bold">
-            {recipient.hiringManager}
-          </div>
-        )}
-
-        {recipient.jobTitle && (
-          <div>{recipient.jobTitle}</div>
-        )}
-
-        {recipient.company && (
-          <div className="font-semibold">
-            {recipient.company}
-          </div>
-        )}
-
-        {recipient.companyAddress && (
-          <div>{recipient.companyAddress}</div>
-        )}
-
-      </div>
-
-      <div className="mt-10 text-sm font-bold text-slate-900">
-        {letter.greeting || "Dear Hiring Manager,"}
-      </div>
-
-      <LetterContent
-        letter={letter}
-        accent="blue"
-      />
-
-      <Signature
-        letter={letter}
-        personalInfo={personalInfo}
-        closing="Best regards,"
-      />
-
-    </div>
-  );
-}
-
-/* =========================================================
-   PROFESSIONAL TEMPLATE
-========================================================= */
-
-function ProfessionalTemplate({
-  personalInfo,
-  recipient,
-  letter,
-}) {
-  return (
-    <div className="min-h-[1123px] bg-white px-[82px] py-[72px] text-slate-900">
-
-      <div className="text-center">
-
-        <h1 className="text-4xl font-black tracking-wide">
-          {personalInfo.fullName || "YOUR NAME"}
-        </h1>
-
-        {recipient.jobTitle && (
-          <p className="mt-2 text-sm font-semibold uppercase tracking-widest text-slate-500">
-            {recipient.jobTitle}
+          <p>
+            {letter.greeting}
           </p>
-        )}
 
-        <div className="mt-5 h-px bg-slate-300" />
+          <p>
+            {letter.opening}
+          </p>
 
-        <div className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-slate-500">
+          <p>
+            {letter.body}
+          </p>
 
-          {personalInfo.email && (
-            <span>{personalInfo.email}</span>
-          )}
+          <p>
+            {letter.closing}
+          </p>
 
-          {personalInfo.phone && (
-            <span>{personalInfo.phone}</span>
-          )}
+          <div className="pt-2">
 
-          {personalInfo.location && (
-            <span>{personalInfo.location}</span>
-          )}
+            <p>
+              {letter.signOff}
+            </p>
+
+            <p className="mt-5 font-black text-slate-950">
+              {fullName}
+            </p>
+
+          </div>
 
         </div>
 
-        {(personalInfo.website ||
-          personalInfo.linkedin) && (
-          <div className="mt-1 flex justify-center gap-x-5 text-xs text-slate-500">
-
-            {personalInfo.website && (
-              <span>{personalInfo.website}</span>
-            )}
-
-            {personalInfo.linkedin && (
-              <span>{personalInfo.linkedin}</span>
-            )}
-
-          </div>
-        )}
-
       </div>
 
-      <div className="mt-11 text-sm text-slate-600">
-        {formatDate(letter.date)}
-      </div>
+    </article>
+  );
+}
 
-      <div className="mt-8 space-y-1 text-sm leading-6 text-slate-700">
+/* =========================================================
+   CONTACT LINE
+========================================================= */
 
-        {recipient.hiringManager && (
-          <div className="font-bold">
-            {recipient.hiringManager}
-          </div>
-        )}
+function ContactLine({
+  email,
+  phone,
+  website,
+  linkedin,
+  github,
+}) {
+  const values = [
+    email,
+    phone,
+    website,
+    linkedin,
+    github,
+  ].filter(Boolean);
 
-        {recipient.jobTitle && (
-          <div>{recipient.jobTitle}</div>
-        )}
+  if (!values.length) {
+    return null;
+  }
 
-        {recipient.company && (
-          <div className="font-semibold">
-            {recipient.company}
-          </div>
-        )}
-
-        {recipient.companyAddress && (
-          <div>{recipient.companyAddress}</div>
-        )}
-
-      </div>
-
-      <div className="mt-10 text-sm font-semibold">
-        {letter.greeting || "Dear Hiring Manager,"}
-      </div>
-
-      <LetterContent
-        letter={letter}
-        accent="slate"
-      />
-
-      <Signature
-        letter={letter}
-        personalInfo={personalInfo}
-        closing="Sincerely,"
-      />
-
+  return (
+    <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+      {values.map(
+        (value, index) => (
+          <span key={index}>
+            {value}
+          </span>
+        )
+      )}
     </div>
   );
 }
 
 /* =========================================================
-   MINIMAL TEMPLATE
+   EDITOR SECTION HEADER
 ========================================================= */
 
-function MinimalTemplate({
-  personalInfo,
-  recipient,
-  letter,
+function EditorSectionHeader({
+  number,
+  title,
+  description,
 }) {
   return (
-    <div className="min-h-[1123px] bg-white px-[84px] py-[78px] text-slate-900">
+    <div className="mb-5">
 
-      <div>
+      <div className="flex items-center gap-3">
 
-        <h1 className="text-4xl font-semibold tracking-tight">
-          {personalInfo.fullName || "Your Name"}
-        </h1>
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-[10px] font-black text-white">
+          {number}
+        </span>
 
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
-
-          {personalInfo.email && (
-            <span>{personalInfo.email}</span>
-          )}
-
-          {personalInfo.phone && (
-            <span>{personalInfo.phone}</span>
-          )}
-
-          {personalInfo.location && (
-            <span>{personalInfo.location}</span>
-          )}
-
-        </div>
-
-        {(personalInfo.website ||
-          personalInfo.linkedin) && (
-          <div className="mt-1 flex flex-wrap gap-x-4 text-xs text-slate-400">
-
-            {personalInfo.website && (
-              <span>{personalInfo.website}</span>
-            )}
-
-            {personalInfo.linkedin && (
-              <span>{personalInfo.linkedin}</span>
-            )}
-
-          </div>
-        )}
+        <h2 className="text-sm font-black text-slate-900">
+          {title}
+        </h2>
 
       </div>
 
-      <div className="mt-7 h-px bg-slate-200" />
-
-      <div className="mt-11 text-sm text-slate-400">
-        {formatDate(letter.date)}
-      </div>
-
-      <div className="mt-8 space-y-1 text-sm leading-6 text-slate-600">
-
-        {recipient.hiringManager && (
-          <div>{recipient.hiringManager}</div>
-        )}
-
-        {recipient.jobTitle && (
-          <div>{recipient.jobTitle}</div>
-        )}
-
-        {recipient.company && (
-          <div>{recipient.company}</div>
-        )}
-
-        {recipient.companyAddress && (
-          <div>{recipient.companyAddress}</div>
-        )}
-
-      </div>
-
-      <div className="mt-11 text-sm text-slate-800">
-        {letter.greeting || "Dear Hiring Manager,"}
-      </div>
-
-      <LetterContent
-        letter={letter}
-        accent="minimal"
-      />
-
-      <Signature
-        letter={letter}
-        personalInfo={personalInfo}
-        closing="Kind regards,"
-      />
-
-    </div>
-  );
-}
-
-/* =========================================================
-   LETTER CONTENT
-========================================================= */
-
-function LetterContent({ letter, accent }) {
-
-  const emptyText =
-    accent === "minimal"
-      ? "text-slate-300"
-      : "text-slate-400";
-
-  return (
-    <div className="mt-7 space-y-6 text-sm leading-7 text-slate-700">
-
-      {letter.opening ? (
-        <p className="whitespace-pre-line">
-          {letter.opening}
-        </p>
-      ) : (
-        <p className={emptyText}>
-          Your opening paragraph will appear here.
-        </p>
-      )}
-
-      {letter.body ? (
-        <p className="whitespace-pre-line">
-          {letter.body}
-        </p>
-      ) : (
-        <p className={emptyText}>
-          Your main letter content will appear here.
-        </p>
-      )}
-
-      {letter.closing && (
-        <p className="whitespace-pre-line">
-          {letter.closing}
-        </p>
-      )}
-
-    </div>
-  );
-}
-
-/* =========================================================
-   SIGNATURE
-========================================================= */
-
-function Signature({
-  letter,
-  personalInfo,
-  closing,
-}) {
-  return (
-    <div className="mt-11 text-sm text-slate-700">
-
-      <p>{closing}</p>
-
-      <p className="mt-6 font-bold text-slate-900">
-        {letter.signature ||
-          personalInfo.fullName ||
-          "Your Name"}
+      <p className="mt-2 pl-10 text-xs leading-5 text-slate-500">
+        {description}
       </p>
 
     </div>
@@ -969,43 +1719,19 @@ function Signature({
 }
 
 /* =========================================================
-   SECTION TITLE
+   INPUT FIELD
 ========================================================= */
 
-function SectionTitle({
-  number,
-  title,
-}) {
-  return (
-    <div className="mb-4 flex items-center gap-3">
-
-      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-xs font-black text-white">
-        {number}
-      </span>
-
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">
-        {title}
-      </h3>
-
-    </div>
-  );
-}
-
-/* =========================================================
-   INPUT
-========================================================= */
-
-function Input({
+function Field({
   label,
   value,
   onChange,
-  placeholder,
   type = "text",
 }) {
   return (
     <label className="block">
 
-      <span className="mb-1.5 block text-sm font-bold text-slate-700">
+      <span className="mb-1.5 block text-xs font-black text-slate-700">
         {label}
       </span>
 
@@ -1013,22 +1739,31 @@ function Input({
         type={type}
         value={value || ""}
         onChange={(event) =>
-          onChange(event.target.value)
+          onChange(
+            event.target.value
+          )
         }
-        placeholder={placeholder}
         className="
           h-11
           w-full
+
           rounded-xl
+
           border
           border-slate-200
+
           bg-white
-          px-4
+
+          px-3.5
+
           text-sm
+          font-medium
           text-slate-800
+
           outline-none
+
           transition
-          placeholder:text-slate-400
+
           focus:border-blue-500
           focus:ring-4
           focus:ring-blue-100
@@ -1040,20 +1775,19 @@ function Input({
 }
 
 /* =========================================================
-   TEXTAREA
+   TEXTAREA FIELD
 ========================================================= */
 
-function Textarea({
+function TextareaField({
   label,
   value,
   onChange,
-  placeholder,
   rows = 5,
 }) {
   return (
     <label className="block">
 
-      <span className="mb-1.5 block text-sm font-bold text-slate-700">
+      <span className="mb-1.5 block text-xs font-black text-slate-700">
         {label}
       </span>
 
@@ -1061,24 +1795,34 @@ function Textarea({
         rows={rows}
         value={value || ""}
         onChange={(event) =>
-          onChange(event.target.value)
+          onChange(
+            event.target.value
+          )
         }
-        placeholder={placeholder}
         className="
           w-full
+
           resize-y
+
           rounded-xl
+
           border
           border-slate-200
+
           bg-white
-          px-4
+
+          px-3.5
           py-3
+
           text-sm
+          font-medium
           leading-6
           text-slate-800
+
           outline-none
+
           transition
-          placeholder:text-slate-400
+
           focus:border-blue-500
           focus:ring-4
           focus:ring-blue-100
@@ -1090,44 +1834,134 @@ function Textarea({
 }
 
 /* =========================================================
-   DATE FORMATTER
+   LOCKED FEATURE
 ========================================================= */
 
-function formatDate(date) {
+function LockedFeature({
+  text,
+}) {
+  return (
+    <div className="flex items-center gap-3">
 
-  if (!date) {
-    return "Date";
-  }
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+        <HiCheck size={15} />
+      </div>
 
-  const parsedDate = new Date(date);
+      <p className="text-sm font-semibold text-slate-700">
+        {text}
+      </p>
 
-  if (Number.isNaN(parsedDate.getTime())) {
-    return date;
-  }
-
-  return parsedDate.toLocaleDateString(
-    "en-US",
-    {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    }
+    </div>
   );
 }
 
 /* =========================================================
-   TEMPLATE NAME
+   BUILD PLAIN TEXT
 ========================================================= */
 
-function getTemplateName(template) {
+function buildPlainText(
+  letter,
+  profile,
+  contact
+) {
+  const fullName =
+    profile?.fullName ||
+    "Your Name";
 
-  if (template === "professional") {
-    return "Professional";
+  const lines = [];
+
+  lines.push(fullName);
+
+  if (profile?.professionalTitle) {
+    lines.push(
+      profile.professionalTitle
+    );
   }
 
-  if (template === "minimal") {
-    return "Minimal";
+  if (contact?.email) {
+    lines.push(contact.email);
   }
 
-  return "Modern";
+  if (contact?.phone) {
+    lines.push(contact.phone);
+  }
+
+  lines.push("");
+
+  lines.push(
+    letter.recipientName ||
+      "Hiring Manager"
+  );
+
+  lines.push(
+    letter.companyName ||
+      "Company Name"
+  );
+
+  lines.push("");
+
+  lines.push(
+    letter.subject ||
+      `Application for ${
+        letter.jobTitle ||
+        "the position"
+      }`
+  );
+
+  lines.push("");
+
+  lines.push(
+    letter.greeting
+  );
+
+  lines.push("");
+
+  lines.push(
+    letter.opening
+  );
+
+  lines.push("");
+
+  lines.push(
+    letter.body
+  );
+
+  lines.push("");
+
+  lines.push(
+    letter.closing
+  );
+
+  lines.push("");
+
+  lines.push(
+    letter.signOff
+  );
+
+  lines.push("");
+
+  lines.push(fullName);
+
+  return lines.join("\n");
+}
+
+/* =========================================================
+   SANITIZE FILENAME
+========================================================= */
+
+function sanitizeFilename(
+  value
+) {
+  return String(value)
+    .trim()
+    .replace(
+      /[^a-z0-9-_]+/gi,
+      "-"
+    )
+    .replace(
+      /^-+|-+$/g,
+      ""
+    )
+    .toLowerCase() ||
+    "cover-letter";
 }
