@@ -1,18 +1,70 @@
+import { useState } from "react";
+import { HiSparkles } from "react-icons/hi2";
+
 import { useResume } from "../../../context/ResumeContext";
+import { usePricing } from "../../../context/PricingContext";
+import { generateSummaries } from "../../../services/aiService";
 
 export default function PersonalInfoForm() {
   const {
     resumeData,
     updatePersonalInfo,
   } = useResume();
+  const { refreshPricing } = usePricing();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [summaryOptions, setSummaryOptions] = useState(null);
+  const [aiMessage, setAiMessage] = useState("");
 
   const personal = resumeData.personalInfo;
 
   function handleChange(e) {
+    if (e.target.name === "summary") {
+      setSummaryOptions(null);
+      setAiMessage("");
+    }
+
     updatePersonalInfo(
       e.target.name,
       e.target.value
     );
+  }
+
+  async function handleGenerateSummaries() {
+    if (
+      resumeData.experience.length === 0 &&
+      resumeData.skills.length === 0
+    ) {
+      setAiMessage("Add experience or skills before generating summaries.");
+      return;
+    }
+
+    setIsGenerating(true);
+    setAiMessage("");
+
+    try {
+      const result = await generateSummaries(
+        resumeData.experience,
+        resumeData.skills
+      );
+
+      setSummaryOptions(result.summaries);
+
+      try {
+        await refreshPricing();
+      } catch (refreshError) {
+        console.error("Failed to refresh AI credits:", refreshError);
+      }
+    } catch (error) {
+      setAiMessage(error?.message || "Unable to generate summaries.");
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  function selectSummary(summary) {
+    updatePersonalInfo("summary", summary);
+    setSummaryOptions(null);
+    setAiMessage("Summary inserted. Review it before continuing.");
   }
 
   return (
@@ -118,9 +170,21 @@ export default function PersonalInfoForm() {
       {/* Summary */}
 
       <div>
-        <label className="mb-2 block font-semibold text-slate-700">
-          Professional Summary
-        </label>
+        <div className="mb-2 flex items-center justify-between gap-4">
+          <label className="block font-semibold text-slate-700">
+            Professional Summary
+          </label>
+
+          <button
+            type="button"
+            onClick={handleGenerateSummaries}
+            disabled={isGenerating || (resumeData.experience.length === 0 && resumeData.skills.length === 0)}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <HiSparkles />
+            {isGenerating ? "Generating..." : "Generate with AI"}
+          </button>
+        </div>
 
         <textarea
           name="summary"
@@ -148,6 +212,45 @@ export default function PersonalInfoForm() {
             focus:ring-blue-100
           "
         />
+
+        {resumeData.experience.length === 0 &&
+          resumeData.skills.length === 0 && (
+            <p className="mt-2 text-sm text-slate-500">
+              Add experience or skills first to generate summary options.
+            </p>
+          )}
+
+        {summaryOptions && (
+          <div className="mt-4 space-y-3">
+            <p className="text-sm font-semibold text-slate-700">
+              Choose a summary to insert:
+            </p>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {Object.entries(summaryOptions).map(([style, summary]) => (
+                <button
+                  key={style}
+                  type="button"
+                  onClick={() => selectSummary(summary)}
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-blue-400 hover:bg-blue-50"
+                >
+                  <span className="mb-2 block text-sm font-bold capitalize text-blue-700">
+                    {style}
+                  </span>
+                  <span className="block text-sm leading-6 text-slate-600">
+                    {summary}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {aiMessage && (
+          <p className="mt-3 text-sm text-slate-600" role="status">
+            {aiMessage}
+          </p>
+        )}
       </div>
     </div>
   );

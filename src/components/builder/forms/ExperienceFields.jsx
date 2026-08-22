@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { HiSparkles } from "react-icons/hi2";
+
+import { usePricing } from "../../../context/PricingContext";
+import { improveBulletPoint } from "../../../services/aiService";
 
 export default function ExperienceFields({
   initialData = {},
@@ -15,9 +19,16 @@ export default function ExperienceFields({
     endDate: initialData.endDate || "",
     currentlyWorking:
       initialData.currentlyWorking || false,
-    description:
-      initialData.description || "",
+    description: initialData.description || "",
   });
+  const [bullets, setBullets] = useState(() =>
+    (initialData.description || "").split(/\r?\n/)
+  );
+  const [improvingBullet, setImprovingBullet] =
+    useState(null);
+  const [aiMessage, setAiMessage] =
+    useState("");
+  const { refreshPricing } = usePricing();
 
   function handleChange(e) {
     const { name, value, type, checked } =
@@ -36,7 +47,64 @@ export default function ExperienceFields({
   function handleSubmit(e) {
     e.preventDefault();
 
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      description: bullets
+        .map((bullet) => bullet.trim())
+        .filter(Boolean)
+        .join("\n"),
+    });
+  }
+
+  function updateBullet(index, value) {
+    setBullets((previous) =>
+      previous.map((bullet, bulletIndex) =>
+        bulletIndex === index ? value : bullet
+      )
+    );
+    setAiMessage("");
+  }
+
+  async function handleImproveBullet(index) {
+    const bullet = bullets[index].trim();
+
+    if (!bullet) {
+      setAiMessage("Enter a bullet point before improving it.");
+      return;
+    }
+
+    setImprovingBullet(index);
+    setAiMessage("");
+
+    try {
+      const result = await improveBulletPoint(bullet);
+
+      setBullets((previous) =>
+        previous.map((currentBullet, bulletIndex) =>
+          bulletIndex === index
+            ? result.rewrittenBullet
+            : currentBullet
+        )
+      );
+
+      setAiMessage("Bullet improved. Review it before saving.");
+
+      try {
+        await refreshPricing();
+      } catch (refreshError) {
+        console.error(
+          "Failed to refresh AI credits:",
+          refreshError
+        );
+      }
+    } catch (error) {
+      setAiMessage(
+        error?.message ||
+          "Unable to improve this bullet point."
+      );
+    } finally {
+      setImprovingBullet(null);
+    }
   }
 
   return (
@@ -193,14 +261,51 @@ export default function ExperienceFields({
           Job Description
         </label>
 
-        <textarea
-          rows={5}
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          placeholder="Describe your responsibilities..."
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none"
-        />
+        <div className="space-y-3">
+          {bullets.map((bullet, index) => (
+            <div
+              key={index}
+              className="flex items-start gap-2"
+            >
+              <textarea
+                rows={2}
+                value={bullet}
+                onChange={(event) =>
+                  updateBullet(index, event.target.value)
+                }
+                placeholder="Describe one responsibility or achievement..."
+                className="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3 focus:border-blue-500 focus:outline-none"
+              />
+
+              <button
+                type="button"
+                onClick={() => handleImproveBullet(index)}
+                disabled={improvingBullet !== null}
+                title="Enhance with AI"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 text-xs font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <HiSparkles size={16} />
+                {improvingBullet === index
+                  ? "Improving..."
+                  : "Enhance with AI"}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setBullets((previous) => [...previous, ""])}
+          className="mt-3 text-sm font-semibold text-blue-600 hover:text-blue-700"
+        >
+          + Add bullet
+        </button>
+
+        {aiMessage && (
+          <p className="mt-2 text-sm text-slate-600">
+            {aiMessage}
+          </p>
+        )}
       </div>
 
       {/* Buttons */}

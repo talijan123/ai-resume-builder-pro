@@ -4,6 +4,13 @@ import {
   useState,
 } from "react";
 
+import { usePricing } from "../context/PricingContext";
+import { useProfile } from "../context/ProfileContext";
+import {
+  generateResume,
+  scanResumeATS,
+} from "../services/aiService";
+
 import {
   useLocation,
   useNavigate,
@@ -88,6 +95,29 @@ export default function ResumeBuilder() {
   const [generating, setGenerating] = useState(false);
   const [generationMessage, setGenerationMessage] =
     useState("");
+  const [generationError, setGenerationError] =
+    useState("");
+  const [generationMode, setGenerationMode] = useState(
+    "job-description"
+  );
+  const [generationJobTitle, setGenerationJobTitle] =
+    useState("");
+  const [generationIndustry, setGenerationIndustry] =
+    useState("");
+  const [generationYearsOfExperience, setGenerationYearsOfExperience] =
+    useState("");
+  const [generationKeySkills, setGenerationKeySkills] =
+    useState("");
+  const [generationJobDescription, setGenerationJobDescription] =
+    useState("");
+  const [generationPreview, setGenerationPreview] =
+    useState(null);
+  const [showGenerationPreview, setShowGenerationPreview] =
+    useState(false);
+  const [atsJobDescription, setAtsJobDescription] = useState("");
+  const [atsScanning, setAtsScanning] = useState(false);
+  const [atsError, setAtsError] = useState("");
+  const [atsResult, setAtsResult] = useState(null);
 
   /* ==========================================
      Resume Context
@@ -107,6 +137,9 @@ export default function ResumeBuilder() {
     user,
     loading: authLoading,
   } = useAuth();
+
+  const { profileData } = useProfile();
+  const { refreshPricing } = usePricing();
 
   /* ==========================================
      TEMPLATE FROM URL
@@ -271,109 +304,197 @@ export default function ResumeBuilder() {
   ========================================== */
 
   async function handleGenerateResume() {
-    /*
-      Prevent double clicks.
-    */
-
     if (generating) {
-      console.log(
-        "⚠️ Generation already in progress."
-      );
-
       return;
     }
-
-    /*
-      Wait for authentication.
-    */
 
     if (authLoading) {
-      console.log(
-        "⏳ Authentication still loading..."
-      );
-
       return;
     }
-
-    /*
-      User must be logged in.
-    */
 
     if (!user) {
       navigate("/login");
       return;
     }
 
-    setGenerationMessage("");
+    const normalizedMode =
+      String(generationMode).trim().toLowerCase() === "guided"
+        ? "guided"
+        : "job-description";
+
+    const safeKeySkills = generationKeySkills
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+    const safeJobDescription = generationJobDescription.trim();
+
+    if (
+      normalizedMode === "guided" &&
+      (!generationJobTitle.trim() || safeKeySkills.length === 0)
+    ) {
+      setGenerationError(
+        "Add a job title and at least one key skill before generating a resume."
+      );
+      return;
+    }
+
+    if (
+      normalizedMode === "job-description" &&
+      !safeJobDescription
+    ) {
+      setGenerationError(
+        "Paste a job description before generating a resume."
+      );
+      return;
+    }
+
+    setGenerationError("");
+    setGenerationMessage("Generating your AI resume draft...");
     setGenerating(true);
 
     try {
-      /* ======================================
-         STEP 1
-         DEDUCT ONE CREDIT
-      ====================================== */
+      const existingProfile = {
+        fullName: profileData?.profile?.fullName || "",
+        jobTitle: profileData?.profile?.jobTitle || "",
+        professionalTitle: profileData?.profile?.professionalTitle || "",
+        desiredJobTitle: profileData?.profile?.desiredJobTitle || "",
+        summary: profileData?.profile?.summary || "",
+        yearsOfExperience: profileData?.profile?.yearsOfExperience || "",
+        location: profileData?.profile?.location || "",
+        email: profileData?.contact?.email || "",
+        phone: profileData?.contact?.phone || "",
+        website: profileData?.contact?.website || "",
+        linkedin: profileData?.contact?.linkedin || "",
+        github: profileData?.contact?.github || "",
+      };
 
-      const creditDeducted =
-        await deductGenerationCredit();
+      const generationPayload =
+        normalizedMode === "guided"
+          ? {
+              jobTitle: generationJobTitle,
+              industry: generationIndustry,
+              yearsOfExperience: generationYearsOfExperience,
+              keySkills: safeKeySkills,
+            }
+          : {
+              jobDescription: safeJobDescription,
+            };
 
-      /*
-        If credit deduction fails,
-        stop generation.
-      */
-
-      if (!creditDeducted) {
-        return;
-      }
-
-      /* ======================================
-         STEP 2
-         AI GENERATION
-      ====================================== */
-
-      setGenerationMessage(
-        "Credit used. Generating your AI resume..."
+      const result = await generateResume(
+        normalizedMode,
+        generationPayload,
+        existingProfile
       );
 
-      console.log(
-        "🤖 AI resume generation started:",
-        resumeData
-      );
-
-      /*
-        Temporary test delay.
-
-        Replace this later with your
-        actual AI generation API.
-      */
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1200)
-      );
-
-      /* ======================================
-         GENERATION COMPLETE
-      ====================================== */
-
-      setGenerationMessage(
-        "AI resume generation completed."
-      );
-
-      console.log(
-        "✅ AI resume generation completed."
-      );
+      setGenerationPreview(result.resumeData ?? null);
+      setShowGenerationPreview(true);
+      setGenerationMessage("AI resume draft ready for review.");
+      await refreshPricing();
     } catch (error) {
-      console.error(
-        "❌ AI resume generation failed:",
-        error
+      console.error("❌ AI resume generation failed:", error);
+      setGenerationPreview(null);
+      setShowGenerationPreview(false);
+      setGenerationError(
+        error?.message || "Resume generation failed. Please try again."
       );
-
-      setGenerationMessage(
-        error?.message ||
-          "Resume generation failed."
-      );
+      setGenerationMessage("");
     } finally {
       setGenerating(false);
     }
+  }
+
+  function applyGeneratedResume() {
+    if (!generationPreview) {
+      return;
+    }
+
+    const withIds = {
+      ...resumeData,
+      ...generationPreview,
+      personalInfo: {
+        ...resumeData.personalInfo,
+        ...(generationPreview.personalInfo || {}),
+      },
+      experience: (generationPreview.experience || []).map((entry) => ({
+        ...entry,
+        id: crypto.randomUUID(),
+      })),
+      education: (generationPreview.education || []).map((entry) => ({
+        ...entry,
+        id: crypto.randomUUID(),
+      })),
+      skills: (generationPreview.skills || []).map((entry) => ({
+        ...entry,
+        id: crypto.randomUUID(),
+      })),
+      projects: (generationPreview.projects || []).map((entry) => ({
+        ...entry,
+        id: crypto.randomUUID(),
+      })),
+      certifications: (generationPreview.certifications || []).map((entry) => ({
+        ...entry,
+        id: crypto.randomUUID(),
+      })),
+    };
+
+    setResumeData(withIds);
+    setGenerationPreview(null);
+    setShowGenerationPreview(false);
+    setGenerationError("");
+    setGenerationMessage("AI resume draft applied to your current resume.");
+  }
+
+  async function handleScanResumeATS() {
+    if (atsScanning) {
+      return;
+    }
+
+    if (authLoading) {
+      return;
+    }
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    const safeJobDescription = atsJobDescription.trim();
+
+    if (!safeJobDescription) {
+      setAtsError("Paste a job description before scanning your resume.");
+      return;
+    }
+
+    setAtsError("");
+    setAtsScanning(true);
+
+    try {
+      const result = await scanResumeATS(
+        resumeData,
+        safeJobDescription
+      );
+
+      setAtsResult(result);
+      await refreshPricing();
+    } catch (error) {
+      console.error("❌ AI ATS scan failed:", error);
+      setAtsError(
+        error?.message || "ATS scan failed. Please try again."
+      );
+    } finally {
+      setAtsScanning(false);
+    }
+  }
+
+  function StatCard({ label, value }) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+          {label}
+        </p>
+        <p className="mt-2 text-lg font-bold text-slate-900">{value}</p>
+      </div>
+    );
   }
 
   /* ==========================================
@@ -421,7 +542,8 @@ export default function ResumeBuilder() {
           Main resume container
         */
 
-        #resume-preview {
+        #resume-preview,
+        [data-print-content="resume"] {
           width: 210mm !important;
 
           min-height: 297mm !important;
@@ -947,6 +1069,93 @@ export default function ResumeBuilder() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {showGenerationPreview && generationPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+          <div className="w-full max-w-3xl rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">
+                  Review draft
+                </p>
+                <h3 className="mt-2 text-2xl font-black text-slate-900">
+                  Apply AI-generated resume?
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowGenerationPreview(false);
+                  setGenerationPreview(null);
+                }}
+                className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-bold text-slate-600"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-6 space-y-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+                    Full name
+                  </p>
+                  <p className="mt-2 text-lg font-bold text-slate-900">
+                    {generationPreview.personalInfo?.fullName || "Your Name"}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+                    Job title
+                  </p>
+                  <p className="mt-2 text-lg font-bold text-slate-900">
+                    {generationPreview.personalInfo?.jobTitle || "Target role"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <StatCard label="Experience" value={generationPreview.experience?.length || 0} />
+                <StatCard label="Education" value={generationPreview.education?.length || 0} />
+                <StatCard label="Skills" value={generationPreview.skills?.length || 0} />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <StatCard label="Projects" value={generationPreview.projects?.length || 0} />
+                <StatCard label="Certifications" value={generationPreview.certifications?.length || 0} />
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+                  Summary
+                </p>
+                <p className="mt-3 text-sm leading-7 text-slate-700">
+                  {generationPreview.personalInfo?.summary || "No summary generated yet."}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowGenerationPreview(false);
+                  setGenerationPreview(null);
+                }}
+                className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700"
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                onClick={applyGeneratedResume}
+                className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-500/20"
+              >
+                Apply to my resume
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ======================================
           HEADER
@@ -1053,6 +1262,242 @@ export default function ResumeBuilder() {
           py-8
         "
       >
+        <div className="mb-6 rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">
+                AI Resume Generation
+              </p>
+              <h3 className="mt-2 text-xl font-black text-slate-900">
+                Create a resume draft
+              </h3>
+            </div>
+            <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1">
+              <button
+                type="button"
+                onClick={() => setGenerationMode("job-description")}
+                className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                  generationMode === "job-description"
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600"
+                }`}
+              >
+                Job description
+              </button>
+              <button
+                type="button"
+                onClick={() => setGenerationMode("guided")}
+                className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                  generationMode === "guided"
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600"
+                }`}
+              >
+                Guided fields
+              </button>
+            </div>
+          </div>
+
+          {generationMode === "job-description" ? (
+            <label className="mt-5 block">
+              <span className="mb-2 block text-sm font-bold text-slate-700">
+                Paste the job description
+              </span>
+              <textarea
+                value={generationJobDescription}
+                onChange={(event) => setGenerationJobDescription(event.target.value)}
+                rows={8}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                placeholder="Paste the job description and the AI will generate a resume draft based on it."
+              />
+            </label>
+          ) : (
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <label className="block md:col-span-2">
+                <span className="mb-2 block text-sm font-bold text-slate-700">
+                  Job title
+                </span>
+                <input
+                  value={generationJobTitle}
+                  onChange={(event) => setGenerationJobTitle(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  placeholder="Senior Product Designer"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-slate-700">
+                  Industry
+                </span>
+                <input
+                  value={generationIndustry}
+                  onChange={(event) => setGenerationIndustry(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  placeholder="SaaS, fintech, healthcare..."
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-slate-700">
+                  Years of experience
+                </span>
+                <input
+                  value={generationYearsOfExperience}
+                  onChange={(event) => setGenerationYearsOfExperience(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  placeholder="3"
+                />
+              </label>
+
+              <label className="block md:col-span-2">
+                <span className="mb-2 block text-sm font-bold text-slate-700">
+                  Key skills
+                </span>
+                <input
+                  value={generationKeySkills}
+                  onChange={(event) => setGenerationKeySkills(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  placeholder="React, product strategy, analytics, stakeholder management"
+                />
+              </label>
+            </div>
+          )}
+
+          {generationError && (
+            <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+              {generationError}
+            </p>
+          )}
+
+          <div className="mt-5 flex justify-end">
+            <button
+              type="button"
+              onClick={handleGenerateResume}
+              disabled={generating}
+              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-500/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {generating ? "Generating..." : "Generate Resume"}
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600">
+                AI ATS Scanner
+              </p>
+              <h3 className="mt-2 text-xl font-black text-slate-900">
+                Scan against a job description
+              </h3>
+              <p className="mt-2 text-sm text-slate-500">
+                Compare your current resume with a specific role before you apply.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleScanResumeATS}
+              disabled={atsScanning}
+              className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {atsScanning ? "Scanning..." : "Scan Resume"}
+            </button>
+          </div>
+
+          <textarea
+            value={atsJobDescription}
+            onChange={(event) => setAtsJobDescription(event.target.value)}
+            rows={7}
+            className="mt-5 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+            placeholder="Paste the job description you want to compare against your resume."
+          />
+
+          {atsError && (
+            <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+              {atsError}
+            </p>
+          )}
+
+          {atsResult && (
+            <div className="mt-6 space-y-5 border-t border-slate-200 pt-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-slate-500">
+                  Match percentage
+                </p>
+                <p className="text-4xl font-black text-emerald-600">
+                  {atsResult.keywordMatchPercent}%
+                </p>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <p className="text-sm font-black text-emerald-700">
+                    Matched keywords
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {atsResult.matchedKeywords.length > 0 ? (
+                      atsResult.matchedKeywords.map((keyword) => (
+                        <span
+                          key={keyword}
+                          className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800"
+                        >
+                          {keyword}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-slate-500">None identified.</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-black text-amber-700">
+                    Missing keywords
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {atsResult.missingKeywords.length > 0 ? (
+                      atsResult.missingKeywords.map((keyword) => (
+                        <span
+                          key={keyword}
+                          className="rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-800"
+                        >
+                          {keyword}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-slate-500">None identified.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-black text-slate-700">
+                  Formatting warnings
+                </p>
+                {atsResult.formattingWarnings.length > 0 ? (
+                  <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+                    {atsResult.formattingWarnings.map((warning) => (
+                      <li key={warning} className="flex gap-2">
+                        <span className="text-amber-500">•</span>
+                        <span>{warning}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-3 text-sm text-slate-500">No formatting warnings identified.</p>
+                )}
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-sm font-black text-slate-700">Summary</p>
+                <p className="mt-2 text-sm leading-7 text-slate-600">
+                  {atsResult.summary}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div
           className="
             grid

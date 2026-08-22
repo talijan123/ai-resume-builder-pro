@@ -40,6 +40,14 @@ export default function TestCheckout() {
 
   useEffect(() => {
     async function loadPayment() {
+      if (!import.meta.env.DEV) {
+        setError(
+          "Test checkout is disabled in production environments. Please use the live Safepay checkout flow."
+        );
+        setLoading(false);
+        return;
+      }
+
       if (!orderId) {
         setError(
           "Payment order was not found."

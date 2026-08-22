@@ -1,8 +1,22 @@
 import { FcGoogle } from "react-icons/fc";
+import { supabase } from "../../lib/supabase";
 
 export default function SocialLogin() {
-  function handleGoogleLogin() {
-    console.log("Google Login");
+  async function handleGoogleLogin() {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        alert(`Authentication failed: ${error.message}`);
+      }
+    } catch (err) {
+      alert(`An error occurred: ${err.message}`);
+    }
   }
 
   return (

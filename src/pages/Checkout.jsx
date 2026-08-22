@@ -74,6 +74,16 @@ export default function Checkout() {
   }, [planId, navigate]);
 
   /* =====================================================
+     CANCELLED PAYMENT CHECK
+  ===================================================== */
+
+  useEffect(() => {
+    if (searchParams.get("cancelled") === "true") {
+      setPageError("Payment was cancelled or expired. You have not been charged.");
+    }
+  }, [searchParams]);
+
+  /* =====================================================
      AUTH CHECK
   ===================================================== */
 
@@ -258,32 +268,21 @@ export default function Checkout() {
        * and pass the INTERNAL payment ID.
        */
 
-      const paymentId =
-        data.paymentId;
-
-      const orderId =
-        data.orderId;
-
-      if (!paymentId || !orderId) {
-        throw new Error(
-          "Checkout was created, but the payment information was missing."
-        );
-      }
-
       /* =================================================
-         GO TO TEST PAYMENT PAGE
+         REDIRECT TO SAFEPAY HOSTED CHECKOUT
       ================================================= */
 
-      navigate(
-        `/test-checkout?paymentId=${encodeURIComponent(
-          paymentId
-        )}&orderId=${encodeURIComponent(
-          orderId
-        )}`,
-        {
-          replace: true,
+      if (data?.checkoutUrl) {
+        if (data.orderId) {
+          localStorage.setItem("safepay_pending_order_id", data.orderId);
+          sessionStorage.setItem("safepay_pending_order_id", data.orderId);
         }
-      );
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error(
+          "Checkout was created, but no checkout URL was returned."
+        );
+      }
     } catch (error) {
       console.error(
         "Checkout failed:",

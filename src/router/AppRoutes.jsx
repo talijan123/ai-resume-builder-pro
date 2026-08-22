@@ -7,6 +7,8 @@ import {
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 import Dashboard from "../pages/Dashboard";
 import ResumeBuilder from "../pages/ResumeBuilder";
 import Templates from "../pages/Templates";
@@ -16,6 +18,7 @@ import CoverLetter from "../pages/CoverLetter";
 import MyProfile from "../pages/MyProfile";
 import NotFound from "../pages/NotFound";
 import Checkout from "../pages/Checkout";
+import PaymentCallback from "../pages/PaymentCallback";
 import TestCheckout from "../pages/TestCheckout";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute";
@@ -50,6 +53,16 @@ export default function AppRoutes() {
         <Route
           path="/templates"
           element={<Templates />}
+        />
+
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
         />
 
         {/* =====================================================
@@ -127,9 +140,7 @@ export default function AppRoutes() {
           path="/profile"
           element={
             <ProtectedRoute>
-              <ProfileProvider>
-                <MyProfile />
-              </ProfileProvider>
+              <MyProfile />
             </ProtectedRoute>
           }
         />
@@ -145,6 +156,19 @@ export default function AppRoutes() {
               <SettingsProvider>
                 <Settings />
               </SettingsProvider>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =====================================================
+            PAYMENT CALLBACK (SAFEPAY REDIRECT)
+        ====================================================== */}
+
+        <Route
+          path="/payment/callback"
+          element={
+            <ProtectedRoute>
+              <PaymentCallback />
             </ProtectedRoute>
           }
         />

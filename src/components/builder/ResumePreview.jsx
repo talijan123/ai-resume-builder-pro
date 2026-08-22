@@ -369,6 +369,7 @@ const ResumePreview = forwardRef(
             <div
               ref={ref}
               id="resume-preview"
+              data-print-content="resume"
               className="
                 mx-auto
 
