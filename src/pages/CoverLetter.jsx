@@ -51,7 +51,7 @@ export default function CoverLetter() {
     pageStyle: `
       @page {
         size: A4;
-        margin: 18mm;
+        margin: 15mm;
       }
 
       @media print {

@@ -686,7 +686,8 @@ Deno.serve(async (req) => {
     logEvent(requestId, "started", { taskType });
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    const timeoutMs = taskType === "ats-scan" ? 40000 : 20000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     let geminiResponse: Response;
 

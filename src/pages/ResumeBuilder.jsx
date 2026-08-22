@@ -518,7 +518,7 @@ export default function ResumeBuilder() {
     pageStyle: `
       @page {
         size: A4;
-        margin: 0;
+        margin: 15mm;
       }
 
       @media print {
@@ -528,7 +528,7 @@ export default function ResumeBuilder() {
           margin: 0 !important;
           padding: 0 !important;
 
-          width: 210mm !important;
+          width: 100% !important;
 
           background: white !important;
         }
@@ -544,15 +544,15 @@ export default function ResumeBuilder() {
 
         #resume-preview,
         [data-print-content="resume"] {
-          width: 210mm !important;
+          width: 100% !important;
 
-          min-height: 297mm !important;
+          min-height: 0 !important;
 
           height: auto !important;
 
           margin: 0 !important;
 
-          padding: 10mm !important;
+          padding: 0 !important;
 
           background: white !important;
 

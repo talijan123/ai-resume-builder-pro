@@ -108,7 +108,7 @@ const ResumePreview = forwardRef(
           {`
             @page {
               size: A4;
-              margin: 0;
+              margin: 15mm;
             }
 
             @media print {
@@ -118,7 +118,7 @@ const ResumePreview = forwardRef(
                 margin: 0 !important;
                 padding: 0 !important;
 
-                width: 210mm !important;
+                width: 100% !important;
 
                 background: white !important;
               }
@@ -129,7 +129,7 @@ const ResumePreview = forwardRef(
               }
 
               #resume-print-area {
-                width: 210mm !important;
+                width: 100% !important;
 
                 margin: 0 !important;
                 padding: 0 !important;
@@ -138,15 +138,15 @@ const ResumePreview = forwardRef(
               }
 
               #resume-preview {
-                width: 210mm !important;
+                width: 100% !important;
 
-                min-height: 297mm !important;
+                min-height: 0 !important;
 
                 height: auto !important;
 
                 margin: 0 !important;
 
-                padding: 10mm !important;
+                padding: 0 !important;
 
                 border-radius: 0 !important;
 
@@ -387,13 +387,13 @@ const ResumePreview = forwardRef(
                 shadow-xl
 
                 print:mx-0
-                print:w-[210mm]
+                print:w-full
                 print:max-w-none
-                print:min-h-[297mm]
+                print:min-h-0
                 print:h-auto
                 print:rounded-none
                 print:bg-white
-                print:p-[10mm]
+                print:p-0
                 print:shadow-none
               "
             >
