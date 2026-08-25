@@ -79,7 +79,7 @@ export default function QuickActions() {
       return;
     }
 
-    navigate("/cover-letter");
+    navigate("/my-cover-letters");
   };
 
   /* =========================================================

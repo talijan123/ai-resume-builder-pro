@@ -12,6 +12,7 @@ export default function ATSCard() {
         border-white/40
 
         bg-white/90
+        dark:bg-slate-800/90
 
         p-5
 

@@ -14,6 +14,7 @@ export default function Hero() {
         min-h-screen
 
         bg-[#F8FAFC]
+        dark:bg-slate-900
 
         pt-36
         pb-24

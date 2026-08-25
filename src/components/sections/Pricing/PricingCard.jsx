@@ -105,7 +105,7 @@ export default function PricingCard({
 
         ${
           featured
-            ? "border-blue-500 bg-gradient-to-b from-blue-50 to-white shadow-2xl"
+            ? "border-blue-500 bg-gradient-to-b from-blue-50 to-white dark:from-blue-500/10 dark:to-slate-900 shadow-2xl"
             : "border-slate-200 bg-white"
         }
       `}

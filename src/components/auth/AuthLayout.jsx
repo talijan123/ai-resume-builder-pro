@@ -14,6 +14,9 @@ export default function AuthLayout({
         from-slate-50
         via-white
         to-blue-50
+        dark:from-slate-950
+        dark:via-slate-900
+        dark:to-slate-900
 
         flex
         items-center

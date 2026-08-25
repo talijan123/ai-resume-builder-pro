@@ -85,6 +85,7 @@ export default function HeroContent() {
           border
           border-blue-200
           bg-white/80
+          dark:bg-slate-800/80
           px-5
           py-2.5
           backdrop-blur-xl

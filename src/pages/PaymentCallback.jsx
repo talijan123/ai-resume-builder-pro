@@ -13,6 +13,19 @@ import { supabase } from "../lib/supabase";
 import { usePricing } from "../context/PricingContext";
 import { useAuth } from "../context/AuthContext";
 
+async function verifyPaymentWithSafepay(orderId) {
+  const { data, error } = await supabase.functions.invoke(
+    "verify-payment-status",
+    { body: { order_id: orderId } }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 export default function PaymentCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -172,7 +185,37 @@ export default function PaymentCallback() {
         if (attemptsRef.current < 6) {
           timer = setTimeout(checkPaymentStatus, 2000);
         } else {
-          // Timeout polling, leave as pending with manual refresh button
+          try {
+            const verification = await verifyPaymentWithSafepay(orderId);
+
+            if (verification?.status === "paid") {
+              if (isMounted) {
+                setPaymentDetails((current) =>
+                  current ? { ...current, status: "paid" } : current
+                );
+                setStatus("success");
+                localStorage.removeItem("safepay_pending_order_id");
+                sessionStorage.removeItem("safepay_pending_order_id");
+                await refreshPricing();
+              }
+              return;
+            }
+
+            if (verification?.status === "failed") {
+              if (isMounted) {
+                setStatus("failed");
+                setErrorMessage(
+                  verification.message ||
+                    verification.error ||
+                    "The payment was not completed."
+                );
+              }
+              return;
+            }
+          } catch (verificationError) {
+            console.error("Safepay fallback verification failed:", verificationError);
+          }
+
           if (isMounted) {
             setStatus("pending");
           }
@@ -204,6 +247,44 @@ export default function PaymentCallback() {
     attemptsRef.current = 0;
 
     try {
+      const verification = await verifyPaymentWithSafepay(orderId);
+
+      if (verification?.status === "paid") {
+        const { data: paidPayment } = await supabase
+          .from("payment_transactions")
+          .select(`
+            id,
+            order_id,
+            plan_id,
+            billing_cycle,
+            amount,
+            currency,
+            status,
+            plans (
+              name,
+              slug,
+              monthly_credits
+            )
+          `)
+          .eq("order_id", orderId)
+          .maybeSingle();
+
+        setPaymentDetails(paidPayment);
+        setStatus("success");
+        localStorage.removeItem("safepay_pending_order_id");
+        sessionStorage.removeItem("safepay_pending_order_id");
+        await refreshPricing();
+        return;
+      }
+
+      if (verification?.status === "failed") {
+        setStatus("failed");
+        setErrorMessage(
+          verification.message || verification.error || "Payment was unsuccessful."
+        );
+        return;
+      }
+
       const { data, error } = await supabase
         .from("payment_transactions")
         .select(`

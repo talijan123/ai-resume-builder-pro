@@ -30,6 +30,7 @@ const initialSettings = {
 
   appearance: {
     theme: "system",
+    density: "comfortable",
   },
 
   /* =======================================================
@@ -147,12 +148,61 @@ export function SettingsProvider({
     }
   }, [settings]);
 
+  /* Apply appearance globally and follow OS theme changes. */
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return undefined;
+    }
+
+    const root = document.documentElement;
+    const theme = settings.appearance.theme;
+    const mediaQuery = window.matchMedia
+      ? window.matchMedia("(prefers-color-scheme: dark)")
+      : null;
+
+    const applyAppearance = () => {
+      const isDark =
+        theme === "dark" ||
+        (theme === "system" && Boolean(mediaQuery?.matches));
+
+      root.classList.toggle("dark", isDark);
+      root.dataset.theme = isDark ? "dark" : "light";
+      root.dataset.density = settings.appearance.density;
+    };
+
+    applyAppearance();
+
+    if (theme !== "system" || !mediaQuery) {
+      return undefined;
+    }
+
+    mediaQuery.addEventListener("change", applyAppearance);
+
+    return () => {
+      mediaQuery.removeEventListener("change", applyAppearance);
+    };
+  }, [
+    settings.appearance.theme,
+    settings.appearance.density,
+  ]);
+
   /* =======================================================
      APPEARANCE
   ======================================================= */
 
   const updateAppearance = useCallback(
     (field, value) => {
+      const allowedValues = {
+        theme: ["light", "dark", "system"],
+        density: ["compact", "comfortable", "spacious"],
+      };
+
+      if (
+        !allowedValues[field]?.includes(value)
+      ) {
+        return;
+      }
+
       setSettings((prev) => ({
         ...prev,
 

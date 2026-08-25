@@ -141,8 +141,10 @@ export default function DashboardHeader({
 
         border-b
         border-slate-200/80
+        dark:border-slate-800/80
 
         bg-white/95
+        dark:bg-slate-900/95
 
         backdrop-blur-xl
 
@@ -567,6 +569,7 @@ export default function DashboardHeader({
 
                   ring-2
                   ring-white
+                  dark:ring-slate-800
                 "
               />
             </button>

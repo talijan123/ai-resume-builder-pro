@@ -9,6 +9,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ResumeProvider } from "./context/ResumeContext";
 import { PricingProvider } from "./context/PricingContext";
 import { ProfileProvider } from "./context/ProfileContext";
+import { SettingsProvider } from "./context/SettingsContext";
 
 ReactDOM.createRoot(
   document.getElementById("root")
@@ -18,7 +19,9 @@ ReactDOM.createRoot(
       <ResumeProvider>
         <PricingProvider>
           <ProfileProvider>
-            <AppRoutes />
+            <SettingsProvider>
+              <AppRoutes />
+            </SettingsProvider>
           </ProfileProvider>
         </PricingProvider>
       </ResumeProvider>

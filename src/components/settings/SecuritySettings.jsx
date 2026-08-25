@@ -301,6 +301,9 @@ export default function SecuritySettings() {
             from-slate-50
             via-white
             to-blue-50/40
+            dark:from-slate-900
+            dark:via-slate-900
+            dark:to-blue-500/10
             p-6
             sm:p-7
           "

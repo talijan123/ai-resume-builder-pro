@@ -14,6 +14,7 @@ import ResumeBuilder from "../pages/ResumeBuilder";
 import Templates from "../pages/Templates";
 import Settings from "../pages/Settings";
 import MyResumes from "../pages/MyResumes";
+import MyCoverLetters from "../pages/MyCoverLetters";
 import CoverLetter from "../pages/CoverLetter";
 import MyProfile from "../pages/MyProfile";
 import NotFound from "../pages/NotFound";
@@ -24,7 +25,6 @@ import TestCheckout from "../pages/TestCheckout";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 import { ProfileProvider } from "../context/ProfileContext";
-import { SettingsProvider } from "../context/SettingsContext";
 import { CoverLetterProvider } from "../context/CoverLetterContext";
 
 export default function AppRoutes() {
@@ -117,12 +117,34 @@ export default function AppRoutes() {
           }
         />
 
+        <Route
+          path="/my-cover-letters"
+          element={
+            <ProtectedRoute>
+              <CoverLetterProvider>
+                <MyCoverLetters />
+              </CoverLetterProvider>
+            </ProtectedRoute>
+          }
+        />
+
         {/* =====================================================
             COVER LETTER
         ====================================================== */}
 
         <Route
           path="/cover-letter"
+          element={
+            <ProtectedRoute>
+              <CoverLetterProvider>
+                <CoverLetter />
+              </CoverLetterProvider>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/cover-letter/:id"
           element={
             <ProtectedRoute>
               <CoverLetterProvider>
@@ -153,9 +175,7 @@ export default function AppRoutes() {
           path="/settings"
           element={
             <ProtectedRoute>
-              <SettingsProvider>
-                <Settings />
-              </SettingsProvider>
+              <Settings />
             </ProtectedRoute>
           }
         />

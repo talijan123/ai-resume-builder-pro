@@ -29,6 +29,7 @@ export default function DashboardHeader({
         border-b
         border-slate-200
         bg-white/80
+        dark:bg-slate-900/80
         backdrop-blur-lg
       "
     >
@@ -172,6 +173,7 @@ export default function DashboardHeader({
                 placeholder:text-slate-400
                 focus:border-blue-500
                 focus:bg-white
+                dark:focus:bg-slate-800
                 focus:ring-4
                 focus:ring-blue-100
               "

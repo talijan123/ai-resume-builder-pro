@@ -16,7 +16,7 @@ export default function CoverLetterEditor({ profile, contact, resumeData, planNa
   async function handleSave() {
     setSaving(true);
     try {
-      saveCoverLetter();
+      await saveCoverLetter();
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2500);
     } catch (error) {

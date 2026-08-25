@@ -428,6 +428,7 @@ export default function BuilderHeader({
         border-slate-200
 
         bg-white/95
+        dark:bg-slate-900/95
         backdrop-blur
 
         shadow-sm

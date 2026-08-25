@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HiCheck, HiLockClosed, HiSparkles } from "react-icons/hi2";
 import { useReactToPrint } from "react-to-print";
+import { useParams } from "react-router-dom";
 
 import DashboardHeader from "../components/layout/DashboardHeader";
 import CoverLetterEditor from "../components/coverLetter/CoverLetterEditor";
@@ -13,7 +14,14 @@ import { useProfile } from "../context/ProfileContext";
 export default function CoverLetter() {
   const { planSlug, planName, loading: pricingLoading } = usePricing();
   const { profileData, loading: profileLoading } = useProfile();
-  const { coverLetterData, updateLetter } = useCoverLetter();
+  const { id } = useParams();
+  const {
+    coverLetterData,
+    updateLetter,
+    loadCoverLetter,
+    createCoverLetter,
+  } = useCoverLetter();
+  const [loadingLetter, setLoadingLetter] = useState(Boolean(id));
   const autoPrefillDone = useRef(false);
   const coverLetterRef = useRef(null);
   const profile = useMemo(() => profileData?.profile || {}, [profileData?.profile]);
@@ -30,18 +38,41 @@ export default function CoverLetter() {
   };
 
   useEffect(() => {
-    if (!hasAccess || autoPrefillDone.current) {
+    let mounted = true;
+
+    if (profileLoading || pricingLoading) {
       return;
     }
 
-    autoPrefillDone.current = true;
-    if (!letter.opening?.trim()) {
-      updateLetter("opening", buildOpening(letter, profile));
+    if (!id) {
+      if (!autoPrefillDone.current) {
+        autoPrefillDone.current = true;
+        createCoverLetter({
+          letter: {
+            opening: buildOpening({}, profile),
+            body: buildBody(profile),
+          },
+        });
+      }
+      setLoadingLetter(false);
+      return () => {
+        mounted = false;
+      };
     }
-    if (!letter.body?.trim()) {
-      updateLetter("body", buildBody(profile));
-    }
-  }, [hasAccess, letter, profile, updateLetter]);
+
+    setLoadingLetter(true);
+    loadCoverLetter(id)
+      .catch((error) => {
+        console.error("Failed to load cover letter:", error);
+      })
+      .finally(() => {
+        if (mounted) setLoadingLetter(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [createCoverLetter, id, loadCoverLetter, pricingLoading, profile, profileLoading]);
 
   const handlePrint = useReactToPrint({
     contentRef: coverLetterRef,
@@ -89,7 +120,7 @@ export default function CoverLetter() {
     handlePrint();
   }, [handlePrint]);
 
-  if (pricingLoading || profileLoading) {
+  if (pricingLoading || profileLoading || loadingLetter) {
     return <LoadingState />;
   }
 
@@ -120,7 +151,7 @@ export default function CoverLetter() {
                   <p className="mt-1 text-sm font-bold text-slate-700">{selectedTemplate}</p>
                 </div>
               </div>
-              <div className="overflow-auto rounded-3xl border border-slate-200 bg-slate-200/70 p-4 shadow-inner sm:p-8">
+              <div className="overflow-auto rounded-3xl border border-slate-200 bg-slate-200/70 p-4 shadow-inner sm:p-8 dark:bg-slate-700/70">
                 <CoverLetterPaper
                   ref={coverLetterRef}
                   template={selectedTemplate}
@@ -137,13 +168,13 @@ export default function CoverLetter() {
   );
 }
 
-function buildOpening(letter, profile) {
+function buildOpening(letter = {}, profile = {}) {
   const name = profile?.fullName || "I am";
   const title = profile?.professionalTitle || profile?.desiredJobTitle || "professional";
-  return `I am excited to apply for the ${letter.jobTitle || "position"} at ${letter.companyName || "your company"}. As ${name}, a ${title}, I believe my technical skills, experience, and commitment to continuous learning would allow me to contribute effectively to your team.`;
+  return `I am excited to apply for the ${letter?.jobTitle || "position"} at ${letter?.companyName || "your company"}. As ${name}, a ${title}, I believe my technical skills, experience, and commitment to continuous learning would allow me to contribute effectively to your team.`;
 }
 
-function buildBody(profile) {
+function buildBody(profile = {}) {
   if (profile?.summary) return profile.summary;
   if (profile?.yearsOfExperience) return `With ${profile.yearsOfExperience} years of experience, I have developed a strong foundation in problem solving, technology, and professional development. I am comfortable learning new tools, working collaboratively, and taking responsibility for delivering high-quality results.`;
   return "Throughout my academic and professional journey, I have developed strong problem-solving abilities, technical skills, and a commitment to learning. I am eager to bring these strengths to your organization and contribute positively to your team.";

@@ -15,6 +15,8 @@ export default function Footer() {
         bg-gradient-to-b
         from-white
         to-slate-50
+        dark:from-slate-900
+        dark:to-slate-950
       "
     >
       <Container>

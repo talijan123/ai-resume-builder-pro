@@ -17,6 +17,7 @@ export default function AppearanceSettings() {
   const {
     settings,
     updateAppearance,
+    setTheme: setGlobalTheme,
   } = useSettings();
 
   const appearance = settings?.appearance || {};
@@ -53,19 +54,12 @@ export default function AppearanceSettings() {
   ======================================================= */
 
   const handleThemeChange = (value) => {
-    setTheme(value);
+    setGlobalTheme(value);
 
-    updateAppearance("theme", value);
+    setTheme(value);
 
     setSaved(false);
 
-    /*
-      Apply theme immediately.
-      The actual SettingsContext can also
-      persist this preference.
-    */
-
-    applyTheme(value);
   };
 
   /* =======================================================
@@ -75,10 +69,7 @@ export default function AppearanceSettings() {
   const handleDensityChange = (value) => {
     setDensity(value);
 
-    updateAppearance(
-      "density",
-      value
-    );
+    updateAppearance("density", value);
 
     setSaved(false);
   };
@@ -486,7 +477,6 @@ export default function AppearanceSettings() {
     </div>
   );
 }
-
 /* =========================================================
    THEME OPTION
 ========================================================= */
@@ -630,39 +620,3 @@ function DensityOption({
   );
 }
 
-/* =========================================================
-   APPLY THEME
-========================================================= */
-
-function applyTheme(theme) {
-  if (typeof document === "undefined") {
-    return;
-  }
-
-  const root = document.documentElement;
-
-  if (theme === "dark") {
-    root.classList.add("dark");
-    return;
-  }
-
-  if (theme === "light") {
-    root.classList.remove("dark");
-    return;
-  }
-
-  /* =======================================================
-     SYSTEM
-  ======================================================= */
-
-  const prefersDark =
-    window.matchMedia &&
-    window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-
-  root.classList.toggle(
-    "dark",
-    prefersDark
-  );
-}

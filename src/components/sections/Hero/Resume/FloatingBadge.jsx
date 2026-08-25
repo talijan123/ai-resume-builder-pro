@@ -31,6 +31,7 @@ export default function FloatingBadge() {
         border-blue-100
 
         bg-white/90
+        dark:bg-slate-800/90
 
         px-5
         py-3
