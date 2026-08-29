@@ -38,7 +38,6 @@ export default function Contact() {
     if (!formData.message.trim()) return;
 
     setLoading(true);
-    // Simulate sending message
     setTimeout(() => {
       setLoading(false);
       setSubmitted(true);
@@ -46,77 +45,77 @@ export default function Contact() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 pt-28 pb-20">
         <Container>
-          <div className="mb-6 flex items-center gap-2 text-sm text-slate-400">
-            <Link to="/" className="hover:text-blue-400 transition flex items-center gap-1">
+          <div className="mb-6 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <Link to="/" className="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1">
               <HiArrowLeft size={16} /> Home
             </Link>
             <span>/</span>
-            <span className="text-slate-200 font-semibold">Contact Support</span>
+            <span className="text-slate-800 dark:text-slate-200 font-semibold">Contact Support</span>
           </div>
 
           <div className="grid lg:grid-cols-12 gap-12 max-w-5xl mx-auto">
             {/* Left Column: Contact Info & Quick FAQ */}
             <div className="lg:col-span-5 space-y-8">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3.5 py-1 text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">
+                <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-3.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4">
                   <HiChatBubbleLeftRight size={14} /> Get in Touch
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-white">
+                <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
                   We're Here to Help
                 </h1>
-                <p className="mt-4 text-sm text-slate-400 leading-relaxed">
+                <p className="mt-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                   Have a question about AI generation, ATS optimization, billing, or custom templates? Reach out and our team will get back to you promptly.
                 </p>
               </div>
 
               {/* Direct Support Card */}
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 space-y-4">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-6 space-y-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30">
                     <HiEnvelope size={20} />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-slate-400">Support Email</p>
-                    <p className="text-sm font-bold text-white">support@resumeforge.ai</p>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Support Email</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">support@resumeforge.ai</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 pt-3 border-t border-slate-800">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
+                <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30">
                     <HiSparkles size={20} />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-slate-400">Response Time</p>
-                    <p className="text-sm font-bold text-white">Usually under 24 hours</p>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Response Time</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">Usually under 24 hours</p>
                   </div>
                 </div>
               </div>
 
               {/* Help & FAQ Shortcut */}
-              <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-6">
-                <div className="flex items-center gap-2 text-sm font-bold text-white mb-2">
-                  <HiQuestionMarkCircle className="text-blue-400" size={18} />
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/40 p-6 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white mb-2">
+                  <HiQuestionMarkCircle className="text-blue-600 dark:text-blue-400" size={18} />
                   Looking for quick answers?
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   Check out our interactive FAQ section on the home page or browse our detailed career guides.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Link
                     to="/#faq"
-                    className="text-xs font-bold text-blue-400 hover:underline"
+                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     View FAQs →
                   </Link>
-                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-400 dark:text-slate-600">•</span>
                   <Link
                     to="/blog"
-                    className="text-xs font-bold text-blue-400 hover:underline"
+                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     Browse Blog →
                   </Link>
@@ -126,15 +125,15 @@ export default function Contact() {
 
             {/* Right Column: Contact Form */}
             <div className="lg:col-span-7">
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-8 sm:p-10 shadow-2xl">
+              <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-8 sm:p-10 shadow-xl dark:shadow-2xl">
                 {submitted ? (
                   <div className="py-12 text-center space-y-4">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
-                      <HiCheckCircle2 size={36} />
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50 dark:bg-green-500/20 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-500/30">
+                      <HiCheckCircle size={36} />
                     </div>
-                    <h3 className="text-2xl font-bold text-white">Message Received!</h3>
-                    <p className="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
-                      Thank you for contacting us, {formData.name || "there"}. We have received your inquiry and will follow up with you at <strong className="text-blue-400">{formData.email}</strong> soon.
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Message Received!</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+                      Thank you for contacting us, {formData.name || "there"}. We have received your inquiry and will follow up with you at <strong className="text-blue-600 dark:text-blue-400">{formData.email}</strong> soon.
                     </p>
                     <button
                       type="button"
@@ -142,18 +141,18 @@ export default function Contact() {
                         setSubmitted(false);
                         setFormData((prev) => ({ ...prev, message: "" }));
                       }}
-                      className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-800 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-700 transition"
+                      className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 px-5 py-2.5 text-xs font-bold text-slate-800 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition"
                     >
                       Send Another Message
                     </button>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
-                    <h3 className="text-xl font-bold text-white">Send us a Message</h3>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">Send us a Message</h3>
 
                     <div className="grid gap-6 sm:grid-cols-2">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-2">
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                           Your Name
                         </label>
                         <input
@@ -162,13 +161,13 @@ export default function Contact() {
                           required
                           value={formData.name}
                           onChange={handleChange}
-                          placeholder="e.g. Talal Hassan"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                          placeholder="e.g. Alex Morgan"
+                          className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-2">
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                           Email Address
                         </label>
                         <input
@@ -178,20 +177,20 @@ export default function Contact() {
                           value={formData.email}
                           onChange={handleChange}
                           placeholder="name@company.com"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                          className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-2">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                         Subject / Topic
                       </label>
                       <select
                         name="subject"
                         value={formData.subject}
                         onChange={handleChange}
-                        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       >
                         <option value="General Inquiry">General Inquiry</option>
                         <option value="AI Resume Assistance">AI Resume Assistance</option>
@@ -202,7 +201,7 @@ export default function Contact() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-2">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                         Message
                       </label>
                       <textarea
@@ -212,14 +211,14 @@ export default function Contact() {
                         value={formData.message}
                         onChange={handleChange}
                         placeholder="How can we help you today?"
-                        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/30 transition hover:from-blue-500 hover:to-indigo-500 disabled:opacity-60"
+                      className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/30 transition hover:from-blue-500 hover:to-indigo-500 disabled:opacity-60 cursor-pointer"
                     >
                       {loading ? "Sending Message..." : "Send Message"}
                     </button>

@@ -6,37 +6,37 @@ import Container from "../components/UI/Container/Container";
 
 export default function TermsOfService() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 pt-28 pb-20">
         <Container>
-          <div className="mb-6 flex items-center gap-2 text-sm text-slate-400">
-            <Link to="/" className="hover:text-blue-400 transition flex items-center gap-1">
+          <div className="mb-6 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <Link to="/" className="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1">
               <HiArrowLeft size={16} /> Home
             </Link>
             <span>/</span>
-            <span className="text-slate-200 font-semibold">Terms of Service</span>
+            <span className="text-slate-800 dark:text-slate-200 font-semibold">Terms of Service</span>
           </div>
 
-          <div className="max-w-4xl mx-auto rounded-3xl border border-slate-800 bg-slate-900/80 p-8 sm:p-12 shadow-2xl">
-            <div className="flex items-center gap-3 text-blue-400 mb-4">
+          <div className="max-w-4xl mx-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-8 sm:p-12 shadow-xl dark:shadow-2xl">
+            <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400 mb-4">
               <HiDocumentCheck size={28} />
               <span className="text-xs font-bold uppercase tracking-widest">
                 Service Agreement
               </span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-black text-white">
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
               Terms of Service
             </h1>
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
               Last Updated: August 2026
             </p>
 
-            <div className="mt-8 space-y-6 text-sm sm:text-base leading-relaxed text-slate-300">
+            <div className="mt-8 space-y-6 text-sm sm:text-base leading-relaxed text-slate-700 dark:text-slate-300">
               <section>
-                <h2 className="text-xl font-bold text-white mb-2">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
                   1. Acceptance of Terms
                 </h2>
                 <p>
@@ -45,7 +45,7 @@ export default function TermsOfService() {
               </section>
 
               <section>
-                <h2 className="text-xl font-bold text-white mb-2">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
                   2. Use of AI Services & Accuracy
                 </h2>
                 <p>
@@ -54,7 +54,7 @@ export default function TermsOfService() {
               </section>
 
               <section>
-                <h2 className="text-xl font-bold text-white mb-2">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
                   3. Subscriptions, Credits & Billing
                 </h2>
                 <p>
@@ -63,7 +63,7 @@ export default function TermsOfService() {
               </section>
 
               <section>
-                <h2 className="text-xl font-bold text-white mb-2">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
                   4. Intellectual Property
                 </h2>
                 <p>
