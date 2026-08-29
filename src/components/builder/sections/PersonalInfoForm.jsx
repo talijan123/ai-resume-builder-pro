@@ -165,6 +165,103 @@ export default function PersonalInfoForm() {
           onChange={handleChange}
           placeholder="github.com/talijan123"
         />
+
+        {/* Photo URL */}
+
+        <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+          <label className="mb-2 block font-semibold text-slate-800">
+            Profile Photo / Avatar (for Photo Templates)
+          </label>
+          <div className="flex flex-col sm:flex-row items-center gap-5">
+            <div className="relative h-20 w-20 shrink-0 rounded-full border-2 border-slate-300 bg-slate-200 overflow-hidden flex items-center justify-center shadow-inner">
+              {personal.photo ? (
+                <img
+                  src={personal.photo}
+                  alt="Profile Preview"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl font-bold text-slate-400">
+                  {personal.fullName ? personal.fullName.charAt(0).toUpperCase() : "?"}
+                </span>
+              )}
+            </div>
+
+            <div className="flex-1 w-full space-y-3">
+              <input
+                type="text"
+                name="photo"
+                value={personal.photo || ""}
+                onChange={handleChange}
+                placeholder="Paste Image URL (https://...)"
+                className="
+                  w-full
+                  rounded-xl
+                  border
+                  border-slate-300
+                  bg-white
+                  px-4
+                  py-2.5
+                  text-sm
+                  outline-none
+                  transition-all
+                  focus:border-blue-500
+                  focus:ring-2
+                  focus:ring-blue-100
+                "
+              />
+
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="cursor-pointer rounded-xl bg-white border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition">
+                  <span>Upload Image</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          updatePersonalInfo("photo", reader.result);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </label>
+
+                {personal.photo && (
+                  <button
+                    type="button"
+                    onClick={() => updatePersonalInfo("photo", "")}
+                    className="rounded-xl px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition"
+                  >
+                    Remove Photo
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Gender & DOB (Optional for International CVs) */}
+
+        <Input
+          label="Gender / Pronouns (Optional)"
+          name="gender"
+          value={personal.gender || ""}
+          onChange={handleChange}
+          placeholder="e.g. Female, Male, Non-binary"
+        />
+
+        <Input
+          label="Date of Birth (Optional)"
+          name="dob"
+          value={personal.dob || ""}
+          onChange={handleChange}
+          placeholder="e.g. 14 March 1994"
+        />
       </div>
 
       {/* Summary */}

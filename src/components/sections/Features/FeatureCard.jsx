@@ -1,15 +1,43 @@
 import { motion } from "framer-motion";
 import { HiArrowRight } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function FeatureCard({
   icon: Icon,
   title,
+  slug,
   description,
 }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const targetSlug = slug || "ai-resume-builder";
+
+  function handleClick() {
+    if (user) {
+      navigate(`/blog/${targetSlug}`);
+    } else {
+      navigate(`/login?redirect=/blog/${targetSlug}`);
+    }
+  }
+
   return (
     <motion.div
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
       whileHover={{
         y: -8,
+      }}
+      whileTap={{
+        scale: 0.98,
       }}
       transition={{
         duration: 0.3,
@@ -18,6 +46,8 @@ export default function FeatureCard({
         group
         relative
         overflow-hidden
+        cursor-pointer
+        text-left
 
         rounded-3xl
 
@@ -33,9 +63,12 @@ export default function FeatureCard({
         transition-all
         duration-300
 
-        hover:border-blue-300
+        hover:border-blue-400
         hover:shadow-2xl
-        hover:shadow-blue-100
+        hover:shadow-blue-500/10
+        focus:outline-none
+        focus:ring-2
+        focus:ring-blue-500
       "
     >
       {/* Background Glow */}
@@ -110,6 +143,8 @@ export default function FeatureCard({
           font-bold
 
           text-slate-900
+          transition-colors
+          group-hover:text-blue-600
         "
       >
         {title}
@@ -142,14 +177,14 @@ export default function FeatureCard({
           text-blue-600
         "
       >
-        Learn More
+        Learn More Guide
 
         <HiArrowRight
           className="
             transition-transform
             duration-300
 
-            group-hover:translate-x-1
+            group-hover:translate-x-1.5
           "
         />
       </div>

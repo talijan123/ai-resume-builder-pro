@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { HiArrowRight } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
 import {
   FaCheckCircle,
   FaShieldAlt,
@@ -7,8 +8,21 @@ import {
 } from "react-icons/fa";
 
 import Section from "../../UI/Section/Section";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function CTA() {
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  function handleBuild() {
+    if (loading) return;
+    if (user) {
+      navigate("/dashboard");
+    } else {
+      navigate("/register");
+    }
+  }
+
   return (
     <Section id="cta" className="relative overflow-hidden">
 
@@ -149,6 +163,8 @@ export default function CTA() {
         {/* Button */}
 
         <motion.button
+          type="button"
+          onClick={handleBuild}
           whileHover={{
             scale: 1.05,
           }}
@@ -180,9 +196,10 @@ export default function CTA() {
 
             transition-all
             duration-300
+            cursor-pointer
           "
         >
-          Start Building Free
+          {user ? "Go to Dashboard" : "Start Building Free"}
 
           <HiArrowRight size={22} />
         </motion.button>

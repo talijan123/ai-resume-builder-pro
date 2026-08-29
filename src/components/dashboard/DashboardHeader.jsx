@@ -83,6 +83,8 @@ export default function DashboardHeader({
 
           <Link
             to="/dashboard"
+            title="ResumeForge Dashboard"
+            aria-label="ResumeForge Dashboard"
             className="flex items-center gap-3"
           >
             {/* RF Logo */}

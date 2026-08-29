@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Container from "../../UI/Container/Container";
 
 import FooterColumn from "./FooterColumn";
@@ -193,8 +194,8 @@ export default function Footer() {
             "
           >
 
-            <a
-              href="#"
+            <Link
+              to="/privacy"
               className="
                 transition-colors
                 duration-300
@@ -203,10 +204,10 @@ export default function Footer() {
               "
             >
               Privacy
-            </a>
+            </Link>
 
-            <a
-              href="#"
+            <Link
+              to="/terms"
               className="
                 transition-colors
                 duration-300
@@ -215,10 +216,10 @@ export default function Footer() {
               "
             >
               Terms
-            </a>
+            </Link>
 
-            <a
-              href="#"
+            <Link
+              to="/privacy"
               className="
                 transition-colors
                 duration-300
@@ -227,7 +228,7 @@ export default function Footer() {
               "
             >
               Cookies
-            </a>
+            </Link>
 
           </div>
 

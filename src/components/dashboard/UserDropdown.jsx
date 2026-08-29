@@ -6,6 +6,7 @@ import {
   HiUser,
   HiCog6Tooth,
   HiArrowRightOnRectangle,
+  HiGlobeAlt,
 } from "react-icons/hi2";
 
 import { useAuth } from "../../context/AuthContext";
@@ -142,7 +143,8 @@ export default function UserDropdown() {
           "
         >
           <Link
-            to="/profile"
+            to="/"
+            onClick={() => setOpen(false)}
             className="
               flex
               items-center
@@ -153,18 +155,52 @@ export default function UserDropdown() {
               px-4
               py-3
 
+              text-sm
+              font-semibold
+              text-slate-700
+
               transition-all
 
               hover:bg-slate-100
+              hover:text-slate-900
             "
           >
-            <HiUser size={20} />
+            <HiGlobeAlt size={20} className="text-slate-500" />
+
+            View Landing Page
+          </Link>
+
+          <Link
+            to="/profile"
+            onClick={() => setOpen(false)}
+            className="
+              flex
+              items-center
+              gap-3
+
+              rounded-xl
+
+              px-4
+              py-3
+
+              text-sm
+              font-semibold
+              text-slate-700
+
+              transition-all
+
+              hover:bg-slate-100
+              hover:text-slate-900
+            "
+          >
+            <HiUser size={20} className="text-slate-500" />
 
             My Profile
           </Link>
 
           <Link
             to="/settings"
+            onClick={() => setOpen(false)}
             className="
               flex
               items-center
@@ -175,12 +211,17 @@ export default function UserDropdown() {
               px-4
               py-3
 
+              text-sm
+              font-semibold
+              text-slate-700
+
               transition-all
 
               hover:bg-slate-100
+              hover:text-slate-900
             "
           >
-            <HiCog6Tooth size={20} />
+            <HiCog6Tooth size={20} className="text-slate-500" />
 
             Settings
           </Link>

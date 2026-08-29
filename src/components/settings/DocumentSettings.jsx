@@ -376,6 +376,14 @@ export default function DocumentSettings() {
             }
             options={[
               {
+                value: "sidebar-photo",
+                label: "Sidebar Photo",
+              },
+              {
+                value: "modern-photo",
+                label: "Modern Photo",
+              },
+              {
                 value: "professional",
                 label: "Professional",
               },
@@ -390,6 +398,10 @@ export default function DocumentSettings() {
               {
                 value: "creative",
                 label: "Creative",
+              },
+              {
+                value: "executive",
+                label: "Executive",
               },
             ]}
           />

@@ -21,6 +21,11 @@ import NotFound from "../pages/NotFound";
 import Checkout from "../pages/Checkout";
 import PaymentCallback from "../pages/PaymentCallback";
 import TestCheckout from "../pages/TestCheckout";
+import Blog from "../pages/Blog";
+import BlogPost from "../pages/BlogPost";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
+import TermsOfService from "../pages/TermsOfService";
+import Contact from "../pages/Contact";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
@@ -53,6 +58,31 @@ export default function AppRoutes() {
         <Route
           path="/templates"
           element={<Templates />}
+        />
+
+        <Route
+          path="/blog"
+          element={<Blog />}
+        />
+
+        <Route
+          path="/blog/:slug"
+          element={<BlogPost />}
+        />
+
+        <Route
+          path="/privacy"
+          element={<PrivacyPolicy />}
+        />
+
+        <Route
+          path="/terms"
+          element={<TermsOfService />}
+        />
+
+        <Route
+          path="/contact"
+          element={<Contact />}
         />
 
         <Route

@@ -16,6 +16,8 @@ import ProfessionalTemplate from "../components/templates/ProfessionalTemplate";
 import CreativeTemplate from "../components/templates/CreativeTemplate";
 import ExecutiveTemplate from "../components/templates/ExecutiveTemplate";
 import MinimalTemplate from "../components/templates/MinimalTemplate";
+import SidebarPhotoTemplate from "../components/templates/SidebarPhotoTemplate";
+import ModernPhotoTemplate from "../components/templates/ModernPhotoTemplate";
 
 import { ResumeProvider } from "../context/ResumeContext";
 import { templatePreviewData } from "../data/templatePreviewData";
@@ -25,6 +27,28 @@ import { templatePreviewData } from "../data/templatePreviewData";
 ========================================================= */
 
 const templates = [
+  {
+    id: "sidebar-photo",
+    name: "Sidebar Photo",
+    category: "Photo / Avatar",
+    badge: "Featured",
+    description:
+      "A standout two-column layout with a top accent header, prominent profile photo, high-contrast dark sidebar, and structured timeline sections.",
+    component: SidebarPhotoTemplate,
+    recommended: true,
+  },
+
+  {
+    id: "modern-photo",
+    name: "Modern Photo",
+    category: "Photo / Avatar",
+    badge: "New",
+    description:
+      "A sleek modern layout with a floating avatar card, clean dual-tone structure, and crisp typography for technology & corporate leaders.",
+    component: ModernPhotoTemplate,
+    recommended: false,
+  },
+
   {
     id: "modern",
     name: "Modern",
@@ -87,6 +111,7 @@ const templates = [
 
 const categories = [
   "All",
+  "Photo / Avatar",
   "Modern",
   "Corporate",
   "Creative",

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 export default function FooterColumn({
   title,
@@ -27,38 +28,55 @@ export default function FooterColumn({
 
       <ul className="space-y-4">
 
-        {links.map((link) => (
+        {links.map((link) => {
+          const isInternal = link.href.startsWith("/") && !link.href.startsWith("/#");
 
-          <li key={link.name}>
+          return (
+            <li key={link.name}>
+              {isInternal ? (
+                <Link
+                  to={link.href}
+                  className="
+                    inline-flex
 
-            <motion.a
-              href={link.href}
+                    text-slate-600
 
-              whileHover={{
-                x: 6,
-              }}
+                    transition-colors
+                    duration-300
 
-              transition={{
-                duration: 0.2,
-              }}
+                    hover:text-blue-600
+                    hover:translate-x-1.5
+                    transition-transform
+                  "
+                >
+                  {link.name}
+                </Link>
+              ) : (
+                <motion.a
+                  href={link.href}
+                  whileHover={{
+                    x: 6,
+                  }}
+                  transition={{
+                    duration: 0.2,
+                  }}
+                  className="
+                    inline-flex
 
-              className="
-                inline-flex
+                    text-slate-600
 
-                text-slate-600
+                    transition-colors
+                    duration-300
 
-                transition-colors
-                duration-300
-
-                hover:text-blue-600
-              "
-            >
-              {link.name}
-            </motion.a>
-
-          </li>
-
-        ))}
+                    hover:text-blue-600
+                  "
+                >
+                  {link.name}
+                </motion.a>
+              )}
+            </li>
+          );
+        })}
 
       </ul>
 

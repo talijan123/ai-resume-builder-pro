@@ -11,19 +11,19 @@ export const footerColumns = [
     links: [
       {
         name: "Features",
-        href: "#features",
+        href: "/#features",
       },
       {
         name: "Templates",
-        href: "#templates",
+        href: "/templates",
       },
       {
         name: "Pricing",
-        href: "#pricing",
+        href: "/#pricing",
       },
       {
         name: "AI Resume Builder",
-        href: "#demo",
+        href: "/builder",
       },
     ],
   },
@@ -33,20 +33,20 @@ export const footerColumns = [
 
     links: [
       {
-        name: "Blog",
-        href: "#",
+        name: "Blog & Guides",
+        href: "/blog",
       },
       {
-        name: "Help Center",
-        href: "#",
+        name: "ATS Optimization",
+        href: "/blog/ats-optimizer",
       },
       {
-        name: "Documentation",
-        href: "#",
+        name: "Cover Letter Guide",
+        href: "/blog/cover-letter-ai",
       },
       {
         name: "Privacy Policy",
-        href: "#",
+        href: "/privacy",
       },
     ],
   },
@@ -56,20 +56,20 @@ export const footerColumns = [
 
     links: [
       {
-        name: "About",
-        href: "#",
+        name: "About ResumeForge",
+        href: "/#features",
       },
       {
-        name: "Careers",
-        href: "#",
-      },
-      {
-        name: "Contact",
-        href: "#",
+        name: "Contact Support",
+        href: "/contact",
       },
       {
         name: "Terms of Service",
-        href: "#",
+        href: "/terms",
+      },
+      {
+        name: "Privacy Policy",
+        href: "/privacy",
       },
     ],
   },

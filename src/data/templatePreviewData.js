@@ -364,4 +364,193 @@ export const templatePreviewData = {
 
     certifications: [],
   },
+
+  "sidebar-photo": {
+    template: "sidebar-photo",
+
+    personalInfo: {
+      fullName: "Clarissa Vance",
+      jobTitle: "Senior Brand & Product Strategist",
+      email: "clarissa.vance@brandstudio.com",
+      phone: "+1 (555) 782-9012",
+      location: "San Francisco, CA",
+      website: "clarissavance.design",
+      linkedin: "linkedin.com/in/clarissavance",
+      github: "github.com/clarissavance",
+      gender: "Female",
+      dob: "14 March 1994",
+      photo:
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop",
+      summary:
+        "Results-driven Brand Strategist and Product Designer with 7+ years of experience leading multi-disciplinary design teams. Adept at brand positioning, omnichannel visual identity, and user-centric UX architectures that drive 30%+ year-over-year conversion improvements.",
+    },
+
+    experience: [
+      {
+        id: "sp-exp-1",
+        jobTitle: "Lead Brand Strategist",
+        company: "Apex Creative Agency",
+        startDate: "2021",
+        endDate: "Present",
+        location: "San Francisco, CA",
+        description:
+          "• Spearheaded complete brand overhaul for 12 Fortune 500 tech clients.\n• Directed design sprints resulting in 40% higher product adoption.\n• Mentored a team of 8 brand designers and UI/UX specialists.",
+      },
+      {
+        id: "sp-exp-2",
+        jobTitle: "Senior Visual Designer",
+        company: "Vanguard Media Lab",
+        startDate: "2018",
+        endDate: "2021",
+        location: "New York, NY",
+        description:
+          "• Created enterprise design systems and cross-platform design guidelines.\n• Collaborated closely with engineering teams to ship pixel-perfect web and mobile apps.",
+      },
+    ],
+
+    education: [
+      {
+        id: "sp-edu-1",
+        degree: "M.S. Strategic Design & Management",
+        institution: "Parsons School of Design",
+        startDate: "2016",
+        endDate: "2018",
+        description: "Graduated with High Honors • Dean's Merit Scholar",
+      },
+      {
+        id: "sp-edu-2",
+        degree: "B.A. Graphic & Communication Design",
+        institution: "Rhode Island School of Design",
+        startDate: "2012",
+        endDate: "2016",
+      },
+    ],
+
+    skills: [
+      { id: "sp-s1", name: "Brand Strategy" },
+      { id: "sp-s2", name: "UI/UX Design" },
+      { id: "sp-s3", name: "Figma & Design Systems" },
+      { id: "sp-s4", name: "User Research" },
+      { id: "sp-s5", name: "Creative Direction" },
+      { id: "sp-s6", name: "Adobe Creative Suite" },
+    ],
+
+    projects: [
+      {
+        id: "sp-proj-1",
+        name: "Lumina Fintech Rebrand",
+        description:
+          "Complete brand identity and mobile banking app redesign resulting in 1.2M downloads within 6 months.",
+        technologies: ["Figma", "Design Systems", "Prototyping"],
+      },
+    ],
+
+    certifications: [
+      {
+        id: "sp-cert-1",
+        name: "Certified Design Sprint Master",
+        issuer: "Design Sprint Academy",
+        date: "2022",
+      },
+    ],
+
+    awards: [
+      {
+        id: "sp-award-1",
+        title: "Awwwards Site of the Day",
+        issuer: "Awwwards International",
+        date: "2023",
+      },
+    ],
+
+    languages: [
+      { id: "sp-l1", name: "English", level: "Native" },
+      { id: "sp-l2", name: "French", level: "Professional" },
+    ],
+
+    interests: ["Typography", "Architecture", "Photography", "Tech Ethics"],
+  },
+
+  "modern-photo": {
+    template: "modern-photo",
+
+    personalInfo: {
+      fullName: "David Sterling",
+      jobTitle: "Senior Solutions Architect",
+      email: "david.sterling@cloudtech.io",
+      phone: "+1 (555) 432-8765",
+      location: "Seattle, WA",
+      website: "davidsterling.tech",
+      linkedin: "linkedin.com/in/davidsterling",
+      github: "github.com/davidsterling",
+      photo:
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop",
+      summary:
+        "Senior Solutions Architect with 8+ years architecting fault-tolerant distributed cloud ecosystems and modern React frontends.",
+    },
+
+    experience: [
+      {
+        id: "mp-exp-1",
+        jobTitle: "Principal Cloud Architect",
+        company: "Cascade Cloud Systems",
+        startDate: "2020",
+        endDate: "Present",
+        location: "Seattle, WA",
+        description:
+          "• Architected multi-region microservices infrastructure supporting 10M+ daily active requests.\n• Reduced server latency by 45% and reduced cloud hosting expenditure by $180K/year.",
+      },
+    ],
+
+    education: [
+      {
+        id: "mp-edu-1",
+        degree: "B.S. Computer Engineering",
+        institution: "University of Washington",
+        startDate: "2014",
+        endDate: "2018",
+      },
+    ],
+
+    skills: [
+      { id: "mp-s1", name: "Cloud Architecture" },
+      { id: "mp-s2", name: "Kubernetes & Docker" },
+      { id: "mp-s3", name: "React & TypeScript" },
+      { id: "mp-s4", name: "PostgreSQL & Redis" },
+      { id: "mp-s5", name: "AWS Solutions" },
+    ],
+
+    projects: [
+      {
+        id: "mp-proj-1",
+        name: "OmniStream Cloud Engine",
+        description:
+          "High-throughput real-time event streaming pipeline processing 50K events/second.",
+        technologies: ["Node.js", "Kafka", "AWS", "Docker"],
+      },
+    ],
+
+    certifications: [
+      {
+        id: "mp-cert-1",
+        name: "AWS Certified Solutions Architect - Professional",
+        issuer: "Amazon Web Services",
+        date: "2023",
+      },
+    ],
+
+    awards: [
+      {
+        id: "mp-award-1",
+        title: "Innovator of the Year",
+        issuer: "Cascade Tech Awards",
+        date: "2023",
+      },
+    ],
+
+    languages: [
+      { id: "mp-l1", name: "English", level: "Native" },
+      { id: "mp-l2", name: "German", level: "Conversational" },
+    ],
+  },
 };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import AuthInput from "./AuthInput";
 import SocialLogin from "./SocialLogin";
@@ -8,6 +8,8 @@ import { signIn } from "../../services/authService";
 
 export default function LoginForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/dashboard";
 
   const [formData, setFormData] = useState({
     email: "",
@@ -42,7 +44,7 @@ export default function LoginForm() {
       return;
     }
 
-    navigate("/dashboard");
+    navigate(redirectPath);
   }
 
   return (

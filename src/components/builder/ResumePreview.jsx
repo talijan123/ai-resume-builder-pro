@@ -15,6 +15,8 @@ import ProfessionalTemplate from "../templates/ProfessionalTemplate";
 import MinimalTemplate from "../templates/MinimalTemplate";
 import CreativeTemplate from "../templates/CreativeTemplate";
 import ExecutiveTemplate from "../templates/ExecutiveTemplate";
+import SidebarPhotoTemplate from "../templates/SidebarPhotoTemplate";
+import ModernPhotoTemplate from "../templates/ModernPhotoTemplate";
 
 /* =========================================================
    AVAILABLE TEMPLATES
@@ -26,6 +28,8 @@ const templates = {
   minimal: MinimalTemplate,
   creative: CreativeTemplate,
   executive: ExecutiveTemplate,
+  "sidebar-photo": SidebarPhotoTemplate,
+  "modern-photo": ModernPhotoTemplate,
 };
 
 /* =========================================================

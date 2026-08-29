@@ -66,6 +66,8 @@ const validTemplates = [
   "creative",
   "executive",
   "minimal",
+  "sidebar-photo",
+  "modern-photo",
 ];
 
 /* ==========================================

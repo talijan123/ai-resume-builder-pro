@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Section from "../../UI/Section/Section";
 import SectionTitle from "../../UI/SectionTitle/SectionTitle";
 import SectionSubtitle from "../../UI/SectionSubtitle/SectionSubtitle";
@@ -9,6 +10,8 @@ import { templates } from "./templatesData";
 import { HiArrowRight } from "react-icons/hi2";
 
 export default function Templates() {
+  const navigate = useNavigate();
+
   return (
     <Section id="templates">
 
@@ -82,6 +85,8 @@ export default function Templates() {
       <div className="mt-20 text-center">
 
         <button
+          type="button"
+          onClick={() => navigate("/templates")}
           className="
             group
 
@@ -109,6 +114,7 @@ export default function Templates() {
             hover:border-blue-500
             hover:text-blue-600
             hover:shadow-lg
+            cursor-pointer
           "
         >
           View All Templates

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import Section from "../../UI/Section/Section";
 import SectionTitle from "../../UI/SectionTitle/SectionTitle";
@@ -8,6 +9,7 @@ import FAQItem from "./FAQItem";
 import { faqs } from "./faqData";
 
 export default function FAQ() {
+  const navigate = useNavigate();
   const [openId, setOpenId] = useState(1);
 
   function handleToggle(id) {
@@ -89,6 +91,8 @@ export default function FAQ() {
         </p>
 
         <button
+          type="button"
+          onClick={() => navigate("/contact")}
           className="
             mt-5
 
@@ -112,6 +116,7 @@ export default function FAQ() {
 
             hover:-translate-y-1
             hover:shadow-xl
+            cursor-pointer
           "
         >
           Contact Support

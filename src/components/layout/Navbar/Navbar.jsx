@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link as ScrollLink } from "react-scroll";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
 import {
   HiBars3,
   HiXMark,
@@ -28,12 +28,19 @@ const links = [
     name: "Pricing",
     to: "pricing",
   },
+  {
+    name: "Blog",
+    to: "/blog",
+    isRoute: true,
+  },
 ];
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
   const { user, loading } = useAuth();
 
@@ -97,59 +104,112 @@ export default function Navbar() {
               LOGO
           ================================================= */}
 
-          <ScrollLink
-            to="hero"
-            smooth
-            duration={600}
-            offset={-80}
-            className="
-              flex
-              cursor-pointer
-              items-center
-              gap-3
-            "
-          >
-            <div
+          {isHome ? (
+            <ScrollLink
+              to="hero"
+              smooth
+              duration={600}
+              offset={-80}
               className="
                 flex
-                h-11
-                w-11
+                cursor-pointer
                 items-center
-                justify-center
-                rounded-xl
-                bg-gradient-to-br
-                from-blue-500
-                to-indigo-600
-                font-black
-                text-white
-                shadow-lg
-                shadow-blue-500/30
+                gap-3
               "
             >
-              RF
-            </div>
-
-            <div>
-              <h1
+              <div
                 className="
-                  text-xl
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-gradient-to-br
+                  from-blue-500
+                  to-indigo-600
                   font-black
                   text-white
+                  shadow-lg
+                  shadow-blue-500/30
                 "
               >
-                ResumeForge
-              </h1>
+                RF
+              </div>
 
-              <p
+              <div>
+                <h1
+                  className="
+                    text-xl
+                    font-black
+                    text-white
+                  "
+                >
+                  ResumeForge
+                </h1>
+
+                <p
+                  className="
+                    text-xs
+                    text-slate-400
+                  "
+                >
+                  AI Resume Builder
+                </p>
+              </div>
+            </ScrollLink>
+          ) : (
+            <RouterLink
+              to="/"
+              className="
+                flex
+                cursor-pointer
+                items-center
+                gap-3
+              "
+            >
+              <div
                 className="
-                  text-xs
-                  text-slate-400
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-gradient-to-br
+                  from-blue-500
+                  to-indigo-600
+                  font-black
+                  text-white
+                  shadow-lg
+                  shadow-blue-500/30
                 "
               >
-                AI Resume Builder
-              </p>
-            </div>
-          </ScrollLink>
+                RF
+              </div>
+
+              <div>
+                <h1
+                  className="
+                    text-xl
+                    font-black
+                    text-white
+                  "
+                >
+                  ResumeForge
+                </h1>
+
+                <p
+                  className="
+                    text-xs
+                    text-slate-400
+                  "
+                >
+                  AI Resume Builder
+                </p>
+              </div>
+            </RouterLink>
+          )}
 
           {/* =================================================
               DESKTOP NAVIGATION
@@ -163,39 +223,81 @@ export default function Navbar() {
               lg:flex
             "
           >
-            {links.map((link) => (
-              <ScrollLink
-                key={link.name}
-                to={link.to}
-                smooth
-                spy
-                duration={600}
-                offset={-80}
-                activeClass="text-white after:w-full"
-                className="
-                  relative
-                  cursor-pointer
-                  font-medium
-                  text-slate-300
-                  transition-all
-                  duration-300
-                  hover:text-white
+            {links.map((link) => {
+              if (link.isRoute) {
+                return (
+                  <RouterLink
+                    key={link.name}
+                    to={link.to}
+                    className="
+                      relative
+                      cursor-pointer
+                      font-medium
+                      text-slate-300
+                      transition-all
+                      duration-300
+                      hover:text-white
+                    "
+                  >
+                    {link.name}
+                  </RouterLink>
+                );
+              }
 
-                  after:absolute
-                  after:-bottom-2
-                  after:left-0
-                  after:h-[2px]
-                  after:w-0
-                  after:bg-blue-500
-                  after:transition-all
-                  after:duration-300
+              if (!isHome) {
+                return (
+                  <RouterLink
+                    key={link.name}
+                    to={`/#${link.to}`}
+                    className="
+                      relative
+                      cursor-pointer
+                      font-medium
+                      text-slate-300
+                      transition-all
+                      duration-300
+                      hover:text-white
+                    "
+                  >
+                    {link.name}
+                  </RouterLink>
+                );
+              }
 
-                  hover:after:w-full
-                "
-              >
-                {link.name}
-              </ScrollLink>
-            ))}
+              return (
+                <ScrollLink
+                  key={link.name}
+                  to={link.to}
+                  smooth
+                  spy
+                  duration={600}
+                  offset={-80}
+                  activeClass="text-white after:w-full"
+                  className="
+                    relative
+                    cursor-pointer
+                    font-medium
+                    text-slate-300
+                    transition-all
+                    duration-300
+                    hover:text-white
+
+                    after:absolute
+                    after:-bottom-2
+                    after:left-0
+                    after:h-[2px]
+                    after:w-0
+                    after:bg-blue-500
+                    after:transition-all
+                    after:duration-300
+
+                    hover:after:w-full
+                  "
+                >
+                  {link.name}
+                </ScrollLink>
+              );
+            })}
           </nav>
 
           {/* =================================================
@@ -216,21 +318,6 @@ export default function Navbar() {
               </span>
             ) : user ? (
               <>
-                {/* Dashboard */}
-
-                <button
-                  type="button"
-                  onClick={handleDashboard}
-                  className="
-                    font-medium
-                    text-slate-300
-                    transition
-                    hover:text-white
-                  "
-                >
-                  Dashboard
-                </button>
-
                 {/* Profile */}
 
                 <RouterLink
@@ -242,8 +329,14 @@ export default function Navbar() {
                     hover:text-white
                   "
                 >
-                  Profile
+                  My Profile
                 </RouterLink>
+
+                {/* Go to Dashboard */}
+
+                <Button onClick={handleDashboard}>
+                  Go to Dashboard
+                </Button>
               </>
             ) : (
               <>
@@ -315,27 +408,71 @@ export default function Navbar() {
 
               {/* Landing Page Links */}
 
-              {links.map((link) => (
-                <ScrollLink
-                  key={link.name}
-                  to={link.to}
-                  smooth
-                  duration={600}
-                  offset={-80}
-                  onClick={() => setMenuOpen(false)}
-                  className="
-                    cursor-pointer
-                    border-b
-                    border-slate-800
-                    py-4
-                    text-slate-300
-                    transition
-                    hover:text-white
-                  "
-                >
-                  {link.name}
-                </ScrollLink>
-              ))}
+              {links.map((link) => {
+                if (link.isRoute) {
+                  return (
+                    <RouterLink
+                      key={link.name}
+                      to={link.to}
+                      onClick={() => setMenuOpen(false)}
+                      className="
+                        cursor-pointer
+                        border-b
+                        border-slate-800
+                        py-4
+                        text-slate-300
+                        transition
+                        hover:text-white
+                      "
+                    >
+                      {link.name}
+                    </RouterLink>
+                  );
+                }
+
+                if (!isHome) {
+                  return (
+                    <RouterLink
+                      key={link.name}
+                      to={`/#${link.to}`}
+                      onClick={() => setMenuOpen(false)}
+                      className="
+                        cursor-pointer
+                        border-b
+                        border-slate-800
+                        py-4
+                        text-slate-300
+                        transition
+                        hover:text-white
+                      "
+                    >
+                      {link.name}
+                    </RouterLink>
+                  );
+                }
+
+                return (
+                  <ScrollLink
+                    key={link.name}
+                    to={link.to}
+                    smooth
+                    duration={600}
+                    offset={-80}
+                    onClick={() => setMenuOpen(false)}
+                    className="
+                      cursor-pointer
+                      border-b
+                      border-slate-800
+                      py-4
+                      text-slate-300
+                      transition
+                      hover:text-white
+                    "
+                  >
+                    {link.name}
+                  </ScrollLink>
+                );
+              })}
 
               {/* =================================================
                   AUTH ACTIONS
@@ -358,26 +495,13 @@ export default function Navbar() {
                 </div>
               ) : user ? (
                 <>
-                  {/* Dashboard */}
+                  {/* Go to Dashboard */}
 
-                  <button
-                    type="button"
-                    onClick={handleDashboard}
-                    className="
-                      mt-6
-                      rounded-xl
-                      border
-                      border-slate-700
-                      py-3
-                      font-medium
-                      text-slate-300
-                      transition
-                      hover:border-blue-500
-                      hover:text-white
-                    "
-                  >
-                    Dashboard
-                  </button>
+                  <div className="mt-6">
+                    <Button onClick={handleDashboard} className="w-full">
+                      Go to Dashboard
+                    </Button>
+                  </div>
 
                   {/* Profile */}
 

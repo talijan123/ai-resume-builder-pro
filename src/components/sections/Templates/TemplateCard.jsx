@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   HiArrowRight,
   HiStar,
@@ -8,9 +9,15 @@ import TemplatePreview from "./TemplatePreview";
 
 export default function TemplateCard({
   title,
+  templateId,
   category,
   color,
 }) {
+  const navigate = useNavigate();
+
+  function handleUseTemplate() {
+    navigate(`/builder?template=${templateId || "modern"}`);
+  }
   return (
     <motion.div
       whileHover={{
@@ -162,6 +169,8 @@ export default function TemplateCard({
         {/* Button */}
 
         <button
+          type="button"
+          onClick={handleUseTemplate}
           className="
             flex
             w-full
@@ -185,6 +194,7 @@ export default function TemplateCard({
             duration-300
 
             hover:bg-blue-600
+            cursor-pointer
           "
         >
           Use Template

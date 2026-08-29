@@ -18,6 +18,8 @@ export const VALID_TEMPLATES = [
   "minimal",
   "creative",
   "executive",
+  "sidebar-photo",
+  "modern-photo",
 ];
 
 /* =========================================================
@@ -37,6 +39,7 @@ const initialResumeData = {
     linkedin: "",
     github: "",
     summary: "",
+    photo: "",
   },
 
   experience: [],
@@ -44,6 +47,9 @@ const initialResumeData = {
   skills: [],
   projects: [],
   certifications: [],
+  awards: [],
+  languages: [],
+  interests: [],
 };
 
 /* =========================================================
@@ -97,6 +103,18 @@ function normalizeResumeData(data = {}) {
       data?.certifications
     )
       ? data.certifications
+      : [],
+
+    awards: Array.isArray(data?.awards)
+      ? data.awards
+      : [],
+
+    languages: Array.isArray(data?.languages)
+      ? data.languages
+      : [],
+
+    interests: Array.isArray(data?.interests)
+      ? data.interests
       : [],
   };
 }

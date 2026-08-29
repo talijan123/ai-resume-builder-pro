@@ -136,19 +136,19 @@ export default function RegisterForm() {
 
         <span className="text-sm leading-6 text-slate-600">
           I agree to the{" "}
-          <a
-            href="#"
-            className="font-semibold text-blue-600 hover:text-blue-700"
+          <Link
+            to="/terms"
+            className="font-semibold text-blue-600 hover:text-blue-700 underline"
           >
             Terms of Service
-          </a>{" "}
+          </Link>{" "}
           and{" "}
-          <a
-            href="#"
-            className="font-semibold text-blue-600 hover:text-blue-700"
+          <Link
+            to="/privacy"
+            className="font-semibold text-blue-600 hover:text-blue-700 underline"
           >
             Privacy Policy
-          </a>.
+          </Link>.
         </span>
       </label>
 

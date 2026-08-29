@@ -8,6 +8,10 @@ import {
   HiChevronDown,
   HiHome,
   HiSparkles,
+  HiGlobeAlt,
+  HiUser,
+  HiCog6Tooth,
+  HiArrowRightOnRectangle,
 } from "react-icons/hi2";
 
 import {
@@ -22,6 +26,8 @@ import {
 import {
   usePricing,
 } from "../../context/PricingContext";
+
+import { supabase } from "../../lib/supabase";
 
 /* =========================================================
    DASHBOARD HEADER
@@ -113,6 +119,11 @@ export default function DashboardHeader({
      PROFILE MENU
   ======================================================= */
 
+  function handleLandingPage() {
+    navigate("/");
+    setProfileOpen(false);
+  }
+
   function handleProfile() {
     navigate("/profile");
 
@@ -125,8 +136,10 @@ export default function DashboardHeader({
     setProfileOpen(false);
   }
 
-  function handleLogout() {
+  async function handleLogout() {
     setProfileOpen(false);
+    await supabase.auth.signOut();
+    navigate("/login");
   }
 
   /* =======================================================
@@ -820,12 +833,13 @@ export default function DashboardHeader({
                     <button
                       type="button"
                       onClick={
-                        handleProfile
+                        handleLandingPage
                       }
                       className="
                         flex
                         w-full
                         items-center
+                        gap-2.5
 
                         rounded-xl
 
@@ -845,6 +859,40 @@ export default function DashboardHeader({
                         hover:text-slate-900
                       "
                     >
+                      <HiGlobeAlt size={18} className="text-slate-500" />
+                      View Landing Page
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleProfile
+                      }
+                      className="
+                        flex
+                        w-full
+                        items-center
+                        gap-2.5
+
+                        rounded-xl
+
+                        px-3
+                        py-2.5
+
+                        text-left
+
+                        text-sm
+                        font-semibold
+
+                        text-slate-700
+
+                        transition-colors
+
+                        hover:bg-slate-50
+                        hover:text-slate-900
+                      "
+                    >
+                      <HiUser size={18} className="text-slate-500" />
                       My Profile
                     </button>
 
@@ -857,6 +905,7 @@ export default function DashboardHeader({
                         flex
                         w-full
                         items-center
+                        gap-2.5
 
                         rounded-xl
 
@@ -876,8 +925,11 @@ export default function DashboardHeader({
                         hover:text-slate-900
                       "
                     >
+                      <HiCog6Tooth size={18} className="text-slate-500" />
                       Settings
                     </button>
+
+                    <div className="my-1 border-t border-slate-100" />
 
                     <button
                       type="button"
@@ -888,6 +940,7 @@ export default function DashboardHeader({
                         flex
                         w-full
                         items-center
+                        gap-2.5
 
                         rounded-xl
 
@@ -906,6 +959,7 @@ export default function DashboardHeader({
                         hover:bg-red-50
                       "
                     >
+                      <HiArrowRightOnRectangle size={18} className="text-red-500" />
                       Logout
                     </button>
                   </div>
