@@ -17,6 +17,12 @@ import {
   useParams,
 } from "react-router-dom";
 
+import {
+  HiPencilSquare,
+  HiEye,
+  HiSparkles,
+} from "react-icons/hi2";
+
 import { useReactToPrint } from "react-to-print";
 
 import BuilderHeader from "../components/builder/BuilderHeader";
@@ -120,6 +126,7 @@ export default function ResumeBuilder() {
   const [atsScanning, setAtsScanning] = useState(false);
   const [atsError, setAtsError] = useState("");
   const [atsResult, setAtsResult] = useState(null);
+  const [mobileTab, setMobileTab] = useState("editor"); // "editor" | "preview"
 
   /* ==========================================
      Resume Context
@@ -1256,32 +1263,56 @@ export default function ResumeBuilder() {
           MAIN
       ====================================== */}
 
-      <div
-        className="
-          mx-auto
-          max-w-[1800px]
-          px-6
-          py-8
-        "
-      >
-        <div className="mb-6 rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
+      <div className="mx-auto max-w-[1800px] px-3 sm:px-6 py-4 sm:py-8">
+        {/* Mobile View Mode Switcher (Visible on < xl screens) */}
+        <div className="sticky top-16 sm:top-20 z-30 mb-4 flex xl:hidden items-center justify-center">
+          <div className="inline-flex rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 p-1.5 shadow-lg backdrop-blur-md">
+            <button
+              type="button"
+              onClick={() => setMobileTab("editor")}
+              className={`flex items-center gap-2 rounded-xl px-4 sm:px-6 py-2 text-xs sm:text-sm font-bold transition-all ${
+                mobileTab === "editor"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <HiPencilSquare size={16} />
+              <span>Edit Resume</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("preview")}
+              className={`flex items-center gap-2 rounded-xl px-4 sm:px-6 py-2 text-xs sm:text-sm font-bold transition-all ${
+                mobileTab === "preview"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <HiEye size={16} />
+              <span>Live Preview</span>
+            </button>
+          </div>
+        </div>
+
+        {/* AI Resume Generation Section */}
+        <div className="mb-6 rounded-3xl border border-blue-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">
                 AI Resume Generation
               </p>
-              <h3 className="mt-2 text-xl font-black text-slate-900">
+              <h3 className="mt-1 sm:mt-2 text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                 Create a resume draft
               </h3>
             </div>
-            <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1">
+            <div className="inline-flex rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-1">
               <button
                 type="button"
                 onClick={() => setGenerationMode("job-description")}
-                className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                className={`rounded-full px-3.5 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition ${
                   generationMode === "job-description"
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-600"
+                    ? "bg-slate-900 dark:bg-blue-600 text-white"
+                    : "text-slate-600 dark:text-slate-400"
                 }`}
               >
                 Job description
@@ -1289,10 +1320,10 @@ export default function ResumeBuilder() {
               <button
                 type="button"
                 onClick={() => setGenerationMode("guided")}
-                className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                className={`rounded-full px-3.5 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition ${
                   generationMode === "guided"
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-600"
+                    ? "bg-slate-900 dark:bg-blue-600 text-white"
+                    : "text-slate-600 dark:text-slate-400"
                 }`}
               >
                 Guided fields
@@ -1301,64 +1332,64 @@ export default function ResumeBuilder() {
           </div>
 
           {generationMode === "job-description" ? (
-            <label className="mt-5 block">
-              <span className="mb-2 block text-sm font-bold text-slate-700">
+            <label className="mt-4 sm:mt-5 block">
+              <span className="mb-2 block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
                 Paste the job description
               </span>
               <textarea
                 value={generationJobDescription}
                 onChange={(event) => setGenerationJobDescription(event.target.value)}
-                rows={8}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                rows={6}
+                className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30"
                 placeholder="Paste the job description and the AI will generate a resume draft based on it."
               />
             </label>
           ) : (
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <label className="block md:col-span-2">
-                <span className="mb-2 block text-sm font-bold text-slate-700">
+            <div className="mt-4 sm:mt-5 grid gap-4 sm:grid-cols-2">
+              <label className="block sm:col-span-2">
+                <span className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
                   Job title
                 </span>
                 <input
                   value={generationJobTitle}
                   onChange={(event) => setGenerationJobTitle(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30"
                   placeholder="Senior Product Designer"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-700">
+                <span className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
                   Industry
                 </span>
                 <input
                   value={generationIndustry}
                   onChange={(event) => setGenerationIndustry(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30"
                   placeholder="SaaS, fintech, healthcare..."
                 />
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-700">
+                <span className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
                   Years of experience
                 </span>
                 <input
                   value={generationYearsOfExperience}
                   onChange={(event) => setGenerationYearsOfExperience(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30"
                   placeholder="3"
                 />
               </label>
 
-              <label className="block md:col-span-2">
-                <span className="mb-2 block text-sm font-bold text-slate-700">
+              <label className="block sm:col-span-2">
+                <span className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
                   Key skills
                 </span>
                 <input
                   value={generationKeySkills}
                   onChange={(event) => setGenerationKeySkills(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30"
                   placeholder="React, product strategy, analytics, stakeholder management"
                 />
               </label>
@@ -1366,33 +1397,34 @@ export default function ResumeBuilder() {
           )}
 
           {generationError && (
-            <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            <p className="mt-4 rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-xs sm:text-sm font-semibold text-red-700 dark:text-red-400">
               {generationError}
             </p>
           )}
 
-          <div className="mt-5 flex justify-end">
+          <div className="mt-4 sm:mt-5 flex justify-end">
             <button
               type="button"
               onClick={handleGenerateResume}
               disabled={generating}
-              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-500/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-xs sm:text-sm font-black text-white shadow-lg shadow-blue-500/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
             >
               {generating ? "Generating..." : "Generate Resume"}
             </button>
           </div>
         </div>
 
-        <div className="mb-6 rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        {/* AI ATS Scanner Section */}
+        <div className="mb-6 rounded-3xl border border-emerald-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
                 AI ATS Scanner
               </p>
-              <h3 className="mt-2 text-xl font-black text-slate-900">
+              <h3 className="mt-1 sm:mt-2 text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                 Scan against a job description
               </h3>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                 Compare your current resume with a specific role before you apply.
               </p>
             </div>
@@ -1400,7 +1432,7 @@ export default function ResumeBuilder() {
               type="button"
               onClick={handleScanResumeATS}
               disabled={atsScanning}
-              className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-emerald-600 px-6 py-3 text-xs sm:text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
             >
               {atsScanning ? "Scanning..." : "Scan Resume"}
             </button>
@@ -1409,75 +1441,75 @@ export default function ResumeBuilder() {
           <textarea
             value={atsJobDescription}
             onChange={(event) => setAtsJobDescription(event.target.value)}
-            rows={7}
-            className="mt-5 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+            rows={5}
+            className="mt-4 sm:mt-5 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30"
             placeholder="Paste the job description you want to compare against your resume."
           />
 
           {atsError && (
-            <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            <p className="mt-4 rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-xs sm:text-sm font-semibold text-red-700 dark:text-red-400">
               {atsError}
             </p>
           )}
 
           {atsResult && (
-            <div className="mt-6 space-y-5 border-t border-slate-200 pt-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm font-black uppercase tracking-[0.18em] text-slate-500">
+            <div className="mt-5 space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs sm:text-sm font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   Match percentage
                 </p>
-                <p className="text-4xl font-black text-emerald-600">
+                <p className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400">
                   {atsResult.keywordMatchPercent}%
                 </p>
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <p className="text-sm font-black text-emerald-700">
+                  <p className="text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-400">
                     Matched keywords
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-2 flex flex-wrap gap-1.5">
                     {atsResult.matchedKeywords.length > 0 ? (
                       atsResult.matchedKeywords.map((keyword) => (
                         <span
                           key={keyword}
-                          className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800"
+                          className="rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300"
                         >
                           {keyword}
                         </span>
                       ))
                     ) : (
-                      <span className="text-sm text-slate-500">None identified.</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">None identified.</span>
                     )}
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm font-black text-amber-700">
+                  <p className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-400">
                     Missing keywords
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-2 flex flex-wrap gap-1.5">
                     {atsResult.missingKeywords.length > 0 ? (
                       atsResult.missingKeywords.map((keyword) => (
                         <span
                           key={keyword}
-                          className="rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-800"
+                          className="rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 text-xs font-bold text-amber-800 dark:text-amber-300"
                         >
                           {keyword}
                         </span>
                       ))
                     ) : (
-                      <span className="text-sm text-slate-500">None identified.</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">None identified.</span>
                     )}
                   </div>
                 </div>
               </div>
 
               <div>
-                <p className="text-sm font-black text-slate-700">
+                <p className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300">
                   Formatting warnings
                 </p>
                 {atsResult.formattingWarnings.length > 0 ? (
-                  <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+                  <ul className="mt-2 space-y-1.5 text-xs sm:text-sm leading-6 text-slate-600 dark:text-slate-400">
                     {atsResult.formattingWarnings.map((warning) => (
                       <li key={warning} className="flex gap-2">
                         <span className="text-amber-500">•</span>
@@ -1486,13 +1518,13 @@ export default function ResumeBuilder() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-3 text-sm text-slate-500">No formatting warnings identified.</p>
+                  <p className="mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400">No formatting warnings identified.</p>
                 )}
               </div>
 
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-sm font-black text-slate-700">Summary</p>
-                <p className="mt-2 text-sm leading-7 text-slate-600">
+              <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-4 border border-slate-200/60 dark:border-slate-800">
+                <p className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300">Summary</p>
+                <p className="mt-1 text-xs sm:text-sm leading-6 text-slate-600 dark:text-slate-400">
                   {atsResult.summary}
                 </p>
               </div>
@@ -1500,35 +1532,57 @@ export default function ResumeBuilder() {
           )}
         </div>
 
-        <div
-          className="
-            grid
-            gap-8
-            xl:grid-cols-[320px_1fr_650px]
-          "
-        >
-
-          {/* Sidebar */}
-
+        {/* ===================================================
+            BUILDER WORKSPACE (Responsive Multi-Column & Mobile Switcher)
+        =================================================== */}
+        
+        {/* Desktop View (xl+): 3-Column Simultaneous Layout */}
+        <div className="hidden xl:grid gap-8 xl:grid-cols-[300px_1fr_650px]">
           <BuilderSidebar />
-
-          {/* Content */}
-
           <BuilderContent
-            onGenerateResume={
-              handleGenerateResume
-            }
+            onGenerateResume={handleGenerateResume}
             generating={generating}
           />
+          <ResumePreview ref={resumeRef} />
+        </div>
 
-          {/* Preview */}
+        {/* Mobile / Tablet View (< xl): Single Panel Switched by mobileTab */}
+        <div className="xl:hidden">
+          {mobileTab === "editor" ? (
+            <div className="space-y-6">
+              <BuilderContent
+                onGenerateResume={handleGenerateResume}
+                generating={generating}
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <ResumePreview ref={resumeRef} />
+            </div>
+          )}
+        </div>
 
-          <ResumePreview
-            ref={resumeRef}
-          />
-
+        {/* Floating Mobile Toggle Button */}
+        <div className="fixed bottom-5 right-5 z-40 xl:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileTab(mobileTab === "editor" ? "preview" : "editor")}
+            className="flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-xs sm:text-sm font-black text-white shadow-xl shadow-blue-500/30 transition hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            {mobileTab === "editor" ? (
+              <>
+                <HiEye size={18} />
+                <span>View Preview</span>
+              </>
+            ) : (
+              <>
+                <HiPencilSquare size={18} />
+                <span>Edit Resume</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
   );
-}
+}

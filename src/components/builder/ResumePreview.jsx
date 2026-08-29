@@ -1,10 +1,19 @@
 import {
   forwardRef,
+  useState,
+  useEffect,
+  useRef,
 } from "react";
 
 import {
   useSearchParams,
 } from "react-router-dom";
+
+import {
+  HiMagnifyingGlassPlus,
+  HiMagnifyingGlassMinus,
+  HiArrowsPointingOut,
+} from "react-icons/hi2";
 
 import {
   useResume,
@@ -32,82 +41,79 @@ const templates = {
   "modern-photo": ModernPhotoTemplate,
 };
 
+const A4_WIDTH_PX = 794;
+const A4_HEIGHT_PX = 1123;
+
 /* =========================================================
-   RESUME PREVIEW
+   RESUME PREVIEW COMPONENT
 ========================================================= */
 
 const ResumePreview = forwardRef(
   (props, ref) => {
-    /* =======================================================
-       RESUME CONTEXT
-    ======================================================= */
-
-    const {
-      resumeData,
-    } = useResume();
-
-    /* =======================================================
-       URL SEARCH PARAMS
-       
-       Used mainly when creating a NEW resume:
-       
-       /builder?template=professional
-    ======================================================= */
-
-    const [searchParams] =
-      useSearchParams();
-
-    const urlTemplate =
-      searchParams.get("template");
-
-    /* =======================================================
-       SELECT TEMPLATE
-       
-       Priority:
-       
-       1. resumeData.template
-          → Saved resume / current context
-       
-       2. URL ?template=
-          → New resume template selection
-       
-       3. modern
-          → Final fallback
-    ======================================================= */
+    const { resumeData } = useResume();
+    const [searchParams] = useSearchParams();
+    const urlTemplate = searchParams.get("template");
 
     const templateName =
-      resumeData?.template ||
-      urlTemplate ||
-      "modern";
-
-    /* =======================================================
-       SELECT TEMPLATE COMPONENT
-    ======================================================= */
+      resumeData?.template || urlTemplate || "modern";
 
     const SelectedTemplate =
-      templates[templateName] ||
-      ModernTemplate;
-
-    /* =======================================================
-       DISPLAY TEMPLATE NAME
-    ======================================================= */
+      templates[templateName] || ModernTemplate;
 
     const displayTemplateName =
-      templateName
-        .charAt(0)
-        .toUpperCase() +
-      templateName.slice(1);
+      templateName.charAt(0).toUpperCase() + templateName.slice(1);
 
-    /* =======================================================
-       RENDER
-    ======================================================= */
+    // Zoom and responsive scaling state
+    const [scale, setScale] = useState(1);
+    const [isAutoFit, setIsAutoFit] = useState(true);
+    const containerRef = useRef(null);
+
+    // Auto-calculate scale on resize when in AutoFit mode
+    useEffect(() => {
+      function calculateFitScale() {
+        if (!containerRef.current) return;
+        const containerWidth = containerRef.current.clientWidth - 32; // padding offset
+        if (containerWidth > 0) {
+          const autoScale = Math.min(1, Math.max(0.35, containerWidth / A4_WIDTH_PX));
+          if (isAutoFit) {
+            setScale(autoScale);
+          }
+        }
+      }
+
+      calculateFitScale();
+      window.addEventListener("resize", calculateFitScale);
+      return () => window.removeEventListener("resize", calculateFitScale);
+    }, [isAutoFit]);
+
+    function handleZoomIn() {
+      setIsAutoFit(false);
+      setScale((prev) => Math.min(1.5, Number((prev + 0.1).toFixed(2))));
+    }
+
+    function handleZoomOut() {
+      setIsAutoFit(false);
+      setScale((prev) => Math.max(0.35, Number((prev - 0.1).toFixed(2))));
+    }
+
+    function handleResetFit() {
+      setIsAutoFit(true);
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth - 32;
+        setScale(Math.min(1, Math.max(0.35, containerWidth / A4_WIDTH_PX)));
+      }
+    }
+
+    function handleZoom100() {
+      setIsAutoFit(false);
+      setScale(1);
+    }
 
     return (
       <>
         {/* =========================================
             PRINT STYLES
         ========================================= */}
-
         <style>
           {`
             @page {
@@ -116,14 +122,10 @@ const ResumePreview = forwardRef(
             }
 
             @media print {
-
-              html,
-              body {
+              html, body {
                 margin: 0 !important;
                 padding: 0 !important;
-
                 width: 100% !important;
-
                 background: white !important;
               }
 
@@ -134,36 +136,32 @@ const ResumePreview = forwardRef(
 
               #resume-print-area {
                 width: 100% !important;
-
                 margin: 0 !important;
                 padding: 0 !important;
-
                 background: white !important;
+                overflow: visible !important;
+                height: auto !important;
+              }
+
+              #resume-preview-wrapper {
+                transform: none !important;
+                width: 100% !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
               }
 
               #resume-preview {
                 width: 100% !important;
-
                 min-height: 0 !important;
-
                 height: auto !important;
-
                 margin: 0 !important;
-
                 padding: 0 !important;
-
                 border-radius: 0 !important;
-
                 box-shadow: none !important;
-
                 overflow: visible !important;
-
                 background: white !important;
               }
-
-              /* =========================================
-                 KEEP RESUME ENTRIES TOGETHER
-              ========================================= */
 
               .resume-entry,
               .resume-section,
@@ -172,107 +170,55 @@ const ResumePreview = forwardRef(
               .resume-project-item,
               .resume-certification-item {
                 break-inside: avoid !important;
-
                 page-break-inside: avoid !important;
               }
-
-              /* =========================================
-                 KEEP SECTION HEADINGS WITH CONTENT
-              ========================================= */
 
               .resume-section-title {
                 break-after: avoid !important;
-
                 page-break-after: avoid !important;
               }
 
-              /* =========================================
-                 PREVENT COMMON ELEMENTS FROM SPLITTING
-              ========================================= */
-
-              table,
-              tr,
-              td,
-              th,
-              figure,
-              blockquote {
+              table, tr, td, th, figure, blockquote {
                 break-inside: avoid !important;
-
                 page-break-inside: avoid !important;
               }
 
-              /* =========================================
-                 AVOID UNNECESSARY FINAL PAGE BREAK
-              ========================================= */
-
               #resume-preview > *:last-child {
                 break-after: auto !important;
-
                 page-break-after: auto !important;
               }
-
-              /* =========================================
-                 HIDE SCREEN-ONLY ELEMENTS
-              ========================================= */
 
               .print\\:hidden {
                 display: none !important;
               }
 
-              /* =========================================
-                 LINKS
-              ========================================= */
-
               a {
                 color: inherit !important;
-
                 text-decoration: none !important;
               }
 
-              /* =========================================
-                 RESUME PAGE BREAK HELPERS
-              ========================================= */
-
               .resume-page-break {
                 break-before: page !important;
-
                 page-break-before: always !important;
               }
 
               .resume-keep-together {
                 break-inside: avoid !important;
-
                 page-break-inside: avoid !important;
               }
 
               .resume-keep-with-next {
                 break-after: avoid !important;
-
                 page-break-after: avoid !important;
               }
 
-              /* =========================================
-                 HEADINGS
-              ========================================= */
-
-              h1,
-              h2,
-              h3,
-              h4,
-              h5,
-              h6 {
+              h1, h2, h3, h4, h5, h6 {
                 break-after: avoid !important;
-
                 page-break-after: avoid !important;
               }
-
-              /* =========================================
-                 PARAGRAPHS
-              ========================================= */
 
               p {
                 orphans: 3;
-
                 widows: 3;
               }
             }
@@ -282,25 +228,23 @@ const ResumePreview = forwardRef(
         {/* =========================================
             PREVIEW CONTAINER
         ========================================= */}
-
         <div
           className="
-            sticky
-            top-24
-
-            h-[calc(100vh-120px)]
-
+            xl:sticky
+            xl:top-24
+            w-full
+            xl:h-[calc(100vh-120px)]
             overflow-hidden
-
             rounded-3xl
-
             border
             border-slate-200
-
+            dark:border-slate-800
             bg-white
-
+            dark:bg-slate-900
             shadow-xl
-
+            transition-colors
+            flex
+            flex-col
             print:static
             print:h-auto
             print:overflow-visible
@@ -311,97 +255,155 @@ const ResumePreview = forwardRef(
           "
         >
           {/* =======================================
-              PREVIEW HEADER
+              PREVIEW HEADER & ZOOM TOOLBAR
           ======================================= */}
-
           <div
             className="
               border-b
               border-slate-200
-
-              p-5
-
+              dark:border-slate-800
+              p-3.5
+              sm:p-4
+              flex
+              items-center
+              justify-between
+              gap-3
+              bg-white/80
+              dark:bg-slate-900/80
+              backdrop-blur-sm
+              shrink-0
               print:hidden
             "
           >
-            <h2
-              className="
-                text-xl
-                font-bold
-                text-slate-900
-              "
-            >
-              Live Preview
-            </h2>
+            <div>
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
+                Live Preview
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">
+                {displayTemplateName} Template
+              </p>
+            </div>
 
-            <p
-              className="
-                mt-1
-                text-sm
-                text-slate-500
-              "
-            >
-              {displayTemplateName} Template
-            </p>
+            {/* Zoom Controls Bar */}
+            <div className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70 p-1">
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                title="Zoom out"
+                aria-label="Zoom out"
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition shadow-none hover:shadow-sm"
+              >
+                <HiMagnifyingGlassMinus size={15} />
+              </button>
+
+              <span className="min-w-[38px] text-center text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                {Math.round(scale * 100)}%
+              </span>
+
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                title="Zoom in"
+                aria-label="Zoom in"
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition shadow-none hover:shadow-sm"
+              >
+                <HiMagnifyingGlassPlus size={15} />
+              </button>
+
+              <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+
+              <button
+                type="button"
+                onClick={handleResetFit}
+                title="Fit to window"
+                aria-label="Fit to window"
+                className={`flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] font-bold transition ${
+                  isAutoFit
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
+                }`}
+              >
+                <HiArrowsPointingOut size={13} />
+                <span>Fit</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleZoom100}
+                title="100% Size"
+                className={`hidden sm:flex h-7 items-center rounded-lg px-2 text-[11px] font-bold transition ${
+                  scale === 1 && !isAutoFit
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
+                }`}
+              >
+                100%
+              </button>
+            </div>
           </div>
 
           {/* =======================================
-              RESUME SCROLL AREA
+              RESUME SCROLL & ZOOM AREA
           ======================================= */}
-
           <div
             id="resume-print-area"
+            ref={containerRef}
             className="
-              h-full
-
+              flex-1
               overflow-y-auto
-
+              overflow-x-auto
               bg-slate-100
-
-              p-6
-
+              dark:bg-slate-950/60
+              p-3
+              sm:p-6
               print:h-auto
               print:overflow-visible
               print:bg-white
               print:p-0
             "
           >
-            {/* =====================================
-                A4 RESUME PAPER
-            ===================================== */}
-
+            {/* Scaled Wrapper */}
             <div
-              ref={ref}
-              id="resume-preview"
-              data-print-content="resume"
-              className="
-                mx-auto
-
-                w-full
-                max-w-[794px]
-
-                min-h-[1123px]
-
-                rounded-xl
-
-                bg-white
-
-                p-8
-
-                shadow-xl
-
-                print:mx-0
-                print:w-full
-                print:max-w-none
-                print:min-h-0
-                print:h-auto
-                print:rounded-none
-                print:bg-white
-                print:p-0
-                print:shadow-none
-              "
+              id="resume-preview-wrapper"
+              className="mx-auto flex justify-center origin-top transition-transform duration-150"
+              style={{
+                width: `${A4_WIDTH_PX * scale}px`,
+                minHeight: `${A4_HEIGHT_PX * scale}px`,
+              }}
             >
-              <SelectedTemplate />
+              <div
+                style={{
+                  width: `${A4_WIDTH_PX}px`,
+                  transform: `scale(${scale})`,
+                  transformOrigin: "top left",
+                }}
+              >
+                {/* A4 RESUME PAPER */}
+                <div
+                  ref={ref}
+                  id="resume-preview"
+                  data-print-content="resume"
+                  className="
+                    w-[794px]
+                    min-h-[1123px]
+                    rounded-xl
+                    bg-white
+                    p-8
+                    shadow-xl
+                    print:mx-0
+                    print:w-full
+                    print:max-w-none
+                    print:min-h-0
+                    print:h-auto
+                    print:rounded-none
+                    print:bg-white
+                    print:p-0
+                    print:shadow-none
+                  "
+                >
+                  <SelectedTemplate />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -410,7 +412,6 @@ const ResumePreview = forwardRef(
   }
 );
 
-ResumePreview.displayName =
-  "ResumePreview";
+ResumePreview.displayName = "ResumePreview";
 
 export default ResumePreview;

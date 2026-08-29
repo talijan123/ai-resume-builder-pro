@@ -54,6 +54,8 @@ export default function DemoInput({
             from-blue-500
             to-indigo-600
             text-white
+            shadow-lg
+            shadow-blue-500/20
           "
         >
           <HiSparkles size={28} />
@@ -65,12 +67,13 @@ export default function DemoInput({
               text-2xl
               font-bold
               text-slate-900
+              dark:text-white
             "
           >
             Resume Information
           </h3>
 
-          <p className="text-slate-500">
+          <p className="text-slate-500 dark:text-slate-400">
             AI is preparing your resume...
           </p>
         </div>
@@ -88,6 +91,7 @@ export default function DemoInput({
             text-sm
             font-semibold
             text-slate-700
+            dark:text-slate-300
           "
         >
           Full Name
@@ -101,7 +105,11 @@ export default function DemoInput({
             rounded-xl
             border
             border-slate-200
+            dark:border-slate-800
             bg-slate-50
+            dark:bg-slate-900/90
+            text-slate-900
+            dark:text-white
             px-4
             py-3
           "
@@ -127,6 +135,7 @@ export default function DemoInput({
             text-sm
             font-semibold
             text-slate-700
+            dark:text-slate-300
           "
         >
           Job Title
@@ -140,7 +149,11 @@ export default function DemoInput({
             rounded-xl
             border
             border-slate-200
+            dark:border-slate-800
             bg-slate-50
+            dark:bg-slate-900/90
+            text-slate-900
+            dark:text-white
             px-4
             py-3
           "
@@ -166,6 +179,7 @@ export default function DemoInput({
             text-sm
             font-semibold
             text-slate-700
+            dark:text-slate-300
           "
         >
           Skills
@@ -179,11 +193,16 @@ export default function DemoInput({
                 className="
                   rounded-full
                   bg-blue-50
+                  dark:bg-blue-500/15
+                  border
+                  border-blue-200
+                  dark:border-blue-500/30
                   px-4
                   py-2
                   text-sm
                   font-medium
                   text-blue-600
+                  dark:text-blue-400
                 "
               >
                 <TypingAnimation
@@ -207,6 +226,10 @@ export default function DemoInput({
           justify-between
           rounded-2xl
           bg-green-50
+          dark:bg-green-500/10
+          border
+          border-green-200
+          dark:border-green-500/30
           px-5
           py-4
         "
@@ -216,6 +239,7 @@ export default function DemoInput({
             className="
               font-semibold
               text-green-700
+              dark:text-green-400
             "
           >
             🤖 AI Ready
@@ -225,6 +249,7 @@ export default function DemoInput({
             className="
               text-sm
               text-green-600
+              dark:text-green-400/80
             "
           >
             Resume generation initialized.
@@ -269,6 +294,7 @@ export default function DemoInput({
           disabled:opacity-60
           disabled:hover:translate-y-0
           disabled:hover:shadow-lg
+          cursor-pointer
         "
       >
         {loading

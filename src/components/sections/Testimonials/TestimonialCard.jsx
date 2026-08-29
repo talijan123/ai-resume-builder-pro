@@ -25,25 +25,27 @@ export default function TestimonialCard({
 
         border
         border-slate-200
+        dark:border-slate-800
 
         bg-white
+        dark:bg-slate-900
 
         p-8
 
         shadow-lg
+        dark:shadow-none
 
         transition-all
         duration-300
 
         hover:shadow-2xl
+        dark:hover:border-slate-700
       "
     >
       {/* Stars */}
 
       <div className="flex gap-1">
-
         {[...Array(rating)].map((_, index) => (
-
           <motion.div
             key={index}
             initial={{
@@ -66,9 +68,7 @@ export default function TestimonialCard({
               className="text-yellow-400"
             />
           </motion.div>
-
         ))}
-
       </div>
 
       {/* Review */}
@@ -80,6 +80,7 @@ export default function TestimonialCard({
           leading-8
 
           text-slate-600
+          dark:text-slate-300
         "
       >
         "{review}"
@@ -94,13 +95,13 @@ export default function TestimonialCard({
           h-px
 
           bg-slate-200
+          dark:bg-slate-800
         "
       />
 
       {/* User */}
 
       <div className="flex items-center gap-4">
-
         <motion.img
           whileHover={{
             scale: 1.08,
@@ -117,11 +118,11 @@ export default function TestimonialCard({
 
             ring-4
             ring-blue-100
+            dark:ring-blue-500/20
           "
         />
 
         <div>
-
           <h4
             className="
               text-lg
@@ -129,6 +130,7 @@ export default function TestimonialCard({
               font-bold
 
               text-slate-900
+              dark:text-white
             "
           >
             {name}
@@ -139,6 +141,7 @@ export default function TestimonialCard({
               text-sm
 
               text-slate-500
+              dark:text-slate-400
             "
           >
             {role}
@@ -153,6 +156,7 @@ export default function TestimonialCard({
               rounded-full
 
               bg-blue-100
+              dark:bg-blue-500/20
 
               px-3
               py-1
@@ -162,15 +166,13 @@ export default function TestimonialCard({
               font-semibold
 
               text-blue-700
+              dark:text-blue-300
             "
           >
             {company}
           </span>
-
         </div>
-
       </div>
-
     </motion.div>
   );
 }

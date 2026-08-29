@@ -34,10 +34,15 @@ export default function ATSMeter() {
         rounded-3xl
         border
         border-green-200
+        dark:border-emerald-500/30
         bg-gradient-to-br
         from-green-50
         to-emerald-50
+        dark:from-slate-900
+        dark:to-emerald-950/40
         p-6
+        shadow-sm
+        transition-colors
       "
     >
       {/* Heading */}
@@ -47,10 +52,11 @@ export default function ATSMeter() {
         <p
           className="
             text-sm
-            font-semibold
+            font-bold
             uppercase
             tracking-[0.25em]
             text-green-600
+            dark:text-emerald-400
           "
         >
           ATS Compatibility
@@ -75,7 +81,8 @@ export default function ATSMeter() {
               cy="60"
               r={radius}
               fill="none"
-              stroke="#d1fae5"
+              stroke="currentColor"
+              className="text-green-100 dark:text-slate-800"
               strokeWidth="10"
             />
 
@@ -142,6 +149,7 @@ export default function ATSMeter() {
                 text-4xl
                 font-black
                 text-green-600
+                dark:text-emerald-400
               "
             >
               {score}%
@@ -150,12 +158,13 @@ export default function ATSMeter() {
             <span
               className="
                 text-xs
-                font-semibold
+                font-bold
                 uppercase
 
                 tracking-wider
 
                 text-slate-500
+                dark:text-slate-400
               "
             >
               ATS
@@ -176,6 +185,7 @@ export default function ATSMeter() {
             text-xl
             font-bold
             text-green-700
+            dark:text-emerald-400
           "
         >
           {demoData.ats.status}
@@ -187,6 +197,7 @@ export default function ATSMeter() {
             text-sm
             leading-7
             text-slate-600
+            dark:text-slate-300
           "
         >
           {demoData.ats.message}
@@ -204,6 +215,7 @@ export default function ATSMeter() {
             overflow-hidden
             rounded-full
             bg-green-100
+            dark:bg-slate-800
           "
         >
           <div

@@ -10,6 +10,7 @@ import {
   HiSparkles,
 } from "react-icons/hi2";
 
+import BuilderTabs from "./BuilderTabs";
 import PersonalInfoForm from "./sections/PersonalInfoForm";
 import ExperienceForm from "./sections/ExperienceForm";
 import EducationForm from "./sections/EducationForm";
@@ -116,260 +117,199 @@ export default function BuilderContent({
         rounded-3xl
         border
         border-slate-200
+        dark:border-slate-800
         bg-white
+        dark:bg-slate-900
         shadow-sm
+        overflow-hidden
+        transition-colors
       "
     >
+      {/* Mobile / Tablet Horizontal Section Navigation Tabs */}
+      <div className="xl:hidden">
+        <BuilderTabs />
+      </div>
+
       {/* ======================================
           Header
       ======================================= */}
-
-      <div className="border-b border-slate-200 p-6">
-
-        <div className="flex items-center justify-between gap-6">
-
+      <div className="border-b border-slate-200 dark:border-slate-800 p-4 sm:p-6">
+        <div className="flex items-center justify-between gap-4">
           {/* Section Information */}
-
-          <div className="flex items-center gap-5">
-
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <div
               className="
                 flex
-                h-14
-                w-14
+                h-11
+                w-11
+                sm:h-13
+                sm:w-13
                 shrink-0
                 items-center
                 justify-center
-
                 rounded-2xl
-
                 bg-gradient-to-r
                 from-blue-600
                 to-indigo-600
-
                 text-white
+                shadow-md
+                shadow-blue-500/20
               "
             >
-              <Icon size={28} />
+              <Icon size={24} />
             </div>
 
-            <div>
-              <h2
-                className="
-                  text-3xl
-                  font-black
-                  text-slate-900
-                "
-              >
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate">
                 {current.title}
               </h2>
-
-              <p
-                className="
-                  mt-2
-                  text-slate-500
-                "
-              >
+              <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">
                 {current.description}
               </p>
             </div>
-
           </div>
 
-          {/* Status */}
-
+          {/* Status Badge */}
           <div
             className="
               hidden
+              sm:flex
               items-center
               gap-2
-
               rounded-full
-
               bg-green-50
-
-              px-4
-              py-2
-
-              text-sm
-              font-medium
-
+              dark:bg-green-500/10
+              border
+              border-green-200
+              dark:border-green-500/30
+              px-3.5
+              py-1.5
+              text-xs
+              font-bold
               text-green-700
-
-              md:flex
+              dark:text-green-300
+              shrink-0
             "
           >
-            <div
-              className="
-                h-2
-                w-2
-                rounded-full
-                bg-green-500
-              "
-            />
-
-            Editing Draft
+            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            <span>Editing</span>
           </div>
-
         </div>
       </div>
 
       {/* ======================================
           Active Form
       ======================================= */}
-
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {renderSection()}
       </div>
 
       {/* ======================================
-          AI GENERATION
+          AI GENERATION PROMPT FOOTER
       ======================================= */}
-
       <div
         className="
           border-t
           border-slate-200
-
-          bg-slate-50
-
-          p-6
+          dark:border-slate-800
+          bg-slate-50/70
+          dark:bg-slate-950/60
+          p-4
+          sm:p-6
         "
       >
         <div
           className="
             flex
             flex-col
-            gap-5
-
-            rounded-3xl
-
+            gap-4
+            rounded-2xl
             border
             border-blue-100
-
+            dark:border-blue-500/30
             bg-white
-
-            p-6
-
+            dark:bg-slate-900
+            p-4
+            sm:p-6
             shadow-sm
-
             sm:flex-row
             sm:items-center
             sm:justify-between
           "
         >
-
           {/* Text */}
-
-          <div className="flex items-start gap-4">
-
+          <div className="flex items-start gap-3.5">
             <div
               className="
                 flex
-                h-12
-                w-12
+                h-10
+                w-10
+                sm:h-12
+                sm:w-12
                 shrink-0
                 items-center
                 justify-center
-
                 rounded-2xl
-
                 bg-gradient-to-br
                 from-blue-500
                 to-indigo-600
-
                 text-white
+                shadow-md
+                shadow-blue-500/20
               "
             >
-              <HiSparkles size={24} />
+              <HiSparkles size={22} />
             </div>
 
             <div>
-              <h3
-                className="
-                  text-lg
-                  font-bold
-                  text-slate-900
-                "
-              >
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                 AI Resume Generation
               </h3>
-
-              <p
-                className="
-                  mt-1
-                  text-sm
-                  leading-6
-                  text-slate-500
-                "
-              >
-                Generate an optimized resume using
-                your profile information and AI.
+              <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                Generate an optimized resume draft using your profile info and AI.
               </p>
-
-              <p
-                className="
-                  mt-2
-                  text-xs
-                  font-medium
-                  text-blue-600
-                "
-              >
-                1 credit will be used for each
-                generation.
+              <p className="mt-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                1 credit will be used for each draft.
               </p>
             </div>
-
           </div>
 
           {/* Generate Button */}
-
           <button
             type="button"
             onClick={onGenerateResume}
-            disabled={
-              generating ||
-              !onGenerateResume
-            }
+            disabled={generating || !onGenerateResume}
             className="
               inline-flex
+              w-full
+              sm:w-auto
               shrink-0
               items-center
               justify-center
               gap-2
-
-              rounded-2xl
-
+              rounded-xl
               bg-gradient-to-r
               from-blue-600
               to-indigo-600
-
-              px-6
-              py-3.5
-
-              font-semibold
+              px-5
+              py-3
+              text-xs
+              sm:text-sm
+              font-bold
               text-white
-
               shadow-lg
               shadow-blue-500/20
-
               transition-all
-              duration-300
-
-              hover:-translate-y-0.5
               hover:shadow-xl
-
+              active:scale-95
               disabled:cursor-not-allowed
               disabled:opacity-60
+              cursor-pointer
             "
           >
-            <HiSparkles size={20} />
-
-            {generating
-              ? "Generating..."
-              : "Generate Resume"}
+            <HiSparkles size={18} />
+            <span>{generating ? "Generating..." : "Generate Resume"}</span>
           </button>
-
         </div>
       </div>
     </div>

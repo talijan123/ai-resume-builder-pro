@@ -41,31 +41,39 @@ export default function SkillsForm() {
 
   return (
     <>
-      {/* Header */}
-
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h3 className="text-xl font-bold text-slate-900">
+          <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
             Skills
           </h3>
 
-          <p className="mt-1 text-slate-500">
-            Add your technical and professional
-            skills.
+          <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Add your technical and professional skills.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={handleAdd}
           className="
+            inline-flex
+            items-center
+            justify-center
             rounded-xl
             bg-blue-600
-            px-5
-            py-3
-            font-semibold
+            px-4
+            sm:px-5
+            py-2.5
+            sm:py-3
+            text-xs
+            sm:text-sm
+            font-bold
             text-white
+            shadow-md
+            shadow-blue-500/20
             transition
             hover:bg-blue-700
+            cursor-pointer
           "
         >
           + Add Skill

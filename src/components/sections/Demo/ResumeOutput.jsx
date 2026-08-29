@@ -15,12 +15,15 @@ export default function ResumeOutput({
 
         border
         border-slate-200
+        dark:border-slate-800
 
         bg-white
+        dark:bg-slate-900
 
         p-8
 
         shadow-2xl
+        transition-colors
       "
     >
       {/* Header */}
@@ -44,6 +47,7 @@ export default function ResumeOutput({
               tracking-[0.25em]
 
               text-blue-600
+              dark:text-blue-400
             "
           >
             AI GENERATED
@@ -58,6 +62,7 @@ export default function ResumeOutput({
               font-black
 
               text-slate-900
+              dark:text-white
             "
           >
             Resume Preview
@@ -74,6 +79,10 @@ export default function ResumeOutput({
             rounded-full
 
             bg-green-50
+            dark:bg-green-500/10
+            border
+            border-green-200
+            dark:border-green-500/30
 
             px-4
             py-2
@@ -99,6 +108,7 @@ export default function ResumeOutput({
               font-medium
 
               text-green-700
+              dark:text-green-400
             "
           >
             Live
@@ -123,6 +133,7 @@ export default function ResumeOutput({
                 font-black
 
                 text-slate-900
+                dark:text-white
               "
             >
               <TypingAnimation
@@ -135,9 +146,10 @@ export default function ResumeOutput({
               className="
                 mt-2
 
-                font-medium
+                font-semibold
 
                 text-blue-600
+                dark:text-blue-400
               "
             >
               <TypingAnimation
@@ -159,6 +171,7 @@ export default function ResumeOutput({
                 text-sm
 
                 text-slate-500
+                dark:text-slate-400
               "
             >
               <span>{demoData.personal.email}</span>
@@ -182,6 +195,7 @@ export default function ResumeOutput({
                 font-bold
 
                 text-slate-800
+                dark:text-slate-200
               "
             >
               Professional Summary
@@ -195,6 +209,7 @@ export default function ResumeOutput({
                 leading-7
 
                 text-slate-600
+                dark:text-slate-300
               "
             />
 
@@ -211,6 +226,7 @@ export default function ResumeOutput({
                 font-bold
 
                 text-slate-800
+                dark:text-slate-200
               "
             >
               Skills
@@ -232,6 +248,10 @@ export default function ResumeOutput({
                     rounded-full
 
                     bg-slate-100
+                    dark:bg-slate-800
+                    border
+                    border-slate-200/80
+                    dark:border-slate-700/60
 
                     px-4
                     py-2
@@ -241,6 +261,7 @@ export default function ResumeOutput({
                     font-medium
 
                     text-slate-700
+                    dark:text-slate-300
                   "
                 >
                   <TypingAnimation
@@ -267,6 +288,7 @@ export default function ResumeOutput({
                 font-bold
 
                 text-slate-800
+                dark:text-slate-200
               "
             >
               Experience
@@ -290,6 +312,7 @@ export default function ResumeOutput({
                         font-semibold
 
                         text-slate-900
+                        dark:text-white
                       "
                     >
                       {job.role}
@@ -300,6 +323,7 @@ export default function ResumeOutput({
                         text-sm
 
                         text-slate-500
+                        dark:text-slate-400
                       "
                     >
                       {job.period}
@@ -314,6 +338,7 @@ export default function ResumeOutput({
                       font-medium
 
                       text-blue-600
+                      dark:text-blue-400
                     "
                   >
                     {job.company}
@@ -333,6 +358,7 @@ export default function ResumeOutput({
                       leading-7
 
                       text-slate-600
+                      dark:text-slate-300
                     "
                   />
 

@@ -63,24 +63,24 @@ export default function BuilderSidebar() {
   function getATSColor(score) {
     if (score >= 90)
       return {
-        text: "text-green-600",
+        text: "text-emerald-600 dark:text-emerald-400",
         bg: "from-green-500 to-emerald-500",
       };
 
     if (score >= 75)
       return {
-        text: "text-blue-600",
+        text: "text-blue-600 dark:text-blue-400",
         bg: "from-blue-500 to-indigo-500",
       };
 
     if (score >= 60)
       return {
-        text: "text-yellow-600",
+        text: "text-yellow-600 dark:text-amber-400",
         bg: "from-yellow-500 to-orange-500",
       };
 
     return {
-      text: "text-red-600",
+      text: "text-red-600 dark:text-red-400",
       bg: "from-red-500 to-pink-500",
     };
   }
@@ -92,82 +92,72 @@ export default function BuilderSidebar() {
       className="
         sticky
         top-24
-
         rounded-3xl
         border
         border-slate-200
+        dark:border-slate-800
         bg-white
-
+        dark:bg-slate-900
         shadow-sm
         overflow-hidden
+        transition-colors
       "
     >
       {/* Header */}
-
-      <div className="p-6 border-b border-slate-200">
-        <h2 className="text-xl font-black text-slate-900">
+      <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
+        <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
           Resume Sections
         </h2>
 
-        <p className="mt-2 text-sm text-slate-500">
-          Complete every section to build a
-          professional ATS-friendly resume.
+        <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          Complete each section to build an ATS-friendly resume.
         </p>
       </div>
 
       {/* Navigation */}
-
-      <div className="p-4 space-y-2">
+      <div className="p-3 sm:p-4 space-y-1.5">
         {sections.map((section) => {
           const Icon = section.icon;
-
-          const active =
-            activeSection === section.id;
-
-          const completed =
-            completedSections.includes(section.id);
+          const active = activeSection === section.id;
+          const completed = completedSections.includes(section.id);
 
           return (
             <button
               key={section.id}
-              onClick={() =>
-                setActiveSection(section.id)
-              }
+              type="button"
+              onClick={() => setActiveSection(section.id)}
               className={`
                 flex
                 w-full
                 items-center
                 justify-between
-
-                rounded-2xl
-
-                px-4
-                py-3
-
+                rounded-xl
+                px-3.5
+                py-2.5
+                text-xs
+                sm:text-sm
+                font-bold
                 transition-all
-
+                cursor-pointer
                 ${
                   active
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                    : "text-slate-700 hover:bg-slate-100"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }
               `}
             >
               <div className="flex items-center gap-3">
-                <Icon size={20} />
-
-                <span className="font-medium">
-                  {section.title}
-                </span>
+                <Icon size={18} />
+                <span>{section.title}</span>
               </div>
 
               {completed && (
                 <HiCheckCircle
-                  size={20}
+                  size={18}
                   className={
                     active
                       ? "text-white"
-                      : "text-green-600"
+                      : "text-emerald-600 dark:text-emerald-400"
                   }
                 />
               )}
@@ -177,89 +167,63 @@ export default function BuilderSidebar() {
       </div>
 
       {/* Resume Completion */}
-
-      <div className="border-t border-slate-200 p-6">
-        <div className="flex items-center justify-between">
-          <span className="font-semibold text-slate-700">
-            Resume Completion
+      <div className="border-t border-slate-200 dark:border-slate-800 p-4 sm:p-6">
+        <div className="flex items-center justify-between text-xs sm:text-sm">
+          <span className="font-semibold text-slate-700 dark:text-slate-300">
+            Completion
           </span>
-
-          <span className="font-bold text-blue-600">
+          <span className="font-bold text-blue-600 dark:text-blue-400">
             {percentage}%
           </span>
         </div>
 
-        <div className="mt-3 h-3 rounded-full bg-slate-200 overflow-hidden">
+        <div className="mt-2.5 h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
           <div
-            className="
-              h-full
-              rounded-full
-              bg-gradient-to-r
-              from-blue-600
-              to-indigo-600
-              transition-all
-              duration-500
-            "
-            style={{
-              width: `${percentage}%`,
-            }}
+            className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500"
+            style={{ width: `${percentage}%` }}
           />
         </div>
       </div>
 
       {/* ATS Score */}
-
-      <div className="border-t border-slate-200 p-6">
-        <div className="flex items-center justify-between">
-          <span className="font-semibold text-slate-700">
+      <div className="border-t border-slate-200 dark:border-slate-800 p-4 sm:p-6">
+        <div className="flex items-center justify-between text-xs sm:text-sm">
+          <span className="font-semibold text-slate-700 dark:text-slate-300">
             ATS Score
           </span>
-
-          <span
-            className={`text-2xl font-black ${color.text}`}
-          >
+          <span className={`text-xl font-black ${color.text}`}>
             {ats.score}/100
           </span>
         </div>
 
-        <div className="mt-3 h-3 rounded-full bg-slate-200 overflow-hidden">
+        <div className="mt-2.5 h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
           <div
             className={`h-full rounded-full bg-gradient-to-r ${color.bg}`}
-            style={{
-              width: `${ats.score}%`,
-            }}
+            style={{ width: `${ats.score}%` }}
           />
         </div>
 
-        <div className="mt-5 space-y-3">
+        <div className="mt-4 space-y-2">
           {ats.suggestions.length > 0 ? (
-            ats.suggestions
-              .slice(0, 3)
-              .map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-3"
-                >
-                  <HiExclamationTriangle
-                    className="mt-0.5 text-yellow-500"
-                    size={18}
-                  />
-
-                  <p className="text-sm text-slate-600 leading-6">
-                    {item}
-                  </p>
-                </div>
-              ))
+            ats.suggestions.slice(0, 2).map((item, index) => (
+              <div key={index} className="flex items-start gap-2 text-xs">
+                <HiExclamationTriangle
+                  className="mt-0.5 text-amber-500 shrink-0"
+                  size={15}
+                />
+                <p className="text-slate-600 dark:text-slate-400 leading-5">
+                  {item}
+                </p>
+              </div>
+            ))
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-xs">
               <HiCheckCircle
-                className="text-green-600"
-                size={18}
+                className="text-emerald-600 dark:text-emerald-400 shrink-0"
+                size={16}
               />
-
-              <p className="text-sm text-green-700">
-                Excellent! Your resume is
-                ATS-friendly.
+              <p className="text-emerald-700 dark:text-emerald-400 font-medium">
+                Excellent! Resume is ATS-optimized.
               </p>
             </div>
           )}
