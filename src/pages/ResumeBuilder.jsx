@@ -36,6 +36,7 @@ import { useAuth } from "../context/AuthContext";
 
 import { supabase } from "../lib/supabase";
 import { deductCredit } from "../services/creditService";
+import { toast } from "sonner";
 
 /* ==========================================
    Empty Resume
@@ -733,10 +734,10 @@ export default function ResumeBuilder() {
         }
 
         if (!currentUser) {
-          alert("Please login first.");
-
+          toast.error("Please login first", {
+            description: "You must be signed in to edit this resume.",
+          });
           navigate("/login");
-
           return;
         }
 
@@ -758,12 +759,10 @@ export default function ResumeBuilder() {
         }
 
         if (!data) {
-          alert(
-            "Resume not found."
-          );
-
+          toast.error("Resume not found", {
+            description: "The requested resume could not be located.",
+          });
           navigate("/my-resumes");
-
           return;
         }
 
@@ -822,10 +821,9 @@ export default function ResumeBuilder() {
           error
         );
 
-        alert(
-          error?.message ||
-            "Failed to load resume."
-        );
+        toast.error("Failed to load resume", {
+          description: error?.message || "Unable to load resume data. Please try again.",
+        });
 
         navigate("/my-resumes");
       } finally {

@@ -23,6 +23,7 @@ import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
 import calculateATSScore from "../../utils/ats/calculateATSScore";
 import { deductCredit } from "../../services/creditService";
+import { toast } from "sonner";
 
 export default function BuilderHeader({
   onDownloadPDF,
@@ -124,12 +125,17 @@ export default function BuilderHeader({
       if (userError) throw userError;
 
       if (!authUser) {
-        alert("Please login first.");
+        toast.error("Please login first", {
+          description: "You must be signed in to save your resume.",
+        });
         navigate("/login");
         return;
       }
 
       const selectedTemplate = resumeData?.template || "modern";
+      const displayTemplate =
+        selectedTemplate.charAt(0).toUpperCase() +
+        selectedTemplate.slice(1).replace("-", " ");
 
       const resumePayload = {
         user_id: authUser.id,
@@ -157,9 +163,10 @@ export default function BuilderHeader({
         if (updateError) throw updateError;
 
         setLastSaved("Just now");
-        alert(
-          `✅ Resume updated successfully!\n\nATS Score: ${atsScore}/100\nTemplate: ${selectedTemplate}`
-        );
+        toast.success("Resume saved successfully!", {
+          description: `ATS Score: ${atsScore}/100 • Template: ${displayTemplate}`,
+          duration: 3000,
+        });
         return;
       }
 
@@ -171,18 +178,22 @@ export default function BuilderHeader({
           creditError?.message || "Unable to use your credit.";
 
         if (errorMessage.includes("INSUFFICIENT_CREDITS")) {
-          alert(
-            "❌ You don't have enough credits to create a new resume.\n\nPlease upgrade your plan or purchase more credits."
-          );
+          toast.error("Insufficient credits", {
+            description: "Please upgrade your plan or purchase more credits to create a new resume.",
+          });
         } else if (errorMessage.includes("ACTIVE_SUBSCRIPTION_NOT_FOUND")) {
-          alert(
-            "❌ You don't have an active subscription.\n\nPlease choose a plan before creating a resume."
-          );
+          toast.error("Subscription required", {
+            description: "Please choose an active plan before creating a new resume.",
+          });
         } else if (errorMessage.includes("USER_NOT_AUTHENTICATED")) {
-          alert("❌ Your session has expired.\n\nPlease login again.");
+          toast.error("Session expired", {
+            description: "Please log in again to continue.",
+          });
           navigate("/login");
         } else {
-          alert(`❌ Unable to use a credit.\n\n${errorMessage}`);
+          toast.error("Unable to use credit", {
+            description: errorMessage,
+          });
         }
         return;
       }
@@ -200,16 +211,19 @@ export default function BuilderHeader({
       if (insertError) throw insertError;
 
       setLastSaved("Just now");
-      alert(
-        `✅ Resume created successfully!\n\nATS Score: ${atsScore}/100\nTemplate: ${selectedTemplate}`
-      );
+      toast.success("Resume saved successfully!", {
+        description: `ATS Score: ${atsScore}/100 • Template: ${displayTemplate}`,
+        duration: 3000,
+      });
 
       if (insertData?.id) {
         navigate(`/builder/${insertData.id}`, { replace: true });
       }
     } catch (err) {
       console.error("❌ Unexpected save error:", err);
-      alert("❌ Something went wrong while saving your resume.");
+      toast.error("Failed to save resume", {
+        description: "Something went wrong while saving your resume. Please try again.",
+      });
     } finally {
       setSaving(false);
     }

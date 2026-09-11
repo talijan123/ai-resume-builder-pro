@@ -7,14 +7,16 @@ import {
   HiTrash,
 } from "react-icons/hi2";
 import { supabase } from "../../lib/supabase";
+import { toast } from "sonner";
 
 export default function CoverLetterCard({ coverLetter, onDelete, onRename }) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(coverLetter.title || "Untitled Cover Letter");
 
   async function handleRename() {
-    const nextTitle = title.trim() || "Untitled Cover Letter";
-    if (nextTitle === coverLetter.title) {
+    const nextTitle = title.trim();
+    if (!nextTitle) {
+      setTitle(coverLetter.title || "Untitled Cover Letter");
       setEditing(false);
       return;
     }
@@ -27,11 +29,14 @@ export default function CoverLetterCard({ coverLetter, onDelete, onRename }) {
       .single();
 
     if (error) {
-      alert(error.message || "Failed to rename cover letter.");
+      toast.error("Failed to rename cover letter", {
+        description: error.message || "An unexpected error occurred.",
+      });
       return;
     }
 
     setEditing(false);
+    toast.success("Cover letter renamed.");
     onRename(data);
   }
 

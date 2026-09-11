@@ -9,6 +9,7 @@ import {
 } from "react-icons/hi2";
 
 import { supabase } from "../../lib/supabase";
+import { toast } from "sonner";
 
 export default function ResumeCard({
   resume,
@@ -35,13 +36,15 @@ export default function ResumeCard({
 
       if (error) throw error;
 
-      alert("Resume deleted successfully.");
+      toast.success("Resume deleted successfully.");
 
       refreshResumes();
     } catch (error) {
       console.error("Delete resume error:", error);
 
-      alert(error.message || "Failed to delete resume.");
+      toast.error("Failed to delete resume", {
+        description: error.message || "An unexpected error occurred.",
+      });
     }
   }
 
@@ -56,7 +59,9 @@ export default function ResumeCard({
       } = await supabase.auth.getUser();
 
       if (!user) {
-        alert("Please login first.");
+        toast.error("Please login first", {
+          description: "You must be signed in to duplicate resumes.",
+        });
         return;
       }
 
@@ -80,16 +85,15 @@ export default function ResumeCard({
 
       if (error) throw error;
 
-      alert("Resume duplicated successfully.");
+      toast.success("Resume duplicated successfully.");
 
       refreshResumes();
     } catch (error) {
       console.error("Duplicate resume error:", error);
 
-      alert(
-        error.message ||
-          "Failed to duplicate resume."
-      );
+      toast.error("Failed to duplicate resume", {
+        description: error.message || "An unexpected error occurred.",
+      });
     }
   }
 

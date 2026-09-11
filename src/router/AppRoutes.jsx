@@ -33,6 +33,7 @@ import ProtectedRoute from "../components/auth/ProtectedRoute";
 import TopLoader from "../components/common/TopLoader";
 import ScrollToTop from "../components/common/ScrollToTop";
 import PageTransition from "../components/common/PageTransition";
+import { Toaster } from "sonner";
 
 import { CoverLetterProvider } from "../context/CoverLetterContext";
 
@@ -43,6 +44,23 @@ function AnimatedRoutes() {
     <>
       <TopLoader />
       <ScrollToTop />
+      <Toaster
+        theme="dark"
+        position="top-right"
+        duration={3000}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#0f172a",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            color: "#f8fafc",
+            boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.7)",
+            borderRadius: "16px",
+            padding: "14px 18px",
+          },
+          className: "border border-white/10 bg-[#0f172a] text-white shadow-2xl rounded-2xl font-sans",
+        }}
+      />
       <AnimatePresence mode="wait" initial={false}>
         <PageTransition key={location.pathname}>
           <Routes location={location}>

@@ -11,6 +11,7 @@ import ResumeCard from "../components/resumes/ResumeCard";
 import EmptyState from "../components/resumes/EmptyState";
 
 import { supabase } from "../lib/supabase";
+import { toast } from "sonner";
 
 export default function MyResumes() {
   const [resumes, setResumes] = useState([]);
@@ -59,7 +60,9 @@ export default function MyResumes() {
     } catch (error) {
       console.error("Failed to load resumes:", error);
 
-      alert("Failed to load resumes.");
+      toast.error("Failed to load resumes", {
+        description: error.message || "Please check your internet connection.",
+      });
     } finally {
       setLoading(false);
     }
