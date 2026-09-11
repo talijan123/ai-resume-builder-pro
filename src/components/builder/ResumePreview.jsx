@@ -13,10 +13,14 @@ import {
   HiMagnifyingGlassPlus,
   HiMagnifyingGlassMinus,
   HiArrowsPointingOut,
+  HiArrowDownTray,
+  HiSwatch,
+  HiChevronDown,
 } from "react-icons/hi2";
 
 import {
   useResume,
+  VALID_TEMPLATES,
 } from "../../context/ResumeContext";
 
 import ModernTemplate from "../templates/ModernTemplate";
@@ -41,17 +45,27 @@ const templates = {
   "modern-photo": ModernPhotoTemplate,
 };
 
+const templateOptions = [
+  { id: "modern", name: "Modern" },
+  { id: "professional", name: "Professional" },
+  { id: "creative", name: "Creative" },
+  { id: "executive", name: "Executive" },
+  { id: "minimal", name: "Minimal" },
+  { id: "sidebar-photo", name: "Sidebar Photo" },
+  { id: "modern-photo", name: "Modern Photo" },
+];
+
 const A4_WIDTH_PX = 794;
 const A4_HEIGHT_PX = 1123;
 
 /* =========================================================
-   RESUME PREVIEW COMPONENT
+   RESUME PREVIEW CANVAS COMPONENT
 ========================================================= */
 
 const ResumePreview = forwardRef(
-  (props, ref) => {
-    const { resumeData } = useResume();
-    const [searchParams] = useSearchParams();
+  ({ onDownloadPDF }, ref) => {
+    const { resumeData, setTemplate } = useResume();
+    const [searchParams, setSearchParams] = useSearchParams();
     const urlTemplate = searchParams.get("template");
 
     const templateName =
@@ -61,20 +75,23 @@ const ResumePreview = forwardRef(
       templates[templateName] || ModernTemplate;
 
     const displayTemplateName =
-      templateName.charAt(0).toUpperCase() + templateName.slice(1);
+      templateName.charAt(0).toUpperCase() + templateName.slice(1).replace("-", " ");
 
     // Zoom and responsive scaling state
-    const [scale, setScale] = useState(1);
+    const [scale, setScale] = useState(0.8);
     const [isAutoFit, setIsAutoFit] = useState(true);
+    const [templateDropdownOpen, setTemplateDropdownOpen] = useState(false);
     const containerRef = useRef(null);
+    const dropdownRef = useRef(null);
 
-    // Auto-calculate scale on resize when in AutoFit mode
+    // Auto-calculate scale on container size change
     useEffect(() => {
       function calculateFitScale() {
         if (!containerRef.current) return;
-        const containerWidth = containerRef.current.clientWidth - 32; // padding offset
+        const containerWidth = containerRef.current.clientWidth - 48; // padding offset
         if (containerWidth > 0) {
-          const autoScale = Math.min(1, Math.max(0.35, containerWidth / A4_WIDTH_PX));
+          const widthScale = containerWidth / A4_WIDTH_PX;
+          const autoScale = Math.min(1.05, Math.max(0.35, Number(widthScale.toFixed(2))));
           if (isAutoFit) {
             setScale(autoScale);
           }
@@ -82,31 +99,60 @@ const ResumePreview = forwardRef(
       }
 
       calculateFitScale();
+      const observer = new ResizeObserver(calculateFitScale);
+      if (containerRef.current) observer.observe(containerRef.current);
       window.addEventListener("resize", calculateFitScale);
-      return () => window.removeEventListener("resize", calculateFitScale);
+
+      return () => {
+        observer.disconnect();
+        window.removeEventListener("resize", calculateFitScale);
+      };
     }, [isAutoFit]);
+
+    // Close template dropdown on outside click
+    useEffect(() => {
+      function handleClickOutside(e) {
+        if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+          setTemplateDropdownOpen(false);
+        }
+      }
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     function handleZoomIn() {
       setIsAutoFit(false);
-      setScale((prev) => Math.min(1.5, Number((prev + 0.1).toFixed(2))));
+      setScale((prev) => Math.min(1.5, Number((prev + 0.08).toFixed(2))));
     }
 
     function handleZoomOut() {
       setIsAutoFit(false);
-      setScale((prev) => Math.max(0.35, Number((prev - 0.1).toFixed(2))));
+      setScale((prev) => Math.max(0.35, Number((prev - 0.08).toFixed(2))));
     }
 
     function handleResetFit() {
       setIsAutoFit(true);
       if (containerRef.current) {
-        const containerWidth = containerRef.current.clientWidth - 32;
-        setScale(Math.min(1, Math.max(0.35, containerWidth / A4_WIDTH_PX)));
+        const containerWidth = containerRef.current.clientWidth - 48;
+        setScale(Math.min(1.05, Math.max(0.35, Number((containerWidth / A4_WIDTH_PX).toFixed(2)))));
       }
     }
 
     function handleZoom100() {
       setIsAutoFit(false);
       setScale(1);
+    }
+
+    function handleSelectTemplate(newTemplateId) {
+      if (setTemplate) {
+        setTemplate(newTemplateId);
+      }
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("template", newTemplateId);
+        return next;
+      });
+      setTemplateDropdownOpen(false);
     }
 
     return (
@@ -226,124 +272,162 @@ const ResumePreview = forwardRef(
         </style>
 
         {/* =========================================
-            PREVIEW CONTAINER
+            PREVIEW CANVAS CONTAINER
         ========================================= */}
         <div
           className="
-            xl:sticky
-            xl:top-24
+            h-full
             w-full
-            xl:h-[calc(100vh-120px)]
-            overflow-hidden
-            rounded-3xl
-            border
-            border-slate-200
-            dark:border-slate-800
-            bg-white
-            dark:bg-slate-900
-            shadow-xl
-            transition-colors
             flex
             flex-col
+            min-h-0
+            bg-[#090d16]
+            dark:bg-[#070a12]
+            transition-colors
+            relative
             print:static
             print:h-auto
             print:overflow-visible
-            print:rounded-none
-            print:border-0
             print:bg-white
-            print:shadow-none
           "
         >
           {/* =======================================
-              PREVIEW HEADER & ZOOM TOOLBAR
+              FLOATING CANVAS TOOLBAR
           ======================================= */}
           <div
             className="
-              border-b
-              border-slate-200
-              dark:border-slate-800
-              p-3.5
-              sm:p-4
+              sticky
+              top-0
+              z-30
+              h-14
+              px-4
+              sm:px-6
               flex
               items-center
               justify-between
               gap-3
-              bg-white/80
-              dark:bg-slate-900/80
-              backdrop-blur-sm
+              border-b
+              border-white/10
+              bg-[#0d1322]/90
+              backdrop-blur-md
               shrink-0
               print:hidden
             "
           >
-            <div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
-                Live Preview
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">
-                {displayTemplateName} Template
-              </p>
+            {/* Left: Template Switcher dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setTemplateDropdownOpen(!templateDropdownOpen)}
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-white/10 hover:border-white/20 transition cursor-pointer"
+              >
+                <HiSwatch size={15} className="text-blue-400" />
+                <span className="hidden sm:inline text-slate-400 font-normal">Template:</span>
+                <span>{displayTemplateName}</span>
+                <HiChevronDown size={13} className="text-slate-400" />
+              </button>
+
+              {templateDropdownOpen && (
+                <div className="absolute left-0 top-full mt-2 w-52 rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-xl p-1.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Switch Template
+                  </div>
+                  {templateOptions.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => handleSelectTemplate(t.id)}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition cursor-pointer ${
+                        templateName === t.id
+                          ? "bg-blue-600 text-white"
+                          : "text-slate-300 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      <span>{t.name}</span>
+                      {templateName === t.id && (
+                        <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">Active</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Zoom Controls Bar */}
-            <div className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70 p-1">
-              <button
-                type="button"
-                onClick={handleZoomOut}
-                title="Zoom out"
-                aria-label="Zoom out"
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition shadow-none hover:shadow-sm"
-              >
-                <HiMagnifyingGlassMinus size={15} />
-              </button>
+            {/* Right: Zoom Controls & PDF Export */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Zoom Controls Bar */}
+              <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 p-1">
+                <button
+                  type="button"
+                  onClick={handleZoomOut}
+                  title="Zoom out"
+                  aria-label="Zoom out"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition"
+                >
+                  <HiMagnifyingGlassMinus size={15} />
+                </button>
 
-              <span className="min-w-[38px] text-center text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                {Math.round(scale * 100)}%
-              </span>
+                <span className="min-w-[40px] text-center text-[11px] font-bold text-slate-300">
+                  {Math.round(scale * 100)}%
+                </span>
 
-              <button
-                type="button"
-                onClick={handleZoomIn}
-                title="Zoom in"
-                aria-label="Zoom in"
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition shadow-none hover:shadow-sm"
-              >
-                <HiMagnifyingGlassPlus size={15} />
-              </button>
+                <button
+                  type="button"
+                  onClick={handleZoomIn}
+                  title="Zoom in"
+                  aria-label="Zoom in"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition"
+                >
+                  <HiMagnifyingGlassPlus size={15} />
+                </button>
 
-              <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+                <div className="h-4 w-px bg-white/10 mx-0.5" />
 
-              <button
-                type="button"
-                onClick={handleResetFit}
-                title="Fit to window"
-                aria-label="Fit to window"
-                className={`flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] font-bold transition ${
-                  isAutoFit
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
-                }`}
-              >
-                <HiArrowsPointingOut size={13} />
-                <span>Fit</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={handleResetFit}
+                  title="Fit to screen"
+                  aria-label="Fit to screen"
+                  className={`flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] font-bold transition ${
+                    isAutoFit
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-slate-400 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <HiArrowsPointingOut size={13} />
+                  <span>Fit</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={handleZoom100}
-                title="100% Size"
-                className={`hidden sm:flex h-7 items-center rounded-lg px-2 text-[11px] font-bold transition ${
-                  scale === 1 && !isAutoFit
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
-                }`}
-              >
-                100%
-              </button>
+                <button
+                  type="button"
+                  onClick={handleZoom100}
+                  title="100% Size"
+                  className={`hidden sm:flex h-7 items-center rounded-lg px-2 text-[11px] font-bold transition ${
+                    scale === 1 && !isAutoFit
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-slate-400 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  100%
+                </button>
+              </div>
+
+              {/* Quick Export PDF button if callback passed */}
+              {onDownloadPDF && (
+                <button
+                  type="button"
+                  onClick={onDownloadPDF}
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition cursor-pointer"
+                >
+                  <HiArrowDownTray size={14} />
+                  <span>Export</span>
+                </button>
+              )}
             </div>
           </div>
 
           {/* =======================================
-              RESUME SCROLL & ZOOM AREA
+              RESUME CANVAS SCROLL AREA
           ======================================= */}
           <div
             id="resume-print-area"
@@ -351,34 +435,36 @@ const ResumePreview = forwardRef(
             className="
               flex-1
               overflow-y-auto
-              overflow-x-auto
-              bg-slate-100
-              dark:bg-slate-950/60
-              p-3
-              sm:p-6
+              overflow-x-hidden
+              p-4
+              sm:p-8
+              flex
+              justify-center
+              items-start
               print:h-auto
               print:overflow-visible
               print:bg-white
               print:p-0
             "
           >
-            {/* Scaled Wrapper */}
+            {/* Centered Scaled Wrapper */}
             <div
               id="resume-preview-wrapper"
-              className="mx-auto flex justify-center origin-top transition-transform duration-150"
+              className="mx-auto flex justify-center transition-transform duration-100 ease-out"
               style={{
-                width: `${A4_WIDTH_PX * scale}px`,
-                minHeight: `${A4_HEIGHT_PX * scale}px`,
+                width: `${Math.round(A4_WIDTH_PX * scale)}px`,
+                minHeight: `${Math.round(A4_HEIGHT_PX * scale)}px`,
               }}
             >
               <div
                 style={{
                   width: `${A4_WIDTH_PX}px`,
+                  minHeight: `${A4_HEIGHT_PX}px`,
                   transform: `scale(${scale})`,
-                  transformOrigin: "top left",
+                  transformOrigin: "top center",
                 }}
               >
-                {/* A4 RESUME PAPER */}
+                {/* A4 RESUME PAPER WITH REALISTIC ELEVATION */}
                 <div
                   ref={ref}
                   id="resume-preview"
@@ -386,10 +472,10 @@ const ResumePreview = forwardRef(
                   className="
                     w-[794px]
                     min-h-[1123px]
-                    rounded-xl
+                    rounded-md
                     bg-white
                     p-8
-                    shadow-xl
+                    shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)]
                     print:mx-0
                     print:w-full
                     print:max-w-none

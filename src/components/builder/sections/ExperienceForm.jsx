@@ -17,16 +17,10 @@ export default function ExperienceForm() {
       <div className="space-y-8">
         {/* Header */}
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              Work Experience
-            </h2>
-
-            <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Showcase your professional experience.
-            </p>
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            {resumeData.experience.length} {resumeData.experience.length === 1 ? "Role" : "Roles"} Added
+          </p>
 
           <button
             type="button"

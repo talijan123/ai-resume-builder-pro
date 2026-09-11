@@ -68,20 +68,7 @@ export default function PersonalInfoForm() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Heading */}
-
-      <div>
-        <h3 className="text-2xl font-black text-slate-900">
-          Personal Information
-        </h3>
-
-        <p className="mt-2 text-slate-500">
-          This information will appear at the top of
-          your resume.
-        </p>
-      </div>
-
+    <div className="space-y-6">
       {/* Form */}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

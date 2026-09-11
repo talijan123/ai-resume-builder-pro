@@ -49,16 +49,10 @@ export default function CertificationsForm() {
 
   return (
     <>
-      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-            Certifications
-          </h3>
-
-          <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Showcase your professional certifications and courses.
-          </p>
-        </div>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          {resumeData.certifications.length} {resumeData.certifications.length === 1 ? "Certificate" : "Certificates"} Added
+        </p>
 
         <button
           type="button"

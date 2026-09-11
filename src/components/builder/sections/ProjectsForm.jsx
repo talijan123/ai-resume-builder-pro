@@ -49,16 +49,10 @@ export default function ProjectsForm() {
 
   return (
     <>
-      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-            Projects
-          </h3>
-
-          <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Showcase your best work and portfolio projects.
-          </p>
-        </div>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          {resumeData.projects.length} {resumeData.projects.length === 1 ? "Project" : "Projects"} Added
+        </p>
 
         <button
           type="button"

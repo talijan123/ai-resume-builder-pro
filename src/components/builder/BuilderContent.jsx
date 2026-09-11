@@ -1,3 +1,4 @@
+import React from "react";
 import { useResume } from "../../context/ResumeContext";
 
 import {
@@ -8,6 +9,8 @@ import {
   HiFolder,
   HiTrophy,
   HiSparkles,
+  HiArrowRight,
+  HiArrowLeft,
 } from "react-icons/hi2";
 
 import BuilderTabs from "./BuilderTabs";
@@ -19,297 +22,189 @@ import ProjectsForm from "./sections/ProjectsForm";
 import CertificationsForm from "./sections/CertificationsForm";
 
 /* ==========================================
-   Sections
+   Sections Definition
 ========================================== */
 
 const sections = {
   personal: {
     title: "Personal Information",
-    description:
-      "Tell employers who you are and how they can contact you.",
+    description: "Tell employers who you are and how they can contact you.",
     icon: HiUser,
   },
-
   experience: {
     title: "Work Experience",
-    description:
-      "Showcase your professional work experience.",
+    description: "Showcase your professional work experience and achievements.",
     icon: HiBriefcase,
   },
-
   education: {
     title: "Education",
-    description:
-      "Add your educational background.",
+    description: "Add your educational qualifications and academic background.",
     icon: HiAcademicCap,
   },
-
   skills: {
     title: "Skills",
-    description:
-      "Highlight your technical and professional skills.",
+    description: "Highlight your key technical and professional capabilities.",
     icon: HiWrenchScrewdriver,
   },
-
   projects: {
     title: "Projects",
-    description:
-      "Show your best projects and achievements.",
+    description: "Display notable projects, open-source work, and achievements.",
     icon: HiFolder,
   },
-
   certifications: {
     title: "Certificates",
-    description:
-      "Add certifications and professional courses.",
+    description: "Add certifications, licenses, and verified accreditations.",
     icon: HiTrophy,
   },
 };
 
-/* ==========================================
-   Builder Content
-========================================== */
+const sectionOrder = [
+  "personal",
+  "experience",
+  "education",
+  "skills",
+  "projects",
+  "certifications",
+];
 
 export default function BuilderContent({
   onGenerateResume,
   generating = false,
+  onToggleAi,
+  showAi = false,
+  onViewPreview,
 }) {
-  const { activeSection } = useResume();
+  const { activeSection, setActiveSection } = useResume();
 
-  const current =
-    sections[activeSection] ||
-    sections.personal;
-
+  const current = sections[activeSection] || sections.personal;
   const Icon = current.icon;
 
+  const currentIndex = sectionOrder.indexOf(activeSection);
+  const prevSectionId = currentIndex > 0 ? sectionOrder[currentIndex - 1] : null;
+  const nextSectionId =
+    currentIndex < sectionOrder.length - 1 ? sectionOrder[currentIndex + 1] : null;
+
   /* ==========================================
-     Render Active Section
+     Render Active Section Form
   ========================================== */
 
   function renderSection() {
     switch (activeSection) {
       case "personal":
         return <PersonalInfoForm />;
-
       case "experience":
         return <ExperienceForm />;
-
       case "education":
         return <EducationForm />;
-
       case "skills":
         return <SkillsForm />;
-
       case "projects":
         return <ProjectsForm />;
-
       case "certifications":
         return <CertificationsForm />;
-
       default:
         return <PersonalInfoForm />;
     }
   }
 
   return (
-    <div
-      className="
-        rounded-3xl
-        border
-        border-slate-200
-        dark:border-slate-800
-        bg-white
-        dark:bg-slate-900
-        shadow-sm
-        overflow-hidden
-        transition-colors
-      "
-    >
-      {/* Mobile / Tablet Horizontal Section Navigation Tabs */}
-      <div className="xl:hidden">
-        <BuilderTabs />
-      </div>
+    <div className="flex h-full flex-col min-h-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-colors">
+      {/* Pinned Section Navigation Bar */}
+      <BuilderTabs onToggleAi={onToggleAi} showAi={showAi} />
 
-      {/* ======================================
-          Header
-      ======================================= */}
-      <div className="border-b border-slate-200 dark:border-slate-800 p-4 sm:p-6">
-        <div className="flex items-center justify-between gap-4">
-          {/* Section Information */}
+      {/* Independently Scrollable Form Container */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 px-4 sm:px-8 py-5 sm:py-7">
+        {/* Active Section Header */}
+        <div className="mb-6 sm:mb-8 flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-5">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-            <div
-              className="
-                flex
-                h-11
-                w-11
-                sm:h-13
-                sm:w-13
-                shrink-0
-                items-center
-                justify-center
-                rounded-2xl
-                bg-gradient-to-r
-                from-blue-600
-                to-indigo-600
-                text-white
-                shadow-md
-                shadow-blue-500/20
-              "
-            >
-              <Icon size={24} />
+            <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 shadow-sm">
+              <Icon size={22} />
             </div>
 
             <div className="min-w-0">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 {current.title}
               </h2>
-              <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">
+              <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                 {current.description}
               </p>
             </div>
           </div>
 
-          {/* Status Badge */}
-          <div
-            className="
-              hidden
-              sm:flex
-              items-center
-              gap-2
-              rounded-full
-              bg-green-50
-              dark:bg-green-500/10
-              border
-              border-green-200
-              dark:border-green-500/30
-              px-3.5
-              py-1.5
-              text-xs
-              font-bold
-              text-green-700
-              dark:text-green-300
-              shrink-0
-            "
-          >
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+          <div className="hidden sm:flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 shrink-0">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>Editing</span>
           </div>
         </div>
-      </div>
 
-      {/* ======================================
-          Active Form
-      ======================================= */}
-      <div className="p-4 sm:p-6 lg:p-8">
-        {renderSection()}
-      </div>
+        {/* Active Form */}
+        <div className="pb-8">
+          {renderSection()}
+        </div>
 
-      {/* ======================================
-          AI GENERATION PROMPT FOOTER
-      ======================================= */}
-      <div
-        className="
-          border-t
-          border-slate-200
-          dark:border-slate-800
-          bg-slate-50/70
-          dark:bg-slate-950/60
-          p-4
-          sm:p-6
-        "
-      >
-        <div
-          className="
-            flex
-            flex-col
-            gap-4
-            rounded-2xl
-            border
-            border-blue-100
-            dark:border-blue-500/30
-            bg-white
-            dark:bg-slate-900
-            p-4
-            sm:p-6
-            shadow-sm
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
-          "
-        >
-          {/* Text */}
-          <div className="flex items-start gap-3.5">
-            <div
-              className="
-                flex
-                h-10
-                w-10
-                sm:h-12
-                sm:w-12
-                shrink-0
-                items-center
-                justify-center
-                rounded-2xl
-                bg-gradient-to-br
-                from-blue-500
-                to-indigo-600
-                text-white
-                shadow-md
-                shadow-blue-500/20
-              "
+        {/* Section Navigation Footer (Prev / Next Stepper) */}
+        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+          {prevSectionId ? (
+            <button
+              type="button"
+              onClick={() => setActiveSection(prevSectionId)}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
             >
-              <HiSparkles size={22} />
-            </div>
+              <HiArrowLeft size={16} />
+              <span>Back: {sections[prevSectionId].title.split(" ")[0]}</span>
+            </button>
+          ) : (
+            <div />
+          )}
 
+          {nextSectionId ? (
+            <button
+              type="button"
+              onClick={() => setActiveSection(nextSectionId)}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-500/20 hover:bg-blue-500 transition cursor-pointer"
+            >
+              <span>Next: {sections[nextSectionId].title.split(" ")[0]}</span>
+              <HiArrowRight size={16} />
+            </button>
+          ) : onViewPreview ? (
+            <button
+              type="button"
+              onClick={onViewPreview}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-emerald-500/20 hover:from-emerald-500 hover:to-teal-500 transition cursor-pointer"
+            >
+              <span>Review Resume</span>
+              <HiArrowRight size={16} />
+            </button>
+          ) : (
+            <div />
+          )}
+        </div>
+
+        {/* AI Quick Banner */}
+        <div className="mt-8 rounded-2xl border border-blue-100 dark:border-blue-500/20 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/30 shrink-0">
+              <HiSparkles size={18} />
+            </div>
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                AI Resume Generation
-              </h3>
-              <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Generate an optimized resume draft using your profile info and AI.
+              <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                Speed up with AI Assistant
               </p>
-              <p className="mt-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                1 credit will be used for each draft.
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Generate tailored bullet points, scan ATS compatibility, or auto-complete.
               </p>
             </div>
           </div>
 
-          {/* Generate Button */}
-          <button
-            type="button"
-            onClick={onGenerateResume}
-            disabled={generating || !onGenerateResume}
-            className="
-              inline-flex
-              w-full
-              sm:w-auto
-              shrink-0
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              bg-gradient-to-r
-              from-blue-600
-              to-indigo-600
-              px-5
-              py-3
-              text-xs
-              sm:text-sm
-              font-bold
-              text-white
-              shadow-lg
-              shadow-blue-500/20
-              transition-all
-              hover:shadow-xl
-              active:scale-95
-              disabled:cursor-not-allowed
-              disabled:opacity-60
-              cursor-pointer
-            "
-          >
-            <HiSparkles size={18} />
-            <span>{generating ? "Generating..." : "Generate Resume"}</span>
-          </button>
+          {onToggleAi && (
+            <button
+              type="button"
+              onClick={onToggleAi}
+              className="inline-flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-750 transition cursor-pointer shrink-0"
+            >
+              {showAi ? "Hide AI Panel" : "Open AI Panel"}
+            </button>
+          )}
         </div>
       </div>
     </div>
