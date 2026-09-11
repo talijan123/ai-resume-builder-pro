@@ -12,6 +12,7 @@ import { FaLinkedin, FaXTwitter } from "react-icons/fa6";
 import Navbar from "../components/layout/Navbar/Navbar";
 import Footer from "../components/layout/Footer/Footer";
 import Container from "../components/UI/Container/Container";
+import SEO from "../components/common/SEO";
 import { blogPosts } from "../data/blogPosts";
 import { useAuth } from "../context/AuthContext";
 
@@ -54,9 +55,43 @@ export default function BlogPost() {
     }
   }
 
+  const articleSchema = post
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": `https://ai-resume-builder-pro-five.vercel.app/blog/${post.slug}`,
+        },
+        "headline": post.title,
+        "description": post.excerpt,
+        "image": [post.coverImage],
+        "datePublished": "2026-08-20T08:00:00+00:00",
+        "dateModified": "2026-08-29T08:00:00+00:00",
+        "author": {
+          "@type": "Person",
+          "name": post.author?.name || "Career Strategist",
+          "jobTitle": post.author?.role || "Lead Career Strategist",
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "ResumeForge AI",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://ai-resume-builder-pro-five.vercel.app/favicon.svg",
+          },
+        },
+        "keywords": post.tags?.join(", "),
+      }
+    : null;
+
   if (!post) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+        <SEO
+          title="Article Not Found | ResumeForge"
+          description="The requested career guide or resume article could not be found."
+        />
         <Navbar />
         <main className="flex-1 flex items-center justify-center py-32">
           <Container>
@@ -83,6 +118,21 @@ export default function BlogPost() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      <SEO
+        title={`${post.title} | ResumeForge Guide`}
+        description={post.excerpt}
+        keywords={post.tags ? post.tags.join(", ") : undefined}
+        canonicalUrl={`https://ai-resume-builder-pro-five.vercel.app/blog/${post.slug}`}
+        ogType="article"
+        ogImage={post.coverImage}
+        article={{
+          publishedTime: post.publishedAt,
+          author: post.author?.name,
+          section: post.category,
+          tags: post.tags,
+        }}
+        schema={articleSchema}
+      />
       <Navbar />
 
       <main className="flex-1 pt-28 pb-20">

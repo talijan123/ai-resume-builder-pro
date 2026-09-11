@@ -10,6 +10,7 @@ import {
 } from "react-icons/hi2";
 
 import DashboardHeader from "../components/layout/DashboardHeader";
+import SEO from "../components/common/SEO";
 
 import ModernTemplate from "../components/templates/ModernTemplate";
 import ProfessionalTemplate from "../components/templates/ProfessionalTemplate";
@@ -182,6 +183,12 @@ export default function Templates() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <SEO
+        title="Free ATS Resume Templates & Modern CV Designs | ResumeForge"
+        description="Browse free, ATS-friendly resume templates. Designed for tech, corporate, creative, and executive roles with instant customization and photo-ready options."
+        keywords="ATS resume templates, free resume designs, modern CV templates, professional resume formats, photo resume template, resume maker designs"
+      />
+
       {/* ===================================================
           PROFESSIONAL GLOBAL HEADER
       =================================================== */}
@@ -222,7 +229,7 @@ export default function Templates() {
               Professional Resume Designs
             </div>
 
-            <h2
+            <h1
               className="
                 text-4xl
                 font-black
@@ -236,7 +243,7 @@ export default function Templates() {
                 {" "}
                 represents you.
               </span>
-            </h2>
+            </h1>
 
             <p
               className="

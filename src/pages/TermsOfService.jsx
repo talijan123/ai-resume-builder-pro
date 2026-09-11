@@ -3,10 +3,15 @@ import { HiArrowLeft, HiDocumentCheck } from "react-icons/hi2";
 import Navbar from "../components/layout/Navbar/Navbar";
 import Footer from "../components/layout/Footer/Footer";
 import Container from "../components/UI/Container/Container";
+import SEO from "../components/common/SEO";
 
 export default function TermsOfService() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      <SEO
+        title="Terms of Service | ResumeForge AI"
+        description="Read the terms, usage conditions, subscription policies, and service agreements for ResumeForge AI."
+      />
       <Navbar />
 
       <main className="flex-1 pt-28 pb-20">

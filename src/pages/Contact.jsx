@@ -11,6 +11,7 @@ import {
 import Navbar from "../components/layout/Navbar/Navbar";
 import Footer from "../components/layout/Footer/Footer";
 import Container from "../components/UI/Container/Container";
+import SEO from "../components/common/SEO";
 import { useAuth } from "../context/AuthContext";
 
 export default function Contact() {
@@ -46,6 +47,11 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      <SEO
+        title="Contact Us & Customer Support | ResumeForge AI"
+        description="Have questions about ResumeForge AI, ATS resume scoring, billing, or custom templates? Reach out to our 24/7 dedicated support team."
+        keywords="contact ResumeForge, customer support, resume builder help, ATS resume inquiry"
+      />
       <Navbar />
 
       <main className="flex-1 pt-28 pb-20">

@@ -3,10 +3,15 @@ import { HiArrowLeft, HiShieldCheck } from "react-icons/hi2";
 import Navbar from "../components/layout/Navbar/Navbar";
 import Footer from "../components/layout/Footer/Footer";
 import Container from "../components/UI/Container/Container";
+import SEO from "../components/common/SEO";
 
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      <SEO
+        title="Privacy Policy | ResumeForge AI"
+        description="Learn how ResumeForge AI protects your personal data, resume information, and account privacy with industry-standard cloud security."
+      />
       <Navbar />
 
       <main className="flex-1 pt-28 pb-20">

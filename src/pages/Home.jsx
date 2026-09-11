@@ -1,4 +1,5 @@
 import Navbar from "../components/layout/Navbar/Navbar";
+import SEO from "../components/common/SEO";
 import Hero from "../components/sections/Hero/Hero";
 import Features from "../components/sections/Features/Features";
 import HowItWorks from "../components/sections/HowItWorks/HowItWorks";
@@ -14,6 +15,7 @@ import ScrollToTop from "../components/UI/ScrollToTop/ScrollToTop";
 export default function Home() {
   return (
     <>
+      <SEO />
       <Navbar />
 
       <main>

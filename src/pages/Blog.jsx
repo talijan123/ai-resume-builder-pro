@@ -13,6 +13,7 @@ import {
 import Navbar from "../components/layout/Navbar/Navbar";
 import Footer from "../components/layout/Footer/Footer";
 import Container from "../components/UI/Container/Container";
+import SEO from "../components/common/SEO";
 import { blogPosts } from "../data/blogPosts";
 import { useAuth } from "../context/AuthContext";
 
@@ -59,6 +60,11 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      <SEO
+        title="Resume Tips, ATS Guides & Career Advice | ResumeForge Blog"
+        description="Expert resume guides, Applicant Tracking System (ATS) secrets, cover letter tips, and actionable career advice to help you land your dream job faster."
+        keywords="resume tips, ATS guides, career advice, cover letter writing, resume builder blog, job search strategies"
+      />
       <Navbar />
 
       <main className="flex-1 pt-28 pb-20">

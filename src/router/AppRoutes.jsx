@@ -2,7 +2,9 @@ import {
   BrowserRouter,
   Routes,
   Route,
+  useLocation,
 } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 
 import Home from "../pages/Home";
 import Login from "../pages/Login";
@@ -28,14 +30,22 @@ import TermsOfService from "../pages/TermsOfService";
 import Contact from "../pages/Contact";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute";
+import TopLoader from "../components/common/TopLoader";
+import ScrollToTop from "../components/common/ScrollToTop";
+import PageTransition from "../components/common/PageTransition";
 
-import { ProfileProvider } from "../context/ProfileContext";
 import { CoverLetterProvider } from "../context/CoverLetterContext";
 
-export default function AppRoutes() {
+function AnimatedRoutes() {
+  const location = useLocation();
+
   return (
-    <BrowserRouter>
-      <Routes>
+    <>
+      <TopLoader />
+      <ScrollToTop />
+      <AnimatePresence mode="wait" initial={false}>
+        <PageTransition key={location.pathname}>
+          <Routes location={location}>
         {/* =====================================================
             PUBLIC ROUTES
         ====================================================== */}
@@ -273,6 +283,16 @@ export default function AppRoutes() {
           element={<NotFound />}
         />
       </Routes>
+    </PageTransition>
+  </AnimatePresence>
+</>
+  );
+}
+
+export default function AppRoutes() {
+  return (
+    <BrowserRouter>
+      <AnimatedRoutes />
     </BrowserRouter>
   );
 }
