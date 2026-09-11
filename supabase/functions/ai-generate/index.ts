@@ -7,7 +7,7 @@ const MAX_EXPERIENCE_ENTRIES = 15;
 const MAX_SKILL_ENTRIES = 30;
 const MAX_SUMMARY_INPUT_LENGTH = 8000;
 const MAX_SUMMARY_LENGTH = 400;
-const MAX_JOB_DESCRIPTION_LENGTH = 6000;
+const MAX_JOB_DESCRIPTION_LENGTH = 8000;
 const MAX_COVER_LETTER_INPUT_LENGTH = 8000;
 const MAX_COVER_LETTER_LENGTH = 3000;
 const MAX_COVER_LETTER_OPTION_LENGTH = 100;
@@ -32,7 +32,8 @@ const MAX_RESUME_ARRAY_EDUCATION = 10;
 const MAX_RESUME_ARRAY_SKILLS = 30;
 const MAX_RESUME_ARRAY_PROJECTS = 10;
 const MAX_RESUME_ARRAY_CERTIFICATIONS = 10;
-const MAX_ATS_INPUT_LENGTH = 8000;
+const MAX_ATS_JOB_DESCRIPTION_LENGTH = 8000;
+const MAX_ATS_RESUME_LENGTH = 16000;
 const MAX_ATS_KEYWORDS = 30;
 const MAX_ATS_KEYWORD_LENGTH = 120;
 const MAX_ATS_WARNINGS = 10;
@@ -313,7 +314,6 @@ Deno.serve(async (req) => {
       if (
         typeof jobDescription !== "string" ||
         jobDescription.trim().length === 0 ||
-        jobDescription.length > MAX_JOB_DESCRIPTION_LENGTH ||
         !resumeObject ||
         !hasMeaningfulResume
       ) {
@@ -330,43 +330,121 @@ Deno.serve(async (req) => {
         );
       }
 
-      const relevantResumeData = {
-        personalInfo: resumeObject.personalInfo || {},
-        experience: Array.isArray(resumeObject.experience)
-          ? resumeObject.experience
-          : [],
-        education: Array.isArray(resumeObject.education)
-          ? resumeObject.education
-          : [],
-        skills: Array.isArray(resumeObject.skills)
-          ? resumeObject.skills
-          : [],
-        projects: Array.isArray(resumeObject.projects)
-          ? resumeObject.projects
-          : [],
-        certifications: Array.isArray(resumeObject.certifications)
-          ? resumeObject.certifications
-          : [],
-      };
-
-      atsInput = JSON.stringify({
-        jobDescription,
-        resumeData: relevantResumeData,
-      });
-
-      if (atsInput.length > MAX_ATS_INPUT_LENGTH) {
+      if (jobDescription.length > MAX_ATS_JOB_DESCRIPTION_LENGTH) {
         logEvent(requestId, "failure", {
           taskType,
-          reason: "ats_scan_input_too_large",
+          reason: "ats_job_description_too_large",
         });
 
         return jsonResponse(
           {
-            error: `Job description and resume data must be ${MAX_ATS_INPUT_LENGTH} characters or fewer.`,
+            error: `Job description must be ${MAX_ATS_JOB_DESCRIPTION_LENGTH} characters or fewer.`,
           },
           400
         );
       }
+
+      const rawPersonalInfo =
+        resumeObject.personalInfo && typeof resumeObject.personalInfo === "object"
+          ? (resumeObject.personalInfo as Record<string, unknown>)
+          : {};
+
+      const sanitizedPersonalInfo: Record<string, string> = {};
+      if (typeof rawPersonalInfo.fullName === "string" && rawPersonalInfo.fullName.trim()) {
+        sanitizedPersonalInfo.fullName = rawPersonalInfo.fullName.trim();
+      }
+      if (typeof rawPersonalInfo.jobTitle === "string" && rawPersonalInfo.jobTitle.trim()) {
+        sanitizedPersonalInfo.jobTitle = rawPersonalInfo.jobTitle.trim();
+      }
+      if (typeof rawPersonalInfo.summary === "string" && rawPersonalInfo.summary.trim()) {
+        sanitizedPersonalInfo.summary = rawPersonalInfo.summary.trim();
+      }
+      if (typeof rawPersonalInfo.location === "string" && rawPersonalInfo.location.trim()) {
+        sanitizedPersonalInfo.location = rawPersonalInfo.location.trim();
+      }
+
+      const rawExp = Array.isArray(resumeObject.experience) ? resumeObject.experience : [];
+      const sanitizedExperience = rawExp
+        .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+        .map((item) => ({
+          company: typeof item.company === "string" ? item.company.trim() : "",
+          jobTitle: typeof item.jobTitle === "string" ? item.jobTitle.trim() : "",
+          startDate: typeof item.startDate === "string" ? item.startDate.trim() : "",
+          endDate: typeof item.endDate === "string" ? item.endDate.trim() : "",
+          description: typeof item.description === "string" ? item.description.trim() : "",
+        }))
+        .filter((item) => item.company || item.jobTitle || item.description);
+
+      const rawEdu = Array.isArray(resumeObject.education) ? resumeObject.education : [];
+      const sanitizedEducation = rawEdu
+        .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+        .map((item) => ({
+          institution: typeof item.institution === "string" ? item.institution.trim() : "",
+          degree: typeof item.degree === "string" ? item.degree.trim() : "",
+          fieldOfStudy: typeof item.fieldOfStudy === "string" ? item.fieldOfStudy.trim() : "",
+          startDate: typeof item.startDate === "string" ? item.startDate.trim() : "",
+          endDate: typeof item.endDate === "string" ? item.endDate.trim() : "",
+        }))
+        .filter((item) => item.institution || item.degree || item.fieldOfStudy);
+
+      const rawSkills = Array.isArray(resumeObject.skills) ? resumeObject.skills : [];
+      const sanitizedSkills = rawSkills
+        .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+        .map((item) => ({
+          name: typeof item.name === "string" ? item.name.trim() : "",
+          level: typeof item.level === "string" ? item.level.trim() : "",
+        }))
+        .filter((item) => item.name);
+
+      const rawProjects = Array.isArray(resumeObject.projects) ? resumeObject.projects : [];
+      const sanitizedProjects = rawProjects
+        .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+        .map((item) => ({
+          title: typeof item.title === "string" ? item.title.trim() : "",
+          description: typeof item.description === "string" ? item.description.trim() : "",
+          technologies: typeof item.technologies === "string" ? item.technologies.trim() : "",
+        }))
+        .filter((item) => item.title || item.description || item.technologies);
+
+      const rawCerts = Array.isArray(resumeObject.certifications) ? resumeObject.certifications : [];
+      const sanitizedCertifications = rawCerts
+        .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+        .map((item) => ({
+          name: typeof item.name === "string" ? item.name.trim() : "",
+          issuer: typeof item.issuer === "string" ? item.issuer.trim() : "",
+          issueDate: typeof item.issueDate === "string" ? item.issueDate.trim() : "",
+        }))
+        .filter((item) => item.name || item.issuer);
+
+      const relevantResumeData = {
+        personalInfo: sanitizedPersonalInfo,
+        experience: sanitizedExperience,
+        education: sanitizedEducation,
+        skills: sanitizedSkills,
+        projects: sanitizedProjects,
+        certifications: sanitizedCertifications,
+      };
+
+      const serializedResume = JSON.stringify(relevantResumeData);
+
+      if (serializedResume.length > MAX_ATS_RESUME_LENGTH) {
+        logEvent(requestId, "failure", {
+          taskType,
+          reason: "ats_resume_input_too_large",
+        });
+
+        return jsonResponse(
+          {
+            error: `Resume data must be ${MAX_ATS_RESUME_LENGTH} characters or fewer.`,
+          },
+          400
+        );
+      }
+
+      atsInput = JSON.stringify({
+        jobDescription: jobDescription.trim(),
+        resumeData: relevantResumeData,
+      });
     } else if (taskType === "cover-letter") {
       const resumeObject =
         resumeData && typeof resumeData === "object"

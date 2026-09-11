@@ -493,6 +493,11 @@ export default function ResumeBuilder() {
       return;
     }
 
+    if (safeJobDescription.length > 8000) {
+      setAtsError("Job description must be 8,000 characters or fewer.");
+      return;
+    }
+
     setAtsError("");
     setAtsScanning(true);
 
@@ -1449,20 +1454,54 @@ export default function ResumeBuilder() {
                       <button
                         type="button"
                         onClick={handleScanResumeATS}
-                        disabled={atsScanning}
-                        className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-500 transition disabled:opacity-60 cursor-pointer shrink-0"
+                        disabled={
+                          atsScanning ||
+                          atsJobDescription.length > 8000 ||
+                          atsJobDescription.trim().length === 0
+                        }
+                        className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0"
                       >
                         {atsScanning ? "Scanning..." : "Scan Against Job"}
                       </button>
                     </div>
 
-                    <textarea
-                      value={atsJobDescription}
-                      onChange={(event) => setAtsJobDescription(event.target.value)}
-                      rows={4}
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30"
-                      placeholder="Paste the job description you want to compare against your resume..."
-                    />
+                    <div className="space-y-1.5">
+                      <textarea
+                        value={atsJobDescription}
+                        onChange={(event) => setAtsJobDescription(event.target.value)}
+                        rows={4}
+                        className={`w-full rounded-2xl border ${
+                          atsJobDescription.length > 8000
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:focus:ring-red-950/40"
+                            : "border-slate-200 dark:border-slate-800 focus:border-emerald-500 focus:ring-emerald-100 dark:focus:ring-emerald-900/30"
+                        } bg-slate-50 dark:bg-slate-950 px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4`}
+                        placeholder="Paste the job description you want to compare against your resume..."
+                      />
+                      <div className="flex items-center justify-between px-1 text-xs">
+                        <span
+                          className={
+                            atsJobDescription.length > 8000
+                              ? "font-semibold text-red-500 dark:text-red-400"
+                              : "text-slate-400 dark:text-slate-500"
+                          }
+                        >
+                          {atsJobDescription.length > 8000
+                            ? "Character limit exceeded"
+                            : "Target job description for ATS matching"}
+                        </span>
+                        <span
+                          className={`font-mono transition-colors ${
+                            atsJobDescription.length > 8000
+                              ? "font-bold text-red-600 dark:text-red-400"
+                              : atsJobDescription.length > 7000
+                              ? "font-semibold text-amber-600 dark:text-amber-400"
+                              : "text-slate-500 dark:text-slate-400"
+                          }`}
+                        >
+                          {atsJobDescription.length.toLocaleString()} / 8,000 characters
+                        </span>
+                      </div>
+                    </div>
 
                     {atsError && (
                       <p className="mt-3 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-2.5 text-xs font-semibold text-red-700 dark:text-red-400">

@@ -276,6 +276,94 @@ export async function generateResume(mode, params = {}, existingProfile = null) 
   };
 }
 
+export function sanitizeResumeForATS(resumeData) {
+  if (!resumeData || typeof resumeData !== "object") {
+    return {};
+  }
+
+  const rawPersonalInfo = resumeData.personalInfo || {};
+  const personalInfo = {};
+  if (typeof rawPersonalInfo.fullName === "string" && rawPersonalInfo.fullName.trim()) {
+    personalInfo.fullName = rawPersonalInfo.fullName.trim();
+  }
+  if (typeof rawPersonalInfo.jobTitle === "string" && rawPersonalInfo.jobTitle.trim()) {
+    personalInfo.jobTitle = rawPersonalInfo.jobTitle.trim();
+  }
+  if (typeof rawPersonalInfo.summary === "string" && rawPersonalInfo.summary.trim()) {
+    personalInfo.summary = rawPersonalInfo.summary.trim();
+  }
+  if (typeof rawPersonalInfo.location === "string" && rawPersonalInfo.location.trim()) {
+    personalInfo.location = rawPersonalInfo.location.trim();
+  }
+
+  const experience = Array.isArray(resumeData.experience)
+    ? resumeData.experience
+        .filter((item) => item && typeof item === "object")
+        .map((item) => ({
+          company: (item.company || "").trim(),
+          jobTitle: (item.jobTitle || "").trim(),
+          startDate: (item.startDate || "").trim(),
+          endDate: (item.endDate || "").trim(),
+          description: (item.description || "").trim(),
+        }))
+        .filter((item) => item.company || item.jobTitle || item.description)
+    : [];
+
+  const education = Array.isArray(resumeData.education)
+    ? resumeData.education
+        .filter((item) => item && typeof item === "object")
+        .map((item) => ({
+          institution: (item.institution || "").trim(),
+          degree: (item.degree || "").trim(),
+          fieldOfStudy: (item.fieldOfStudy || "").trim(),
+          startDate: (item.startDate || "").trim(),
+          endDate: (item.endDate || "").trim(),
+        }))
+        .filter((item) => item.institution || item.degree || item.fieldOfStudy)
+    : [];
+
+  const skills = Array.isArray(resumeData.skills)
+    ? resumeData.skills
+        .filter((item) => item && typeof item === "object")
+        .map((item) => ({
+          name: (item.name || "").trim(),
+          level: (item.level || "").trim(),
+        }))
+        .filter((item) => item.name)
+    : [];
+
+  const projects = Array.isArray(resumeData.projects)
+    ? resumeData.projects
+        .filter((item) => item && typeof item === "object")
+        .map((item) => ({
+          title: (item.title || "").trim(),
+          description: (item.description || "").trim(),
+          technologies: (item.technologies || "").trim(),
+        }))
+        .filter((item) => item.title || item.description || item.technologies)
+    : [];
+
+  const certifications = Array.isArray(resumeData.certifications)
+    ? resumeData.certifications
+        .filter((item) => item && typeof item === "object")
+        .map((item) => ({
+          name: (item.name || "").trim(),
+          issuer: (item.issuer || "").trim(),
+          issueDate: (item.issueDate || "").trim(),
+        }))
+        .filter((item) => item.name || item.issuer)
+    : [];
+
+  return {
+    personalInfo,
+    experience,
+    education,
+    skills,
+    projects,
+    certifications,
+  };
+}
+
 export async function scanResumeATS(resumeData, jobDescription) {
   if (
     !resumeData ||
@@ -286,12 +374,23 @@ export async function scanResumeATS(resumeData, jobDescription) {
     throw new Error("Add a resume and job description before scanning.");
   }
 
+  const trimmedJobDescription = jobDescription.trim();
+  if (trimmedJobDescription.length > 8000) {
+    throw new Error("Job description must be 8000 characters or fewer.");
+  }
+
+  const sanitizedResume = sanitizeResumeForATS(resumeData);
+  const serializedResume = JSON.stringify(sanitizedResume);
+  if (serializedResume.length > 16000) {
+    throw new Error("Resume data must be 16000 characters or fewer.");
+  }
+
   const { data, error } = await supabase.functions.invoke("ai-generate", {
     body: {
       taskType: "ats-scan",
       payload: {
-        resumeData,
-        jobDescription: jobDescription.trim(),
+        resumeData: sanitizedResume,
+        jobDescription: trimmedJobDescription,
       },
     },
   });
