@@ -84,6 +84,7 @@ export default function HeroContent() {
           rounded-full
           border
           border-blue-200
+          dark:border-blue-800/60
           bg-white/80
           dark:bg-slate-800/80
           px-5
@@ -122,6 +123,7 @@ export default function HeroContent() {
             text-sm
             font-semibold
             text-slate-700
+            dark:text-slate-200
           "
         >
           AI Resume Builder
@@ -143,15 +145,13 @@ export default function HeroContent() {
           leading-[0.9]
           tracking-[-0.05em]
           text-slate-900
+          dark:text-white
           lg:text-7xl
         "
       >
         Build a Resume
-
         <br />
-
         Recruiters
-
         <span
           className="
             block
@@ -176,11 +176,14 @@ export default function HeroContent() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.45 }}
         className="
-          mt-8
+          mt-6
+          sm:mt-8
           max-w-xl
-          text-xl
-          leading-9
+          text-lg
+          sm:text-xl
+          leading-relaxed
           text-slate-600
+          dark:text-slate-300
         "
       >
         Design beautiful resumes, optimize them for ATS
@@ -189,70 +192,23 @@ export default function HeroContent() {
       </motion.p>
 
       {/* =====================================================
-          STATS
+          BUTTONS (CTA ACTION ROW)
       ===================================================== */}
 
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.55 }}
         className="
-          mt-10
+          mt-6
+          sm:mt-8
           flex
           flex-wrap
-          gap-10
+          items-center
+          gap-4
         "
       >
-        <div>
-          <h3 className="text-3xl font-black text-slate-900">
-            20K+
-          </h3>
-
-          <p className="mt-1 text-slate-500">
-            Resumes Created
-          </p>
-        </div>
-
-        <div>
-          <h3 className="text-3xl font-black text-slate-900">
-            98%
-          </h3>
-
-          <p className="mt-1 text-slate-500">
-            ATS Success
-          </p>
-        </div>
-
-        <div>
-          <h3 className="text-3xl font-black text-slate-900">
-            4.9★
-          </h3>
-
-          <p className="mt-1 text-slate-500">
-            User Rating
-          </p>
-        </div>
-      </motion.div>
-
-      {/* =====================================================
-          BUTTONS
-      ===================================================== */}
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.65 }}
-        className="
-          mt-12
-          flex
-          flex-wrap
-          gap-5
-        "
-      >
-        {/* ===================================================
-            BUILD MY RESUME
-        =================================================== */}
-
+        {/* BUILD MY RESUME / GO TO DASHBOARD */}
         <button
           type="button"
           onClick={handleBuildResume}
@@ -276,8 +232,10 @@ export default function HeroContent() {
             duration-300
             hover:-translate-y-1
             hover:scale-[1.03]
+            hover:shadow-blue-500/40
             disabled:cursor-not-allowed
             disabled:opacity-60
+            cursor-pointer
           "
         >
           {loading
@@ -296,10 +254,7 @@ export default function HeroContent() {
           />
         </button>
 
-        {/* ===================================================
-            WATCH DEMO
-        =================================================== */}
-
+        {/* WATCH DEMO */}
         <button
           type="button"
           onClick={handleWatchDemo}
@@ -312,17 +267,23 @@ export default function HeroContent() {
             rounded-full
             border
             border-slate-300
+            dark:border-slate-700
             bg-white
+            dark:bg-slate-900
             px-8
             py-4
             font-semibold
             text-slate-700
+            dark:text-slate-200
             transition-all
             duration-300
             hover:-translate-y-1
             hover:border-blue-500
+            dark:hover:border-blue-400
             hover:text-blue-600
+            dark:hover:text-blue-400
             hover:shadow-lg
+            dark:hover:shadow-blue-500/10
           "
         >
           <HiPlay
@@ -331,11 +292,66 @@ export default function HeroContent() {
               transition-transform
               duration-300
               group-hover:scale-110
+              text-blue-600
+              dark:text-blue-400
             "
           />
-
           Watch Demo
         </button>
+      </motion.div>
+
+      {/* =====================================================
+          TRUST STATS METRICS (GROUNDED BELOW CTA BUTTONS)
+      ===================================================== */}
+
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.65 }}
+        className="
+          mt-8
+          sm:mt-10
+          border-t
+          border-slate-200
+          dark:border-slate-800
+          pt-6
+          flex
+          flex-wrap
+          items-center
+          gap-x-8
+          gap-y-4
+        "
+      >
+        <div>
+          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            20K+
+          </h3>
+          <p className="mt-0.5 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+            Resumes Created
+          </p>
+        </div>
+
+        <div className="hidden sm:block h-8 w-px bg-slate-200 dark:bg-slate-800" />
+
+        <div>
+          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            98%
+          </h3>
+          <p className="mt-0.5 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+            ATS Success
+          </p>
+        </div>
+
+        <div className="hidden sm:block h-8 w-px bg-slate-200 dark:bg-slate-800" />
+
+        <div>
+          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            4.9★
+          </h3>
+          <p className="mt-0.5 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+            User Rating
+          </p>
+        </div>
       </motion.div>
     </motion.div>
   );
