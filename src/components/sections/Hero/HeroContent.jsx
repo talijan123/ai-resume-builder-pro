@@ -1,13 +1,59 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { HiArrowRight, HiPlay } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
 
+const ROTATING_PHRASES = [
+  "Actually Read.",
+  "Can't Ignore.",
+  "Love to Hire.",
+  "Pass ATS With.",
+];
+
 export default function HeroContent() {
   const navigate = useNavigate();
-
   const { user, loading } = useAuth();
+
+  /* =========================================================
+     TYPEWRITER EFFECT FOR ACCENT HEADLINE
+  ========================================================= */
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [displayText, setDisplayText] = useState(ROTATING_PHRASES[0]);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentPhrase = ROTATING_PHRASES[phraseIndex];
+    let timeoutId;
+
+    if (!isDeleting) {
+      // Typing phase (~90ms per character)
+      if (displayText.length < currentPhrase.length) {
+        timeoutId = setTimeout(() => {
+          setDisplayText(currentPhrase.slice(0, displayText.length + 1));
+        }, 90);
+      } else {
+        // Full phrase displayed, pause for 2.2 seconds
+        timeoutId = setTimeout(() => {
+          setIsDeleting(true);
+        }, 2200);
+      }
+    } else {
+      // Deleting phase (~45ms per character)
+      if (displayText.length > 0) {
+        timeoutId = setTimeout(() => {
+          setDisplayText(currentPhrase.slice(0, displayText.length - 1));
+        }, 45);
+      } else {
+        // Complete deletion, rotate to next phrase
+        setIsDeleting(false);
+        setPhraseIndex((prev) => (prev + 1) % ROTATING_PHRASES.length);
+      }
+    }
+
+    return () => clearTimeout(timeoutId);
+  }, [displayText, isDeleting, phraseIndex]);
 
   /* =========================================================
      BUILD RESUME
@@ -131,7 +177,7 @@ export default function HeroContent() {
       </motion.div>
 
       {/* =====================================================
-          HEADING
+          HEADING WITH ANIMATED TYPEWRITER
       ===================================================== */}
 
       <motion.h1
@@ -142,7 +188,7 @@ export default function HeroContent() {
           mt-8
           text-5xl
           font-black
-          leading-[0.9]
+          leading-[0.95]
           tracking-[-0.05em]
           text-slate-900
           dark:text-white
@@ -151,7 +197,7 @@ export default function HeroContent() {
       >
         Build a Resume
         <br />
-        Recruiters
+        Recruiters{" "}
         <span
           className="
             block
@@ -161,9 +207,25 @@ export default function HeroContent() {
             to-cyan-500
             bg-clip-text
             text-transparent
+            min-h-[1.15em]
           "
         >
-          Actually Read.
+          {displayText}
+          <span
+            aria-hidden="true"
+            className="
+              inline-block
+              w-[3px]
+              sm:w-1
+              h-[0.85em]
+              bg-blue-500
+              dark:bg-blue-400
+              animate-pulse
+              ml-1
+              align-baseline
+              rounded-full
+            "
+          />
         </span>
       </motion.h1>
 
