@@ -19,6 +19,14 @@ export default function Dashboard() {
     loading: pricingLoading,
   } = usePricing();
 
+  const currentPlan = planName || plan?.name || "Starter";
+  const hasAIFeatures =
+    currentPlan === "Team" ||
+    currentPlan === "Pro" ||
+    currentPlan.toLowerCase() === "team" ||
+    currentPlan.toLowerCase() === "pro" ||
+    Boolean(canUseAI);
+
   /* =======================================================
      LOADING
   ======================================================= */
@@ -225,7 +233,7 @@ export default function Dashboard() {
 
             <FeatureItem
               title="AI Features"
-              enabled={canUseAI}
+              enabled={hasAIFeatures}
             />
 
             {/* Premium Templates */}

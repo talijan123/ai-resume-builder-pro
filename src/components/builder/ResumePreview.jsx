@@ -281,8 +281,8 @@ const ResumePreview = forwardRef(
             flex
             flex-col
             min-h-0
-            bg-[#090d16]
-            dark:bg-[#070a12]
+            bg-slate-900
+            dark:bg-slate-950
             transition-colors
             relative
             print:static
@@ -307,8 +307,9 @@ const ResumePreview = forwardRef(
               justify-between
               gap-3
               border-b
-              border-white/10
-              bg-[#0d1322]/90
+              border-slate-800
+              bg-slate-900/90
+              dark:bg-slate-950/90
               backdrop-blur-md
               shrink-0
               print:hidden
@@ -475,7 +476,8 @@ const ResumePreview = forwardRef(
                     rounded-md
                     bg-white
                     p-8
-                    shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)]
+                    shadow-2xl
+                    shadow-slate-950/50
                     print:mx-0
                     print:w-full
                     print:max-w-none

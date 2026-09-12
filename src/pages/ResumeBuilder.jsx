@@ -27,7 +27,8 @@ import {
 
 import { useReactToPrint } from "react-to-print";
 
-import BuilderHeader from "../components/builder/BuilderHeader";
+import DashboardHeader from "../components/layout/DashboardHeader";
+import BuilderSubHeader from "../components/builder/BuilderSubHeader";
 import BuilderContent from "../components/builder/BuilderContent";
 import ResumePreview from "../components/builder/ResumePreview";
 
@@ -1181,12 +1182,20 @@ export default function ResumeBuilder() {
       )}
 
       {/* ======================================
-          HEADER
+          GLOBAL HEADER
       ====================================== */}
 
-      <BuilderHeader
+      <DashboardHeader />
+
+      {/* ======================================
+          DOCUMENT ACTIONS SUB-TOOLBAR
+      ====================================== */}
+
+      <BuilderSubHeader
         onDownloadPDF={handleDownloadPDF}
         resumeId={id}
+        onToggleAi={() => setShowAiPanel(!showAiPanel)}
+        showAi={showAiPanel}
       />
 
       {/* ======================================

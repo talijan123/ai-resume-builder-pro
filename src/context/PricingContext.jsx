@@ -395,6 +395,22 @@ export function PricingProvider({ children }) {
     }, [plan]);
 
   /* =======================================================
+     AI FEATURES
+  ======================================================= */
+
+  const canUseAI =
+    useMemo(() => {
+      return Boolean(
+        plan?.ai_features ||
+        plan?.ai_resume_generation ||
+        planSlug === "pro" ||
+        planSlug === "team" ||
+        plan?.name?.toLowerCase() === "pro" ||
+        plan?.name?.toLowerCase() === "team"
+      );
+    }, [plan, planSlug]);
+
+  /* =======================================================
      AI RESUME GENERATION
   ======================================================= */
 
@@ -678,6 +694,8 @@ export function PricingProvider({ children }) {
 
         canUseCoverLetters,
 
+        canUseAI,
+
         canUseAIResumeGeneration,
 
         canUseAIResumeAnalysis,
@@ -722,6 +740,7 @@ export function PricingProvider({ children }) {
 
         canUsePremiumTemplates,
         canUseCoverLetters,
+        canUseAI,
         canUseAIResumeGeneration,
         canUseAIResumeAnalysis,
         canUseATSOptimization,

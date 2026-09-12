@@ -148,14 +148,44 @@ export function ResumeProvider({
 }) {
   /*
     Normalize initialData immediately.
-
-    This is important when a template preview or an existing
-    saved resume is passed into the provider.
+    Restore from localStorage draft if available and no initialData provided.
   */
 
-  const [resumeData, setResumeData] = useState(() =>
-    normalizeResumeData(initialData || {})
-  );
+  const [resumeData, setResumeData] = useState(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      return normalizeResumeData(initialData);
+    }
+    try {
+      const saved = typeof window !== "undefined" ? localStorage.getItem("resumeforge_active_draft") : null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          return normalizeResumeData(parsed);
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return normalizeResumeData(initialData || {});
+  });
+
+  // Auto-sync resume draft to localStorage to preserve state across navigation
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const hasContent =
+          resumeData?.personalInfo?.fullName ||
+          resumeData?.personalInfo?.email ||
+          resumeData?.experience?.length > 0 ||
+          resumeData?.skills?.length > 0;
+        if (hasContent) {
+          localStorage.setItem("resumeforge_active_draft", JSON.stringify(resumeData));
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [resumeData]);
 
   /* =======================================================
      Active Section

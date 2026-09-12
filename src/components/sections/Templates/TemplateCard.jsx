@@ -72,7 +72,7 @@ export default function TemplateCard({
           group-hover:scale-[1.03]
         "
       >
-        <TemplatePreview />
+        <TemplatePreview templateId={templateId} color={color} />
       </div>
 
       {/* Content */}
