@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { HiSparkles } from "react-icons/hi2";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { useResume } from "../../../context/ResumeContext";
+import { useResume, templateSupportsPhoto } from "../../../context/ResumeContext";
 import { usePricing } from "../../../context/PricingContext";
 import { generateSummaries } from "../../../services/aiService";
 
@@ -9,6 +10,8 @@ export default function PersonalInfoForm() {
   const {
     resumeData,
     updatePersonalInfo,
+    currentTemplate,
+    supportsPhoto: contextSupportsPhoto,
   } = useResume();
   const { refreshPricing } = usePricing();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -16,6 +19,11 @@ export default function PersonalInfoForm() {
   const [aiMessage, setAiMessage] = useState("");
 
   const personal = resumeData.personalInfo;
+  const activeTemplate = resumeData.template || "modern";
+  const supportsPhoto =
+    currentTemplate?.supportsPhoto ??
+    contextSupportsPhoto ??
+    templateSupportsPhoto(activeTemplate);
 
   function handleChange(e) {
     if (e.target.name === "summary") {
@@ -153,84 +161,116 @@ export default function PersonalInfoForm() {
           placeholder="github.com/talijan123"
         />
 
-        {/* Photo URL */}
+        {/* Photo URL (Conditionally rendered for photo-supported templates) */}
 
-        <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
-          <label className="mb-2 block font-semibold text-slate-800">
-            Profile Photo / Avatar (for Photo Templates)
-          </label>
-          <div className="flex flex-col sm:flex-row items-center gap-5">
-            <div className="relative h-20 w-20 shrink-0 rounded-full border-2 border-slate-300 bg-slate-200 overflow-hidden flex items-center justify-center shadow-inner">
-              {personal.photo ? (
-                <img
-                  src={personal.photo}
-                  alt="Profile Preview"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="text-2xl font-bold text-slate-400">
-                  {personal.fullName ? personal.fullName.charAt(0).toUpperCase() : "?"}
-                </span>
-              )}
-            </div>
-
-            <div className="flex-1 w-full space-y-3">
-              <input
-                type="text"
-                name="photo"
-                value={personal.photo || ""}
-                onChange={handleChange}
-                placeholder="Paste Image URL (https://...)"
-                className="
-                  w-full
-                  rounded-xl
-                  border
-                  border-slate-300
-                  bg-white
-                  px-4
-                  py-2.5
-                  text-sm
-                  outline-none
-                  transition-all
-                  focus:border-blue-500
-                  focus:ring-2
-                  focus:ring-blue-100
-                "
-              />
-
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="cursor-pointer rounded-xl bg-white border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition">
-                  <span>Upload Image</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          updatePersonalInfo("photo", reader.result);
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                  />
+        <AnimatePresence initial={false}>
+          {supportsPhoto && (
+            <motion.div
+              key="profile-photo-upload-card"
+              id="profile-photo-upload-card"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{
+                opacity: 1,
+                height: "auto",
+                transition: {
+                  height: { duration: 0.28, ease: [0.16, 1, 0.3, 1] },
+                  opacity: { duration: 0.25, delay: 0.05 },
+                },
+              }}
+              exit={{
+                opacity: 0,
+                height: 0,
+                transition: {
+                  opacity: { duration: 0.15 },
+                  height: { duration: 0.25, ease: [0.4, 0, 0.2, 1] },
+                },
+              }}
+              className="profile-photo-upload-card overflow-hidden md:col-span-2"
+            >
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 p-5">
+                <label className="mb-2 block font-semibold text-slate-800 dark:text-slate-200">
+                  Profile Photo / Avatar (for Photo Templates)
                 </label>
+                <div className="flex flex-col sm:flex-row items-center gap-5">
+                  <div className="relative h-20 w-20 shrink-0 rounded-full border-2 border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800 overflow-hidden flex items-center justify-center shadow-inner">
+                    {personal.photo ? (
+                      <img
+                        src={personal.photo}
+                        alt="Profile Preview"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl font-bold text-slate-400">
+                        {personal.fullName ? personal.fullName.charAt(0).toUpperCase() : "?"}
+                      </span>
+                    )}
+                  </div>
 
-                {personal.photo && (
-                  <button
-                    type="button"
-                    onClick={() => updatePersonalInfo("photo", "")}
-                    className="rounded-xl px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition"
-                  >
-                    Remove Photo
-                  </button>
-                )}
+                  <div className="flex-1 w-full space-y-3">
+                    <input
+                      type="text"
+                      name="photo"
+                      value={personal.photo || ""}
+                      onChange={handleChange}
+                      placeholder="Paste Image URL (https://...)"
+                      className="
+                        w-full
+                        rounded-xl
+                        border
+                        border-slate-300
+                        dark:border-slate-700
+                        bg-white
+                        dark:bg-slate-950
+                        px-4
+                        py-2.5
+                        text-sm
+                        text-slate-900
+                        dark:text-white
+                        outline-none
+                        transition-all
+                        focus:border-blue-500
+                        focus:ring-2
+                        focus:ring-blue-100
+                        dark:focus:ring-blue-900/30
+                      "
+                    />
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className="cursor-pointer rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                        <span>Upload Image</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                updatePersonalInfo("photo", reader.result);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+
+                      {personal.photo && (
+                        <button
+                          type="button"
+                          onClick={() => updatePersonalInfo("photo", "")}
+                          className="rounded-xl px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                        >
+                          Remove Photo
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Gender & DOB (Optional for International CVs) */}
 

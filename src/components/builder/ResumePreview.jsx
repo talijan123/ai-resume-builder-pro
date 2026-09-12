@@ -46,13 +46,13 @@ const templates = {
 };
 
 const templateOptions = [
-  { id: "modern", name: "Modern" },
-  { id: "professional", name: "Professional" },
-  { id: "creative", name: "Creative" },
-  { id: "executive", name: "Executive" },
-  { id: "minimal", name: "Minimal" },
-  { id: "sidebar-photo", name: "Sidebar Photo" },
-  { id: "modern-photo", name: "Modern Photo" },
+  { id: "modern", name: "Modern", supportsPhoto: false },
+  { id: "professional", name: "Professional", supportsPhoto: false },
+  { id: "creative", name: "Creative", supportsPhoto: false },
+  { id: "executive", name: "Executive", supportsPhoto: false },
+  { id: "minimal", name: "Minimal", supportsPhoto: false },
+  { id: "sidebar-photo", name: "Sidebar Photo", supportsPhoto: true },
+  { id: "modern-photo", name: "Modern Photo", supportsPhoto: true },
 ];
 
 const A4_WIDTH_PX = 794;

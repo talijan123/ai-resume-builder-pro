@@ -22,6 +22,25 @@ export const VALID_TEMPLATES = [
   "modern-photo",
 ];
 
+export const PHOTO_SUPPORTED_TEMPLATES = [
+  "sidebar-photo",
+  "modern-photo",
+];
+
+export const TEMPLATE_CONFIG = {
+  modern: { id: "modern", name: "Modern", supportsPhoto: false },
+  professional: { id: "professional", name: "Professional", supportsPhoto: false },
+  minimal: { id: "minimal", name: "Minimal", supportsPhoto: false },
+  creative: { id: "creative", name: "Creative", supportsPhoto: false },
+  executive: { id: "executive", name: "Executive", supportsPhoto: false },
+  "sidebar-photo": { id: "sidebar-photo", name: "Sidebar Photo", supportsPhoto: true },
+  "modern-photo": { id: "modern-photo", name: "Modern Photo", supportsPhoto: true },
+};
+
+export function templateSupportsPhoto(templateId) {
+  return PHOTO_SUPPORTED_TEMPLATES.includes(templateId);
+}
+
 /* =========================================================
    Initial Resume Data
 ========================================================= */
@@ -498,6 +517,19 @@ export function ResumeProvider({
      Context Value
   ========================================================= */
 
+  const activeTemplateId = resumeData?.template || "modern";
+  const currentTemplate = useMemo(() => {
+    return (
+      TEMPLATE_CONFIG[activeTemplateId] || {
+        id: activeTemplateId,
+        name: activeTemplateId,
+        supportsPhoto: templateSupportsPhoto(activeTemplateId),
+      }
+    );
+  }, [activeTemplateId]);
+
+  const supportsPhoto = Boolean(currentTemplate.supportsPhoto);
+
   const value = useMemo(
     () => ({
       resumeData,
@@ -515,6 +547,8 @@ export function ResumeProvider({
 
       /* Template */
       setTemplate,
+      currentTemplate,
+      supportsPhoto,
 
       /* Personal Information */
       updatePersonalInfo,
@@ -554,6 +588,8 @@ export function ResumeProvider({
       updateResumeData,
 
       setTemplate,
+      currentTemplate,
+      supportsPhoto,
 
       updatePersonalInfo,
 

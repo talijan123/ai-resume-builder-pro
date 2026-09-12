@@ -37,6 +37,7 @@ const templates = [
       "A standout two-column layout with a top accent header, prominent profile photo, high-contrast dark sidebar, and structured timeline sections.",
     component: SidebarPhotoTemplate,
     recommended: true,
+    supportsPhoto: true,
   },
 
   {
@@ -48,6 +49,7 @@ const templates = [
       "A sleek modern layout with a floating avatar card, clean dual-tone structure, and crisp typography for technology & corporate leaders.",
     component: ModernPhotoTemplate,
     recommended: false,
+    supportsPhoto: true,
   },
 
   {
@@ -59,6 +61,7 @@ const templates = [
       "A clean, modern layout designed for technology, startups, developers, and creative professionals.",
     component: ModernTemplate,
     recommended: true,
+    supportsPhoto: false,
   },
 
   {
@@ -70,6 +73,7 @@ const templates = [
       "A polished and structured design for corporate roles, business professionals, and traditional applications.",
     component: ProfessionalTemplate,
     recommended: false,
+    supportsPhoto: false,
   },
 
   {
@@ -81,6 +85,7 @@ const templates = [
       "A visually engaging layout for designers, marketers, developers, and creative professionals.",
     component: CreativeTemplate,
     recommended: false,
+    supportsPhoto: false,
   },
 
   {
@@ -92,6 +97,7 @@ const templates = [
       "A sophisticated resume design created for leadership, management, and experienced professionals.",
     component: ExecutiveTemplate,
     recommended: false,
+    supportsPhoto: false,
   },
 
   {
@@ -103,6 +109,7 @@ const templates = [
       "A simple and elegant layout that keeps attention on your experience, skills, and achievements.",
     component: MinimalTemplate,
     recommended: true,
+    supportsPhoto: false,
   },
 ];
 

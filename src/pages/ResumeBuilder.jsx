@@ -31,7 +31,7 @@ import BuilderHeader from "../components/builder/BuilderHeader";
 import BuilderContent from "../components/builder/BuilderContent";
 import ResumePreview from "../components/builder/ResumePreview";
 
-import { useResume } from "../context/ResumeContext";
+import { useResume, VALID_TEMPLATES } from "../context/ResumeContext";
 import { useAuth } from "../context/AuthContext";
 
 import { supabase } from "../lib/supabase";
@@ -55,6 +55,9 @@ const emptyResume = {
     linkedin: "",
     github: "",
     summary: "",
+    photo: "",
+    gender: "",
+    dob: "",
   },
 
   experience: [],
@@ -68,15 +71,7 @@ const emptyResume = {
    Valid Templates
 ========================================== */
 
-const validTemplates = [
-  "modern",
-  "professional",
-  "creative",
-  "executive",
-  "minimal",
-  "sidebar-photo",
-  "modern-photo",
-];
+const validTemplates = VALID_TEMPLATES;
 
 /* ==========================================
    Stat Card Helper Component
@@ -109,6 +104,7 @@ export default function ResumeBuilder() {
 
   const resumeRef = useRef(null);
   const autoDownloadHandled = useRef(false);
+  const hasInitializedRef = useRef(false);
 
   /* ==========================================
      State
@@ -700,21 +696,29 @@ export default function ResumeBuilder() {
             : "modern";
 
         if (mounted) {
-          setResumeData({
-            ...emptyResume,
+          if (!hasInitializedRef.current) {
+            hasInitializedRef.current = true;
+            setResumeData({
+              ...emptyResume,
 
-            template: selectedTemplate,
+              template: selectedTemplate,
 
-            personalInfo: {
-              ...emptyResume.personalInfo,
-            },
+              personalInfo: {
+                ...emptyResume.personalInfo,
+              },
 
-            experience: [],
-            education: [],
-            skills: [],
-            projects: [],
-            certifications: [],
-          });
+              experience: [],
+              education: [],
+              skills: [],
+              projects: [],
+              certifications: [],
+            });
+          } else {
+            setResumeData((prev) => ({
+              ...prev,
+              template: selectedTemplate,
+            }));
+          }
 
           setLoading(false);
         }
