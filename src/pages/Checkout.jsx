@@ -237,11 +237,6 @@ export default function Checkout() {
         throw new Error(message);
       }
 
-      console.log(
-        "Checkout created successfully:",
-        data
-      );
-
       /* =================================================
          VALIDATE RESPONSE
       ================================================= */

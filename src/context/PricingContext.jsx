@@ -75,11 +75,6 @@ export function PricingProvider({ children }) {
         setLoading(true);
         setError(null);
 
-        console.log(
-          "🔄 Loading pricing data for user:",
-          user.id
-        );
-
         /* ===================================================
            1. GET USER SUBSCRIPTION
         =================================================== */
@@ -96,11 +91,6 @@ export function PricingProvider({ children }) {
         if (subscriptionError) {
           throw subscriptionError;
         }
-
-        console.log(
-          "✅ Subscription:",
-          subscriptionData
-        );
 
         /* ===================================================
            2. GET PLAN
@@ -162,11 +152,6 @@ export function PricingProvider({ children }) {
           }
         }
 
-        console.log(
-          "✅ Plan:",
-          planData
-        );
-
         /* ===================================================
            3. GET CREDIT BALANCE
            
@@ -190,11 +175,6 @@ export function PricingProvider({ children }) {
                   ) || 0,
               }
             : null;
-
-        console.log(
-          "✅ Credit balance:",
-          creditData
-        );
 
         /* ===================================================
            4. SAVE STATE
@@ -264,10 +244,6 @@ export function PricingProvider({ children }) {
       return;
     }
 
-    console.log(
-      "📡 Starting pricing realtime listener"
-    );
-
     const pricingChannel =
       supabase
         .channel(
@@ -281,12 +257,7 @@ export function PricingProvider({ children }) {
             table: "user_subscriptions",
             filter: `user_id=eq.${user.id}`,
           },
-          (payload) => {
-            console.log(
-              "🔄 Subscription realtime update:",
-              payload
-            );
-
+          () => {
             /*
               Reload:
 
@@ -298,18 +269,9 @@ export function PricingProvider({ children }) {
             loadPricingData();
           }
         )
-        .subscribe((status) => {
-          console.log(
-            "📡 Pricing realtime status:",
-            status
-          );
-        });
+        .subscribe();
 
     return () => {
-      console.log(
-        "🧹 Cleaning pricing realtime listener"
-      );
-
       supabase.removeChannel(
         pricingChannel
       );

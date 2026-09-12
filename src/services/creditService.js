@@ -48,8 +48,6 @@ export async function getSubscriptionCredits() {
       throw error;
     }
 
-    console.log("✅ Credit balance:", data);
-
     return Number(
       data?.credits_remaining ?? 0
     );
@@ -86,15 +84,6 @@ export async function deductCredit(
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-
-    console.log(
-      "🔐 Auth before deduction:",
-      {
-        userId: user?.id,
-        email: user?.email,
-        authError,
-      }
-    );
 
     if (authError) {
       console.error(
@@ -138,23 +127,6 @@ export async function deductCredit(
 
       throw error;
     }
-
-    /* -------------------------------------------------------
-       Log RPC request
-    ------------------------------------------------------- */
-
-    console.log(
-      "💳 Attempting to deduct credit:",
-      {
-        amount,
-        description,
-        userId: user.id,
-      }
-    );
-
-    console.log(
-      "💳 Calling deduct_credit RPC..."
-    );
 
     /* -------------------------------------------------------
        Call Supabase RPC
@@ -224,22 +196,8 @@ export async function deductCredit(
       throw error;
     }
 
-    /* -------------------------------------------------------
-       RPC SUCCESS
-    ------------------------------------------------------- */
-
-    console.log(
-      "✅ RPC SUCCESS:",
-      data
-    );
-
     const remainingCredits =
       Number(data);
-
-    console.log(
-      "💰 Remaining credits:",
-      remainingCredits
-    );
 
     return remainingCredits;
   } catch (error) {

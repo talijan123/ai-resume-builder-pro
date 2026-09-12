@@ -109,11 +109,6 @@ export default function RecentResumes() {
       return;
     }
 
-    console.log(
-      "📥 Opening resume for automatic PDF download:",
-      resumeId
-    );
-
     navigate(`/builder/${resumeId}`, {
       state: {
         autoDownload: true,

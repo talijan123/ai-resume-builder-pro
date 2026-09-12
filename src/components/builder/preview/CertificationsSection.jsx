@@ -3,9 +3,6 @@ import { useResume } from "../../../context/ResumeContext";
 export default function CertificationsSection() {
   const { resumeData } = useResume();
 
-  console.log("resumeData:", resumeData);
-  console.log("certifications:", resumeData.certifications);
-
   const certifications = resumeData.certifications;
 
   if (!certifications || certifications.length === 0) {

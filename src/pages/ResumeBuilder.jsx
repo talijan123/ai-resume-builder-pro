@@ -216,21 +216,11 @@ export default function ResumeBuilder() {
         "Checking your AI credits..."
       );
 
-      console.log(
-        "💳 Attempting to deduct 1 AI credit..."
-      );
-
       const remainingCredits =
         await deductCredit(
           1,
           "AI resume generation"
         );
-
-      console.log(
-        "✅ AI credit deducted successfully.",
-        "Remaining credits:",
-        remainingCredits
-      );
 
       setGenerationMessage(
         `1 credit used. ${remainingCredits} credits remaining.`
@@ -899,10 +889,6 @@ export default function ResumeBuilder() {
       if (updateError) {
         throw updateError;
       }
-
-      console.log(
-        "✅ Download count updated successfully."
-      );
     } catch (error) {
       /*
         Download count failure should NOT

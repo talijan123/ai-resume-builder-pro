@@ -32,7 +32,6 @@ export default function PaymentCallback() {
   const { user, loading: authLoading } = useAuth();
   const { refreshPricing } = usePricing();
 
-  const receivedSearchParams = Object.fromEntries(searchParams.entries());
   const safepayOrderId =
     searchParams.get("order_id") ||
     searchParams.get("orderId") ||
@@ -42,17 +41,6 @@ export default function PaymentCallback() {
     localStorage.getItem("safepay_pending_order_id") ||
     sessionStorage.getItem("safepay_pending_order_id");
   const orderId = safepayOrderId || storedOrderId;
-  const beacon = searchParams.get("beacon") || searchParams.get("token");
-
-  console.log("Safepay callback parameters:", {
-    url: window.location.href,
-    params: receivedSearchParams,
-    entries: Array.from(searchParams.entries()),
-    safepayOrderId,
-    storedOrderId,
-    selectedOrderId: orderId,
-    beacon,
-  });
 
   const [status, setStatus] = useState("verifying"); // "verifying" | "success" | "failed" | "pending"
   const [paymentDetails, setPaymentDetails] = useState(null);
