@@ -20,6 +20,7 @@ export default function BuilderSubHeader({
   onDownloadPDF,
   resumeId,
   onToggleAi,
+  onOpenAts,
   showAi = false,
 }) {
   const navigate = useNavigate();
@@ -249,20 +250,22 @@ export default function BuilderSubHeader({
         {/* Right: ATS Pill + AI Tools Toggle + Export PDF + Save Button */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* ATS Score Badge */}
-          <div
-            className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-bold shadow-sm transition ${
+          <button
+            type="button"
+            onClick={onOpenAts || onToggleAi}
+            className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-bold shadow-sm transition hover:scale-105 cursor-pointer ${
               atsScore >= 80
                 ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                 : atsScore >= 60
                 ? "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300"
+                : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300"
             }`}
-            title={`ATS Compatibility Score: ${atsScore}/100`}
+            title={`ATS Compatibility Score: ${atsScore}/100 • Click to scan with AI`}
           >
             <HiChartBar size={14} className="shrink-0" />
             <span className="hidden sm:inline">ATS:</span>
             <span>{atsScore}/100</span>
-          </div>
+          </button>
 
           {/* AI Tools Toggle Button */}
           {onToggleAi && (

@@ -36,6 +36,7 @@ import SectionTileGrid, { SECTION_TILES } from "../components/builder/SectionTil
 import FocusedSectionCard from "../components/builder/FocusedSectionCard";
 import ResumeSettingsCard from "../components/builder/ResumeSettingsCard";
 import PreviewModal from "../components/builder/PreviewModal";
+import AIToolsModal from "../components/builder/AIToolsModal";
 
 import { useResume, VALID_TEMPLATES } from "../context/ResumeContext";
 import { useAuth } from "../context/AuthContext";
@@ -441,6 +442,7 @@ export default function ResumeBuilder() {
 
       setGenerationPreview(result.resumeData ?? null);
       setShowGenerationPreview(true);
+      setShowAiPanel(false);
       setGenerationMessage("AI resume draft ready for review.");
       await refreshPricing();
     } catch (error) {
@@ -493,6 +495,7 @@ export default function ResumeBuilder() {
     setResumeData(withIds);
     setGenerationPreview(null);
     setShowGenerationPreview(false);
+    setShowAiPanel(false);
     setGenerationError("");
     setGenerationMessage("AI resume draft applied to your current resume.");
   }
@@ -1311,7 +1314,14 @@ export default function ResumeBuilder() {
       <BuilderSubHeader
         onDownloadPDF={handleDownloadPDF}
         resumeId={id}
-        onToggleAi={() => setShowAiPanel(!showAiPanel)}
+        onToggleAi={() => {
+          setAiActiveTab("generator");
+          setShowAiPanel((prev) => !prev);
+        }}
+        onOpenAts={() => {
+          setAiActiveTab("ats");
+          setShowAiPanel(true);
+        }}
         showAi={showAiPanel}
       />
 
@@ -1414,296 +1424,6 @@ export default function ResumeBuilder() {
       ====================================== */}
 
       <div className="flex-1 flex flex-col relative">
-        {/* Collapsible AI Assistant & ATS Scanner Drawer */}
-        {showAiPanel && (
-          <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl shrink-0 z-30 max-h-[60vh] overflow-y-auto">
-            <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setAiActiveTab("generator")}
-                    className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition cursor-pointer ${
-                      aiActiveTab === "generator"
-                        ? "bg-blue-600 text-white shadow-sm shadow-blue-500/20"
-                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    }`}
-                  >
-                    <HiSparkles size={15} />
-                    <span>AI Resume Generator</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setAiActiveTab("ats")}
-                    className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition cursor-pointer ${
-                      aiActiveTab === "ats"
-                        ? "bg-emerald-600 text-white shadow-sm shadow-emerald-500/20"
-                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    }`}
-                  >
-                    <span>AI ATS Scanner</span>
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowAiPanel(false)}
-                  title="Close AI Panel"
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-white transition cursor-pointer"
-                >
-                  <HiXMark size={20} />
-                </button>
-              </div>
-
-              <div className="py-4">
-                {aiActiveTab === "generator" ? (
-                  /* AI Resume Generation Content */
-                  <div>
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-                      <div>
-                        <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                          Generate tailored resume draft with AI
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Paste a job description or provide key details to generate a complete resume draft.
-                        </p>
-                      </div>
-
-                      <div className="inline-flex rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => setGenerationMode("job-description")}
-                          className={`rounded-full px-3.5 py-1 text-xs font-bold transition cursor-pointer ${
-                            generationMode === "job-description"
-                              ? "bg-blue-600 text-white shadow-sm"
-                              : "text-slate-600 dark:text-slate-400"
-                          }`}
-                        >
-                          Job description
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setGenerationMode("guided")}
-                          className={`rounded-full px-3.5 py-1 text-xs font-bold transition cursor-pointer ${
-                            generationMode === "guided"
-                              ? "bg-blue-600 text-white shadow-sm"
-                              : "text-slate-600 dark:text-slate-400"
-                          }`}
-                        >
-                          Guided fields
-                        </button>
-                      </div>
-                    </div>
-
-                    {generationMode === "job-description" ? (
-                      <label className="block">
-                        <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Paste target job description
-                        </span>
-                        <textarea
-                          value={generationJobDescription}
-                          onChange={(event) => setGenerationJobDescription(event.target.value)}
-                          rows={4}
-                          className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30"
-                          placeholder="Paste job posting text here..."
-                        />
-                      </label>
-                    ) : (
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <label className="block">
-                          <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Job title
-                          </span>
-                          <input
-                            value={generationJobTitle}
-                            onChange={(event) => setGenerationJobTitle(event.target.value)}
-                            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-blue-500"
-                            placeholder="e.g. Senior Full-Stack Developer"
-                          />
-                        </label>
-
-                        <label className="block">
-                          <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Industry
-                          </span>
-                          <input
-                            value={generationIndustry}
-                            onChange={(event) => setGenerationIndustry(event.target.value)}
-                            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-blue-500"
-                            placeholder="e.g. Fintech, SaaS, Healthcare"
-                          />
-                        </label>
-
-                        <label className="block">
-                          <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Years of experience
-                          </span>
-                          <input
-                            value={generationYearsOfExperience}
-                            onChange={(event) => setGenerationYearsOfExperience(event.target.value)}
-                            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-blue-500"
-                            placeholder="e.g. 5"
-                          />
-                        </label>
-
-                        <label className="block">
-                          <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Key skills
-                          </span>
-                          <input
-                            value={generationKeySkills}
-                            onChange={(event) => setGenerationKeySkills(event.target.value)}
-                            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-blue-500"
-                            placeholder="e.g. React, Node.js, TypeScript"
-                          />
-                        </label>
-                      </div>
-                    )}
-
-                    {generationError && (
-                      <p className="mt-3 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-2.5 text-xs font-semibold text-red-700 dark:text-red-400">
-                        {generationError}
-                      </p>
-                    )}
-
-                    <div className="mt-4 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={handleGenerateResume}
-                        disabled={generating}
-                        className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:from-blue-500 hover:to-indigo-500 transition disabled:opacity-60 cursor-pointer"
-                      >
-                        {generating ? "Generating Draft..." : "Generate Resume Draft"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* AI ATS Scanner Content */
-                  <div>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
-                      <div>
-                        <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                          Scan resume against job description
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Detect keyword match percentage and missing ATS qualifications.
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleScanResumeATS}
-                        disabled={
-                          atsScanning ||
-                          atsJobDescription.length > 8000 ||
-                          atsJobDescription.trim().length === 0
-                        }
-                        className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0"
-                      >
-                        {atsScanning ? "Scanning..." : "Scan Against Job"}
-                      </button>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <textarea
-                        value={atsJobDescription}
-                        onChange={(event) => setAtsJobDescription(event.target.value)}
-                        rows={4}
-                        className={`w-full rounded-2xl border ${
-                          atsJobDescription.length > 8000
-                            ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:focus:ring-red-950/40"
-                            : "border-slate-200 dark:border-slate-800 focus:border-emerald-500 focus:ring-emerald-100 dark:focus:ring-emerald-900/30"
-                        } bg-slate-50 dark:bg-slate-950 px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4`}
-                        placeholder="Paste the job description you want to compare against your resume..."
-                      />
-                      <div className="flex items-center justify-between px-1 text-xs">
-                        <span
-                          className={
-                            atsJobDescription.length > 8000
-                              ? "font-semibold text-red-500 dark:text-red-400"
-                              : "text-slate-400 dark:text-slate-500"
-                          }
-                        >
-                          {atsJobDescription.length > 8000
-                            ? "Character limit exceeded"
-                            : "Target job description for ATS matching"}
-                        </span>
-                        <span
-                          className={`font-mono transition-colors ${
-                            atsJobDescription.length > 8000
-                              ? "font-bold text-red-600 dark:text-red-400"
-                              : atsJobDescription.length > 7000
-                              ? "font-semibold text-amber-600 dark:text-amber-400"
-                              : "text-slate-500 dark:text-slate-400"
-                          }`}
-                        >
-                          {atsJobDescription.length.toLocaleString()} / 8,000 characters
-                        </span>
-                      </div>
-                    </div>
-
-                    {atsError && (
-                      <p className="mt-3 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-2.5 text-xs font-semibold text-red-700 dark:text-red-400">
-                        {atsError}
-                      </p>
-                    )}
-
-                    {atsResult && (
-                      <div className="mt-4 space-y-3 border-t border-slate-200 dark:border-slate-800 pt-4">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Match Score
-                          </p>
-                          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                            {atsResult.keywordMatchPercent}%
-                          </p>
-                        </div>
-
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <div>
-                            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1">
-                              Matched Keywords
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {atsResult.matchedKeywords?.length > 0 ? (
-                                atsResult.matchedKeywords.map((k) => (
-                                  <span key={k} className="rounded-md bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
-                                    {k}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-xs text-slate-500">None detected</span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div>
-                            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1">
-                              Missing Keywords
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {atsResult.missingKeywords?.length > 0 ? (
-                                atsResult.missingKeywords.map((k) => (
-                                  <span key={k} className="rounded-md bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:text-amber-300">
-                                    {k}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-xs text-slate-500">None</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ===================================================
             OVERLAPPING 3-COLUMN FLOATING CARDS WORKSPACE
         =================================================== */}
@@ -1776,6 +1496,35 @@ export default function ResumeBuilder() {
           onClose={() => setShowPreviewModal(false)}
           onDownloadPDF={handleDownloadPDF}
           downloading={downloading}
+        />
+
+        {/* Floating AI Studio Modal */}
+        <AIToolsModal
+          isOpen={showAiPanel}
+          onClose={() => setShowAiPanel(false)}
+          activeTab={aiActiveTab}
+          setActiveTab={setAiActiveTab}
+          generationMode={generationMode}
+          setGenerationMode={setGenerationMode}
+          generationJobDescription={generationJobDescription}
+          setGenerationJobDescription={setGenerationJobDescription}
+          generationJobTitle={generationJobTitle}
+          setGenerationJobTitle={setGenerationJobTitle}
+          generationIndustry={generationIndustry}
+          setGenerationIndustry={setGenerationIndustry}
+          generationYearsOfExperience={generationYearsOfExperience}
+          setGenerationYearsOfExperience={setGenerationYearsOfExperience}
+          generationKeySkills={generationKeySkills}
+          setGenerationKeySkills={setGenerationKeySkills}
+          generationError={generationError}
+          generating={generating}
+          onGenerateResume={handleGenerateResume}
+          atsJobDescription={atsJobDescription}
+          setAtsJobDescription={setAtsJobDescription}
+          atsScanning={atsScanning}
+          atsError={atsError}
+          atsResult={atsResult}
+          onScanResumeATS={handleScanResumeATS}
         />
 
         {/* Subtle Copyright Footer Bar */}
