@@ -30,8 +30,12 @@ import { useReactToPrint } from "react-to-print";
 
 import DashboardHeader from "../components/layout/DashboardHeader";
 import BuilderSubHeader from "../components/builder/BuilderSubHeader";
-import BuilderContent from "../components/builder/BuilderContent";
 import ResumePreview from "../components/builder/ResumePreview";
+import EditorBanner from "../components/builder/EditorBanner";
+import SectionTileGrid, { SECTION_TILES } from "../components/builder/SectionTileGrid";
+import FocusedSectionCard from "../components/builder/FocusedSectionCard";
+import ResumeSettingsCard from "../components/builder/ResumeSettingsCard";
+import PreviewModal from "../components/builder/PreviewModal";
 
 import { useResume, VALID_TEMPLATES } from "../context/ResumeContext";
 import { useAuth } from "../context/AuthContext";
@@ -166,9 +170,9 @@ export default function ResumeBuilder() {
   const [atsScanning, setAtsScanning] = useState(false);
   const [atsError, setAtsError] = useState("");
   const [atsResult, setAtsResult] = useState(null);
-  const [mobileTab, setMobileTab] = useState("editor"); // "editor" | "preview"
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiActiveTab, setAiActiveTab] = useState("generator"); // "generator" | "ats"
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   /* ==========================================
      Resume Context
@@ -178,6 +182,14 @@ export default function ResumeBuilder() {
     resumeData,
     setResumeData,
     setTemplate,
+    activeSection,
+    setActiveSection,
+    addExperience,
+    addEducation,
+    addSkill,
+    addProject,
+    addCertification,
+    updatePersonalInfo,
   } = useResume();
 
   /* ==========================================
@@ -529,6 +541,99 @@ export default function ResumeBuilder() {
       );
     } finally {
       setAtsScanning(false);
+    }
+  }
+
+  /* ==========================================
+     AI FILL ACTIVE SECTION
+  ========================================== */
+
+  function handleAiFillActiveSection() {
+    switch (activeSection) {
+      case "personal":
+        updatePersonalInfo("fullName", resumeData?.personalInfo?.fullName || "John Doe");
+        updatePersonalInfo("jobTitle", resumeData?.personalInfo?.jobTitle || "Senior Full-Stack Engineer");
+        updatePersonalInfo("email", resumeData?.personalInfo?.email || "john.doe@example.com");
+        updatePersonalInfo("phone", resumeData?.personalInfo?.phone || "+1 (555) 019-2834");
+        updatePersonalInfo("location", resumeData?.personalInfo?.location || "San Francisco, CA");
+        updatePersonalInfo("website", resumeData?.personalInfo?.website || "https://johndoe.dev");
+        updatePersonalInfo("linkedin", resumeData?.personalInfo?.linkedin || "linkedin.com/in/johndoe");
+        updatePersonalInfo("github", resumeData?.personalInfo?.github || "github.com/johndoe");
+        setGenerationMessage("Personal information filled with sample draft.");
+        break;
+      case "summary":
+        updatePersonalInfo(
+          "summary",
+          "Passionate and results-driven Senior Full-Stack Engineer with 6+ years of experience designing scalable web architectures, microservices, and high-performance cloud applications. Adept at driving cross-functional team success and accelerating product delivery."
+        );
+        setGenerationMessage("Professional summary filled with tailored draft.");
+        break;
+      case "experience":
+        addExperience({
+          company: "TechCorp Global",
+          jobTitle: "Senior Full-Stack Developer",
+          employmentType: "Full-time",
+          location: "San Francisco, CA",
+          startDate: "March 2021",
+          endDate: "Present",
+          currentlyWorking: true,
+          description: "• Architected high-throughput microservices handling 250k+ daily API requests.\n• Reduced page load times by 45% by migrating legacy code to modern React and optimized Edge rendering.\n• Mentored 8 junior and mid-level developers in testing best practices and CI/CD pipelines.",
+        });
+        setGenerationMessage("Sample work experience added to your resume.");
+        break;
+      case "education":
+        addEducation({
+          school: "University of California, Berkeley",
+          degree: "Bachelor of Science",
+          field: "Computer Science",
+          location: "Berkeley, CA",
+          startDate: "September 2016",
+          endDate: "June 2020",
+          currentlyStudying: false,
+          grade: "3.85 GPA",
+          description: "• Graduated Magna Cum Laude with honors.\n• Relevant Coursework: Data Structures & Algorithms, Distributed Computing, Database Systems.",
+        });
+        setGenerationMessage("Sample education credential added to your resume.");
+        break;
+      case "skills":
+        [
+          { name: "React / Next.js", level: "Expert" },
+          { name: "Node.js & Express", level: "Advanced" },
+          { name: "TypeScript", level: "Advanced" },
+          { name: "PostgreSQL & Supabase", level: "Advanced" },
+          { name: "Docker & AWS", level: "Intermediate" },
+        ].forEach((s) => addSkill(s));
+        setGenerationMessage("Key technical skills populated.");
+        break;
+      case "projects":
+        addProject({
+          title: "AI-Powered Automation Engine",
+          role: "Lead Creator",
+          technologies: "React, Node.js, Gemini API, Tailwind CSS",
+          liveLink: "https://demo.example.com",
+          githubLink: "https://github.com/example/engine",
+          startDate: "Jan 2024",
+          endDate: "Present",
+          description: "• Engineered autonomous workflow orchestration platform with 99.9% uptime.\n• Integrated real-time generative AI pipeline saving enterprise users over 15 hours per week.",
+        });
+        setGenerationMessage("Standout portfolio project added.");
+        break;
+      case "certifications":
+        addCertification({
+          name: "AWS Certified Solutions Architect – Associate",
+          issuer: "Amazon Web Services (AWS)",
+          issueDate: "2023",
+          expiryDate: "2026",
+          neverExpires: false,
+          credentialId: "AWS-PSA-948201",
+          credentialUrl: "https://aws.amazon.com/verification",
+          description: "Demonstrated expertise in architecting secure, robust, and cost-effective cloud infrastructures.",
+        });
+        setGenerationMessage("Verified certification credential added.");
+        break;
+      default:
+        setShowAiPanel(true);
+        break;
     }
   }
 
@@ -1104,7 +1209,7 @@ export default function ResumeBuilder() {
   ========================================== */
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-zinc-950 text-slate-900 dark:text-slate-100 transition-colors">
       {showGenerationPreview && generationPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
           <div className="w-full max-w-3xl rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
@@ -1299,10 +1404,16 @@ export default function ResumeBuilder() {
       </AnimatePresence>
 
       {/* ======================================
-          MAIN WORKSPACE (2-Column Split Layout)
+          TOP GRADIENT HERO BANNER
       ====================================== */}
 
-      <div className="flex-1 min-h-0 flex flex-col relative overflow-hidden">
+      <EditorBanner activeSection={activeSection} />
+
+      {/* ======================================
+          MAIN WORKSPACE
+      ====================================== */}
+
+      <div className="flex-1 flex flex-col relative">
         {/* Collapsible AI Assistant & ATS Scanner Drawer */}
         {showAiPanel && (
           <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl shrink-0 z-30 max-h-[60vh] overflow-y-auto">
@@ -1594,84 +1705,90 @@ export default function ResumeBuilder() {
         )}
 
         {/* ===================================================
-            DESKTOP & TABLET (> 768px): 2-COLUMN SPLIT WORKSPACE
+            OVERLAPPING 3-COLUMN FLOATING CARDS WORKSPACE
         =================================================== */}
-        <div className="hidden md:grid h-full min-h-0 md:grid-cols-[48%_52%] lg:grid-cols-[46%_54%] xl:grid-cols-[45%_55%] 2xl:grid-cols-[44%_56%]">
-          <BuilderContent
-            onGenerateResume={handleGenerateResume}
-            generating={generating}
-            onToggleAi={() => setShowAiPanel(!showAiPanel)}
-            showAi={showAiPanel}
-          />
-          <ResumePreview
-            ref={resumeRef}
-            onDownloadPDF={handleDownloadPDF}
-          />
-        </div>
+        <div className="-mt-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-16 relative z-10 flex-1">
+          {/* Mobile & Tablet Horizontal Scrollable Section Switcher */}
+          <div className="flex lg:hidden overflow-x-auto gap-2 pb-3 mb-4 no-scrollbar">
+            {SECTION_TILES.map((tile) => {
+              const Icon = tile.icon;
+              const isActive = activeSection === tile.id;
+              return (
+                <button
+                  key={tile.id}
+                  type="button"
+                  onClick={() => setActiveSection(tile.id)}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-[#ff3366] text-white shadow-md shadow-rose-500/20"
+                      : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
+                  }`}
+                >
+                  <Icon size={15} />
+                  <span>{tile.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
-        {/* ===================================================
-            MOBILE (< 768px): CLEAN TABBED WORKSPACE
-        =================================================== */}
-        <div className="flex md:hidden flex-col h-full min-h-0">
-          {/* Top Segmented Switcher */}
-          <div className="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2 flex items-center justify-center shrink-0">
-            <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 p-1 w-full max-w-xs">
-              <button
-                type="button"
-                onClick={() => setMobileTab("editor")}
-                className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition-all cursor-pointer ${
-                  mobileTab === "editor"
-                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400"
-                }`}
-              >
-                <HiPencilSquare size={15} />
-                <span>Edit Details</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMobileTab("preview")}
-                className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition-all cursor-pointer ${
-                  mobileTab === "preview"
-                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400"
-                }`}
-              >
-                <HiEye size={15} />
-                <span>Live Preview</span>
-              </button>
+          {/* 3-Column Floating Cards Grid (Desktop lg:grid-cols-12) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column (3/12 width) — Square Icon Tile Grid + Primary CTA */}
+            <div className="col-span-12 lg:col-span-3">
+              <SectionTileGrid
+                onTriggerAiFullDraft={() => {
+                  setAiActiveTab("generator");
+                  setShowAiPanel(true);
+                }}
+              />
+            </div>
+
+            {/* Center Column (6/12 width) — Focused Single-Section Form Card */}
+            <div className="col-span-12 lg:col-span-6">
+              <FocusedSectionCard
+                onPreviewResume={() => setShowPreviewModal(true)}
+              />
+            </div>
+
+            {/* Right Column (3/12 width) — Resume Settings Card */}
+            <div className="col-span-12 lg:col-span-3">
+              <ResumeSettingsCard
+                onPreviewResume={() => setShowPreviewModal(true)}
+                onDownloadPDF={handleDownloadPDF}
+                onOpenATSScan={() => {
+                  setAiActiveTab("ats");
+                  setShowAiPanel(true);
+                }}
+                onAiFillSection={handleAiFillActiveSection}
+              />
             </div>
           </div>
-
-          <div className="flex-1 min-h-0 relative overflow-hidden">
-            {mobileTab === "editor" ? (
-              <BuilderContent
-                onGenerateResume={handleGenerateResume}
-                generating={generating}
-                onToggleAi={() => setShowAiPanel(!showAiPanel)}
-                showAi={showAiPanel}
-                onViewPreview={() => setMobileTab("preview")}
-              />
-            ) : (
-              <div className="h-full relative">
-                <ResumePreview
-                  ref={resumeRef}
-                  onDownloadPDF={handleDownloadPDF}
-                />
-                <div className="fixed bottom-5 right-5 z-40">
-                  <button
-                    type="button"
-                    onClick={handleDownloadPDF}
-                    className="flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-xl shadow-blue-500/30 hover:bg-blue-500 transition cursor-pointer"
-                  >
-                    <HiArrowDownTray size={16} />
-                    <span>Export PDF</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
+
+        {/* Hidden Printable Resume for react-to-print */}
+        <div className="hidden print:block">
+          <ResumePreview ref={resumeRef} />
+        </div>
+
+        {/* Live A4 Resume Preview Modal */}
+        <PreviewModal
+          isOpen={showPreviewModal}
+          onClose={() => setShowPreviewModal(false)}
+          onDownloadPDF={handleDownloadPDF}
+          downloading={downloading}
+        />
+
+        {/* Subtle Copyright Footer Bar */}
+        <footer className="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-5 px-4 sm:px-8 mt-auto text-xs text-slate-500 dark:text-slate-400">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p>Copyrights © 2026 ResumeForge Pro. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <a href="#" className="hover:text-slate-900 dark:hover:text-white transition">Terms of use</a>
+              <span>|</span>
+              <a href="#" className="hover:text-slate-900 dark:hover:text-white transition">Privacy policy</a>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );

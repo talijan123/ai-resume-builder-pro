@@ -48,6 +48,7 @@ export function templateSupportsPhoto(templateId) {
 
 const initialResumeData = {
   template: "modern",
+  themeColor: "#2563eb",
 
   personalInfo: {
     fullName: "",
@@ -97,6 +98,7 @@ function normalizeResumeData(data = {}) {
       default "modern" value.
     */
     template,
+    themeColor: data?.themeColor || "#2563eb",
 
     personalInfo: {
       ...initialResumeData.personalInfo,
@@ -222,6 +224,17 @@ export function ResumeProvider({
     },
     []
   );
+
+  /* =======================================================
+     Theme Color
+  ======================================================= */
+
+  const setThemeColor = useCallback((themeColor) => {
+    setResumeData((prev) => ({
+      ...prev,
+      themeColor,
+    }));
+  }, []);
 
   /* =======================================================
      Set Complete Resume Data
@@ -581,6 +594,10 @@ export function ResumeProvider({
       currentTemplate,
       supportsPhoto,
 
+      /* Theme Color */
+      themeColor: resumeData?.themeColor || "#2563eb",
+      setThemeColor,
+
       /* Personal Information */
       updatePersonalInfo,
 
@@ -621,6 +638,7 @@ export function ResumeProvider({
       setTemplate,
       currentTemplate,
       supportsPhoto,
+      setThemeColor,
 
       updatePersonalInfo,
 

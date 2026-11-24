@@ -4,6 +4,7 @@ export default function ModernTemplate({ previewData = null }) {
     const { resumeData } = useResume();
 
     const data = previewData || resumeData;
+    const themeColor = data?.themeColor || "#2563eb";
 
     const {
         personalInfo = {},
@@ -17,12 +18,12 @@ export default function ModernTemplate({ previewData = null }) {
     return (
         <div className="min-h-[1123px] bg-white p-10 text-slate-900">
             {/* Header */}
-            <header className="border-b-4 border-blue-600 pb-6">
+            <header className="border-b-4 pb-6" style={{ borderColor: themeColor }}>
                 <h1 className="text-4xl font-black text-slate-900">
                     {personalInfo.fullName || "Your Name"}
                 </h1>
 
-                <p className="mt-2 text-xl font-semibold text-blue-600">
+                <p className="mt-2 text-xl font-semibold" style={{ color: themeColor }}>
                     {personalInfo.jobTitle || "Professional Title"}
                 </p>
 
@@ -56,7 +57,7 @@ export default function ModernTemplate({ previewData = null }) {
             {/* Summary */}
             {personalInfo.summary && (
                 <section className="mt-7">
-                    <h2 className="mb-3 text-sm font-black uppercase tracking-widest text-blue-600">
+                    <h2 className="mb-3 text-sm font-black uppercase tracking-widest" style={{ color: themeColor }}>
                         Professional Summary
                     </h2>
 
@@ -69,7 +70,7 @@ export default function ModernTemplate({ previewData = null }) {
             {/* Experience */}
             {experience.length > 0 && (
                 <section className="mt-8">
-                    <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-blue-600">
+                    <h2 className="mb-4 text-sm font-black uppercase tracking-widest" style={{ color: themeColor }}>
                         Work Experience
                     </h2>
 
@@ -115,7 +116,7 @@ export default function ModernTemplate({ previewData = null }) {
             {/* Education */}
             {education.length > 0 && (
                 <section className="mt-8">
-                    <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-blue-600">
+                    <h2 className="mb-4 text-sm font-black uppercase tracking-widest" style={{ color: themeColor }}>
                         Education
                     </h2>
 
@@ -164,7 +165,7 @@ export default function ModernTemplate({ previewData = null }) {
             {/* Skills */}
             {skills.length > 0 && (
                 <section className="mt-8">
-                    <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-blue-600">
+                    <h2 className="mb-4 text-sm font-black uppercase tracking-widest" style={{ color: themeColor }}>
                         Skills
                     </h2>
 
@@ -184,7 +185,7 @@ export default function ModernTemplate({ previewData = null }) {
             {/* Projects */}
             {projects.length > 0 && (
                 <section className="mt-8">
-                    <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-blue-600">
+                    <h2 className="mb-4 text-sm font-black uppercase tracking-widest" style={{ color: themeColor }}>
                         Projects
                     </h2>
 
@@ -204,7 +205,7 @@ export default function ModernTemplate({ previewData = null }) {
                                 )}
 
                                 {project.technologies && (
-                                    <p className="mt-2 text-xs font-semibold text-blue-600">
+                                    <p className="mt-2 text-xs font-semibold" style={{ color: themeColor }}>
                                         {Array.isArray(
                                             project.technologies
                                         )
@@ -221,7 +222,7 @@ export default function ModernTemplate({ previewData = null }) {
             {/* Certifications */}
             {certifications.length > 0 && (
                 <section className="mt-8">
-                    <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-blue-600">
+                    <h2 className="mb-4 text-sm font-black uppercase tracking-widest" style={{ color: themeColor }}>
                         Certifications
                     </h2>
 
