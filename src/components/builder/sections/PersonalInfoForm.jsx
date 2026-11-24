@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { HiSparkles } from "react-icons/hi2";
+import { useState, useEffect, useRef } from "react";
+import { HiSparkles, HiXMark } from "react-icons/hi2";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useResume, templateSupportsPhoto } from "../../../context/ResumeContext";
@@ -17,6 +17,26 @@ export default function PersonalInfoForm() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [summaryOptions, setSummaryOptions] = useState(null);
   const [aiMessage, setAiMessage] = useState("");
+  const aiMessageTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (aiMessageTimerRef.current) {
+      clearTimeout(aiMessageTimerRef.current);
+      aiMessageTimerRef.current = null;
+    }
+
+    if (aiMessage) {
+      aiMessageTimerRef.current = setTimeout(() => {
+        setAiMessage("");
+      }, 3500);
+    }
+
+    return () => {
+      if (aiMessageTimerRef.current) {
+        clearTimeout(aiMessageTimerRef.current);
+      }
+    };
+  }, [aiMessage]);
 
   const personal = resumeData.personalInfo;
   const activeTemplate = resumeData.template || "modern";
@@ -370,11 +390,35 @@ export default function PersonalInfoForm() {
           </div>
         )}
 
-        {aiMessage && (
-          <p className="mt-3 text-sm text-slate-600" role="status">
-            {aiMessage}
-          </p>
-        )}
+        <AnimatePresence>
+          {aiMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className={`mt-3 flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
+                aiMessage.includes("inserted")
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                  : "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+              }`}
+              role="status"
+            >
+              <div className="flex items-center gap-1.5">
+                <HiSparkles className="shrink-0 text-emerald-600 dark:text-emerald-400" size={14} />
+                <span>{aiMessage}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAiMessage("")}
+                className="rounded p-0.5 text-current opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer shrink-0"
+                aria-label="Dismiss notification"
+              >
+                <HiXMark size={14} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

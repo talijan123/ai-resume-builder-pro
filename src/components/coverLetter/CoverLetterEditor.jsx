@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { HiCheck, HiPrinter, HiSparkles } from "react-icons/hi2";
+import { useState, useEffect, useRef } from "react";
+import { HiCheck, HiPrinter, HiSparkles, HiXMark } from "react-icons/hi2";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCoverLetter } from "../../context/CoverLetterContext";
 import { usePricing } from "../../context/PricingContext";
 import { generateCoverLetter } from "../../services/aiService";
@@ -12,6 +13,26 @@ export default function CoverLetterEditor({ profile, contact, resumeData, planNa
   const [saved, setSaved] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [message, setMessage] = useState("");
+  const messageTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (messageTimerRef.current) {
+      clearTimeout(messageTimerRef.current);
+      messageTimerRef.current = null;
+    }
+
+    if (message) {
+      messageTimerRef.current = setTimeout(() => {
+        setMessage("");
+      }, 3500);
+    }
+
+    return () => {
+      if (messageTimerRef.current) {
+        clearTimeout(messageTimerRef.current);
+      }
+    };
+  }, [message]);
 
   async function handleSave() {
     setSaving(true);
@@ -105,7 +126,35 @@ export default function CoverLetterEditor({ profile, contact, resumeData, planNa
           <HiSparkles size={16} />
           {generating ? "Generating..." : "Generate with AI"}
         </button>
-        {message && <p className="mt-3 text-sm font-semibold text-slate-600" role="status">{message}</p>}
+        <AnimatePresence>
+          {message && (
+            <motion.div
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className={`mt-3 flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
+                message.includes("inserted") || message.includes("Saved") || message.includes("saved")
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                  : "border-slate-200 bg-slate-50 text-slate-700"
+              }`}
+              role="status"
+            >
+              <div className="flex items-center gap-1.5">
+                <HiSparkles className="shrink-0 text-emerald-600" size={14} />
+                <span>{message}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMessage("")}
+                className="rounded p-0.5 text-current opacity-60 hover:opacity-100 hover:bg-black/5 transition cursor-pointer shrink-0"
+                aria-label="Dismiss notification"
+              >
+                <HiXMark size={14} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
 
       <section className="rounded-3xl border border-blue-100 bg-blue-50 p-5">

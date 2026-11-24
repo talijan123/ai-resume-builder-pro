@@ -24,6 +24,7 @@ import {
   HiXMark,
   HiArrowDownTray,
 } from "react-icons/hi2";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { useReactToPrint } from "react-to-print";
 
@@ -117,6 +118,31 @@ export default function ResumeBuilder() {
   const [generating, setGenerating] = useState(false);
   const [generationMessage, setGenerationMessage] =
     useState("");
+  const generationMessageTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (generationMessageTimerRef.current) {
+      clearTimeout(generationMessageTimerRef.current);
+      generationMessageTimerRef.current = null;
+    }
+
+    const isInProgress =
+      generating ||
+      generationMessage === "Generating your AI resume draft..." ||
+      generationMessage === "Checking your AI credits...";
+
+    if (generationMessage && !isInProgress) {
+      generationMessageTimerRef.current = setTimeout(() => {
+        setGenerationMessage("");
+      }, 3500);
+    }
+
+    return () => {
+      if (generationMessageTimerRef.current) {
+        clearTimeout(generationMessageTimerRef.current);
+      }
+    };
+  }, [generationMessage, generating]);
   const [generationError, setGenerationError] =
     useState("");
   const [generationMode, setGenerationMode] = useState(
@@ -1221,52 +1247,56 @@ export default function ResumeBuilder() {
           GENERATION INDICATOR
       ====================================== */}
 
-      {generationMessage && (
-        <div
-          className={`
-            fixed
-            right-6
-            top-40
-            z-50
+      <AnimatePresence>
+        {generationMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.96 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className={`fixed right-6 top-24 z-50 flex max-w-sm items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold shadow-xl backdrop-blur-md print:hidden pointer-events-auto ${
+              generationMessage.includes("applied") ||
+              generationMessage.includes("ready") ||
+              generationMessage.includes("completed") ||
+              generationMessage.includes("successfully")
+                ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/95 dark:bg-emerald-950/90 text-emerald-800 dark:text-emerald-200 shadow-emerald-500/10"
+                : generationMessage.includes("credit") ||
+                  generationMessage.includes("remaining") ||
+                  generationMessage.includes("Checking")
+                ? "border-blue-200 dark:border-blue-800 bg-blue-50/95 dark:bg-blue-950/90 text-blue-800 dark:text-blue-200 shadow-blue-500/10"
+                : "border-red-200 dark:border-red-800 bg-red-50/95 dark:bg-red-950/90 text-red-800 dark:text-red-200 shadow-red-500/10"
+            }`}
+            role="status"
+          >
+            <div className="flex items-center gap-2">
+              <HiSparkles
+                size={16}
+                className={
+                  generationMessage.includes("applied") ||
+                  generationMessage.includes("ready") ||
+                  generationMessage.includes("completed")
+                    ? "text-emerald-600 dark:text-emerald-400 shrink-0"
+                    : generationMessage.includes("credit") ||
+                      generationMessage.includes("remaining") ||
+                      generationMessage.includes("Checking")
+                    ? "text-blue-600 dark:text-blue-400 shrink-0"
+                    : "text-red-600 dark:text-red-400 shrink-0"
+                }
+              />
+              <span className="leading-snug">{generationMessage}</span>
+            </div>
 
-            max-w-sm
-
-            rounded-2xl
-            border
-
-            px-5
-            py-4
-
-            text-sm
-            font-semibold
-
-            shadow-lg
-
-            print:hidden
-
-            ${
-              generationMessage.includes(
-                "completed"
-              )
-                ? "border-green-200 bg-green-50 text-green-700"
-                : generationMessage.includes(
-                    "credit used"
-                  ) ||
-                  generationMessage.includes(
-                    "Credit used"
-                  )
-                ? "border-blue-200 bg-blue-50 text-blue-700"
-                : generationMessage.includes(
-                    "remaining"
-                  )
-                ? "border-blue-200 bg-blue-50 text-blue-700"
-                : "border-red-200 bg-red-50 text-red-700"
-            }
-          `}
-        >
-          {generationMessage}
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={() => setGenerationMessage("")}
+              className="rounded-lg p-1 text-current opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer shrink-0"
+              aria-label="Dismiss notification"
+            >
+              <HiXMark size={16} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ======================================
           MAIN WORKSPACE (2-Column Split Layout)
