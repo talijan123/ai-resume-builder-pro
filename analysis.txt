@@ -1,0 +1,227 @@
+================================================================================
+AI RESUME BUILDER PRO (RESUMEFORGE) - ARCHITECTURAL ANALYSIS & SYSTEM BLUEPRINT
+================================================================================
+File: analysis.txt
+Generated: November 2026
+Location: d:/projects/ai-resume-builder-pro-main/analysis.txt
+
+--------------------------------------------------------------------------------
+1. EXECUTIVE SUMMARY & TECH STACK
+--------------------------------------------------------------------------------
+AI Resume Builder Pro (branded as ResumeForge) is a production-grade, AI-powered
+SaaS application for building ATS-friendly resumes and tailored cover letters.
+It features a real-time side-by-side builder, ATS compatibility scanner, multi-template
+rendering engine, credit-based AI usage, and subscription billing.
+
+Frontend Stack:
+- Framework: React 19 (^19.2.8)
+- Build Tool: Vite 8 (^8.2.0)
+- Styling: Tailwind CSS v4 (^4.3.3) via @tailwindcss/vite plugin
+- Routing: React Router DOM v7 (^7.18.2) with animated route transitions
+- Motion & Animation: Framer Motion (^12.43.0)
+- Icons: Lucide React (^1.31.0) & React Icons (^5.7.0)
+- Notifications: Sonner (^2.0.8)
+- Print/Export: react-to-print (^3.3.0) with high-fidelity multi-page A4 CSS rules
+- Client SDK: @supabase/supabase-js (^2.112.0)
+
+Backend Stack (Supabase BaaS + Edge Compute):
+- Database: PostgreSQL (Supabase managed) with Row-Level Security (RLS)
+- Edge Runtime: Deno TypeScript for Supabase Edge Functions
+- AI Engine: Google Gemini API (gemini-3.6-flash) with structured JSON schemas
+- Payment Gateway: Safepay API (PKR currency) with webhook + polling fallback
+- Storage: Supabase Storage bucket ('profile-photos') for user avatar uploads
+
+--------------------------------------------------------------------------------
+2. FRONTEND SERVICES ARCHITECTURE (src/services/)
+--------------------------------------------------------------------------------
+The frontend abstracts all backend and AI communication into modular service modules:
+
+1. aiService.js
+   - Acts as the client-side gateway to the 'ai-generate' Supabase Edge Function.
+   - Supports 5 task operations:
+     a) improveBulletPoint(bulletText): Rewrites bullet using STAR framework with
+        action verbs and impact metrics while preserving facts. (Cost: 1 credit)
+     b) generateSummaries(experience, skills): Generates 3 distinct summary styles
+        (Executive, Creative, Technical). (Cost: 2 credits)
+     c) generateCoverLetter(jobDescription, resumeData, options): Crafts a tailored,
+        3-4 paragraph cover letter using exclusively supplied resume data. (Cost: 3 credits)
+     d) generateResume(mode, params, existingProfile): Drafts a complete resume from
+        guided questionnaire or raw job description. (Cost: 5 credits)
+     e) scanResumeATS(resumeData, jobDescription): Performs an ATS audit comparing
+        sanitized resume against job description; returns match percentage, matched/missing
+        keywords, formatting warnings, and audit summary. (Cost: 2 credits)
+   - Features client-side sanitization helper sanitizeResumeForATS() to remove excess noise
+     and truncate payloads before network transit.
+
+2. authService.js
+   - Wraps Supabase Auth methods: signUp(), signIn(), signOut(), getCurrentUser(), getSession().
+   - Handles user metadata registration (e.g. full_name).
+
+3. creditService.js
+   - getSubscriptionCredits(): Fetches live credits_remaining from user_subscriptions.
+   - deductCredit(amount, description): Directly invokes the PostgreSQL RPC 'deduct_credit'
+     to atomically decrement balance with server-side validation.
+
+4. pricingService.js
+   - getPlans(), getPlanById(), getPlanBySlug(): Queries active plans from 'plans' table.
+   - getUserSubscription(): Joins user_subscriptions with plans table for active tier.
+   - getCreditBalance(), getAvailableCredits(), getCreditTransactions(): Fetches balances and history.
+   - Feature entitlement checks: canUseFeature(), getPlanLimit(), isPlanAtLeast().
+
+5. resumeService.js
+   - Provides CRUD operations on 'resumes' table: createResume(), getUserResumes(),
+     getResume(), updateResume(), deleteResume().
+
+6. settingsService.js
+   - Persists user preferences to 'user_settings' table: getUserSettings(), saveUserSettings(),
+     updateUserSetting(), deleteUserSettings() (theme, default templates, auto-save).
+
+--------------------------------------------------------------------------------
+3. SUPABASE EDGE FUNCTIONS ARCHITECTURE (supabase/functions/)
+--------------------------------------------------------------------------------
+All sensitive business logic, payment processing, and AI token handling run server-side
+inside Deno-powered Supabase Edge Functions:
+
+1. ai-generate (supabase/functions/ai-generate/index.ts)
+   - Powered by Google Gemini (gemini-3.6-flash) via generateContent REST API.
+   - Security & Validation:
+     * Validates Supabase JWT bearer token for caller identification.
+     * Enforces active subscription check and plan tier gating (Cover Letters and Resume
+       generation are restricted to 'pro' and 'team' tiers).
+     * Validates that user has sufficient credits before making LLM request.
+     * Strict input character limits and structure checks to mitigate prompt injection.
+     * Enforces structured JSON output using Gemini's native responseSchema definitions.
+     * Strict system instructions against hallucination (preserves original facts,
+       does not fabricate employers, dates, or degrees).
+   - Atomic Credit Deduction:
+     * Calls Supabase RPC 'deduct_credit' only after valid AI output is generated.
+     * Credits: Bullet = 1, Summaries = 2, Cover Letter = 3, ATS Scan = 2, Resume = 5.
+   - Resiliency:
+     * Request timeouts between 20s and 40s via AbortController.
+
+2. create-checkout (supabase/functions/create-checkout/index.ts)
+   - Initializes payment transactions with Safepay for Pro and Team subscriptions.
+   - Security:
+     * Requires valid Supabase user JWT.
+     * Fetches trusted plan pricing (PKR 2,999/mo Pro, PKR 6,999/mo Team) directly from the
+       database 'plans' table (never trusts client-supplied amounts).
+     * Initializes Safepay order tracker (POST /order/v1/init) using SAFEPAY_API_KEY.
+     * Records transaction in 'payment_transactions' table with status 'pending'.
+     * Returns secure checkout URL containing tracker beacon token.
+     * Includes strictly gated test fallback (ALLOW_TEST_PAYMENTS) for local sandbox dev.
+
+3. payment-webhook (supabase/functions/payment-webhook/index.ts)
+   - Handles asynchronous payment callbacks sent by Safepay.
+   - Security & Idempotency:
+     * Verifies inbound webhook HMAC-SHA256 signature (x-sfpy-signature) using
+       SAFEPAY_WEBHOOK_SECRET with timing-safe comparison to prevent timing attacks.
+     * Idempotency check: ignores duplicate events if order is already marked 'paid'.
+     * Calls PostgreSQL RPC 'activate_paid_subscription' on success:
+       atomically marks transaction 'paid', updates user subscription tier, resets
+       billing period, and credits the plan's monthly_credits.
+     * Handles failure/cancellation events appropriately.
+
+4. verify-payment-status (supabase/functions/verify-payment-status/index.ts)
+   - Webhook-independent payment status verification fallback.
+   - Polls Safepay's public tracker status endpoint (GET /order/v1/{tracker_token}) directly
+     when client returns from checkout or when webhooks are delayed/blocked.
+   - Validates user ownership of transaction before polling external API.
+   - Verifies exact amount and currency match against the database order.
+   - Converges on the exact same 'activate_paid_subscription' RPC used by webhooks.
+
+5. probe-safepay (supabase/functions/probe-safepay/index.ts)
+   - Diagnostic utility function to test and verify Safepay endpoint contracts and headers.
+
+--------------------------------------------------------------------------------
+4. DATABASE SCHEMA & PROCEDURES (PostgreSQL / Supabase)
+--------------------------------------------------------------------------------
+Tables:
+- resumes:
+    id (uuid, PK), user_id (uuid -> auth.users), title (text), ats_score (numeric),
+    downloads (int), template (text), resume_data (jsonb), created_at, updated_at.
+- cover_letters:
+    id (uuid, PK), user_id (uuid -> auth.users), title (text), letter_data (jsonb),
+    selected_template (text), created_at, updated_at.
+- profiles:
+    id (uuid, PK -> auth.users), full_name, professional_title, location, summary,
+    years_of_experience, desired_job_title, email, phone, website, linkedin, github,
+    photo_url, skills (jsonb), education (jsonb), experience (jsonb).
+- plans:
+    id (uuid, PK), name, slug ('starter', 'pro', 'team'), price_monthly (PKR),
+    price_yearly (PKR), currency ('PKR'), monthly_credits, max_resumes, max_cover_letters,
+    premium_templates, ai_features, is_active.
+- user_subscriptions:
+    id (uuid, PK), user_id (uuid -> auth.users), plan_id (uuid -> plans), status ('active'),
+    billing_cycle ('monthly', 'yearly'), credits_remaining (int), current_period_start/end.
+- payment_transactions:
+    id (uuid, PK), user_id (uuid), order_id (text), provider ('safepay', 'test'),
+    plan_id (uuid), billing_cycle (text), amount (numeric), currency (text),
+    status ('pending', 'paid', 'failed', 'cancelled'), provider_payment_id (text).
+- user_settings:
+    user_id (uuid, PK -> auth.users), theme, default_resume_template,
+    default_cover_letter_template, auto_save, show_profile_photo, updated_at.
+- credit_balances & credit_transactions:
+    Secondary audit trail for credit allocations and deductions.
+
+Key Stored Procedures (RPCs):
+- deduct_credit(p_amount integer, p_description text):
+    Validates user authentication, verifies credits_remaining >= p_amount, decrements
+    credits_remaining atomically, and logs deduction transaction.
+- activate_paid_subscription(p_order_id text, p_provider_payment_id text, p_provider_subscription_id text):
+    Validates order, updates status to 'paid', upgrades or creates user_subscription
+    record with plan_id, and recharges credits_remaining to the plan's monthly_credits.
+
+--------------------------------------------------------------------------------
+5. PENDING MODULES, INCOMPLETE STUBS & TECHNICAL DEBT
+--------------------------------------------------------------------------------
+While core features (Builder, Templates, Edge Functions, AI Integration, Checkout) are
+fully implemented and functional, several architectural cleanups and features remain:
+
+1. Zero-Byte Stub Files to Implement or Clean Up:
+   - src/components/profile/
+     * EducationSection.jsx (0 bytes)
+     * ExperienceSection.jsx (5 bytes stub)
+     * PersonalInformation.jsx (0 bytes)
+     * ProfessionalInformation.jsx (0 bytes)
+     * ProfileHeader.jsx (0 bytes)
+     * SkillsSection.jsx (0 bytes)
+     -> Cause: src/pages/MyProfile.jsx was written as a 1,381-line monolithic component
+        rather than utilizing these sub-components. Refactoring MyProfile into these
+        clean sub-components will improve maintainability.
+   - src/components/resumes/
+     * DeleteModal.jsx (0 bytes)
+     * ResumeList.jsx (0 bytes)
+     -> Cause: Delete modal and list mapping are currently written inline in MyResumes.jsx.
+   - src/components/dashboard/ResumeCard.jsx (0 bytes)
+     -> Redundant duplicate of src/components/resumes/ResumeCard.jsx.
+   - src/components/layout/Navbar/MobileMenu.jsx (0 bytes)
+     -> Mobile drawer navigation is currently inlined directly in Navbar.jsx.
+   - src/components/sections/Demo/useDemoAnimation.js (0 bytes)
+     -> Demo section animation logic is handled inline in DemoController.jsx.
+   - src/components/UI/Card/GlassCard.jsx (0 bytes) & Input/Input.jsx (0 bytes)
+     -> Empty UI component placeholders.
+   - src/data/coverLetterTemplates.js (0 bytes)
+     -> Template metadata is hardcoded inside CoverLetterTemplates.jsx.
+   - src/App.css (0 bytes)
+     -> Safe to keep empty or delete as Tailwind v4 styles are in src/index.css.
+
+2. Export Formats Expansion:
+   - Currently, resumes and cover letters export via react-to-print (Print / PDF).
+   - Export to Word (.docx), plain text (.txt), and JSON format are not yet implemented.
+
+3. Resume Ingestion & Parsing:
+   - Users currently build resumes from scratch or generate drafts via AI prompts.
+   - Direct PDF / DOCX resume upload with an AI-based file parser to auto-fill
+     builder fields is an anticipated high-value roadmap item.
+
+4. Dynamic Builder Reordering:
+   - Section reordering (drag-and-drop to position Skills above Experience or Education)
+     is not yet enabled in the builder interface.
+
+5. Visual Typography & Accent Palette Customizer:
+   - Resume templates have preset color and font themes. A live font and accent
+     color picker inside BuilderSidebar would enhance customization.
+
+================================================================================
+END OF ARCHITECTURAL ANALYSIS
+================================================================================

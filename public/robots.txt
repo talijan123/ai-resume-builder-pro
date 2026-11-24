@@ -1,0 +1,28 @@
+# Search Engine Robot Directives for ResumeForge AI
+# Production Domain: https://ai-resume-builder-pro-five.vercel.app
+
+User-agent: *
+Allow: /
+Allow: /templates
+Allow: /blog
+Allow: /blog/*
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+
+# Disallow Private User & Dashboard Routes
+Disallow: /dashboard
+Disallow: /builder
+Disallow: /builder/*
+Disallow: /my-resumes
+Disallow: /my-cover-letters
+Disallow: /cover-letter
+Disallow: /cover-letter/*
+Disallow: /profile
+Disallow: /settings
+Disallow: /checkout
+Disallow: /test-checkout
+Disallow: /payment/
+
+# Crawl Delay & Sitemap
+Sitemap: https://ai-resume-builder-pro-five.vercel.app/sitemap.xml

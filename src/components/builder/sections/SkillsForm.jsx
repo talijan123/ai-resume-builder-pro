@@ -1,0 +1,128 @@
+import { useState } from "react";
+
+import { useResume } from "../../../context/ResumeContext";
+
+import SkillCard from "./SkillCard";
+import SkillModal from "../modals/SkillModal";
+
+export default function SkillsForm() {
+  const {
+    resumeData,
+    addSkill,
+    updateSkill,
+    deleteSkill,
+  } = useResume();
+
+  const [openModal, setOpenModal] =
+    useState(false);
+
+  const [editingSkill, setEditingSkill] =
+    useState(null);
+
+  function handleAdd() {
+    setEditingSkill(null);
+    setOpenModal(true);
+  }
+
+  function handleEdit(skill) {
+    setEditingSkill(skill);
+    setOpenModal(true);
+  }
+
+  function handleSave(data) {
+    if (editingSkill) {
+      updateSkill(editingSkill.id, data);
+    } else {
+      addSkill(data);
+    }
+
+    setOpenModal(false);
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          {resumeData.skills.length} {resumeData.skills.length === 1 ? "Skill" : "Skills"} Added
+        </p>
+
+        <button
+          type="button"
+          onClick={handleAdd}
+          className="
+            inline-flex
+            items-center
+            justify-center
+            rounded-xl
+            bg-blue-600
+            px-4
+            sm:px-5
+            py-2.5
+            sm:py-3
+            text-xs
+            sm:text-sm
+            font-bold
+            text-white
+            shadow-md
+            shadow-blue-500/20
+            transition
+            hover:bg-blue-700
+            cursor-pointer
+          "
+        >
+          + Add Skill
+        </button>
+      </div>
+
+      {/* Skills List */}
+
+      <div className="mt-8 space-y-5">
+        {resumeData.skills.length === 0 ? (
+          <div
+            className="
+              rounded-2xl
+              border
+              border-dashed
+              border-slate-300
+              bg-slate-50
+              p-10
+              text-center
+            "
+          >
+            <h4 className="text-lg font-semibold">
+              No skills added yet
+            </h4>
+
+            <p className="mt-2 text-slate-500">
+              Click "Add Skill" to get started.
+            </p>
+          </div>
+        ) : (
+          resumeData.skills.map((skill) => (
+            <SkillCard
+              key={skill.id}
+              skill={skill}
+              onEdit={() =>
+                handleEdit(skill)
+              }
+              onDelete={() =>
+                deleteSkill(skill.id)
+              }
+            />
+          ))
+        )}
+      </div>
+
+      {/* Modal */}
+
+      <SkillModal
+        open={openModal}
+        onClose={() =>
+          setOpenModal(false)
+        }
+        initialData={editingSkill}
+        onSave={handleSave}
+      />
+    </>
+  );
+}

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="rf-bg-grad" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="50%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#7C3AED" />
+    </linearGradient>
+
+    <!-- Document Gradient -->
+    <linearGradient id="rf-doc-grad" x1="14" y1="12" x2="44" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </linearGradient>
+
+    <!-- Sparkle Gradient -->
+    <linearGradient id="rf-sparkle-grad" x1="38" y1="6" x2="58" y2="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#60A5FA" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+
+    <!-- Drop Shadow Filter for Document -->
+    <filter id="rf-shadow" x="8" y="10" width="46" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.35" />
+    </filter>
+
+    <!-- Glow for Sparkle -->
+    <filter id="rf-glow" x="32" y="2" width="30" height="30" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#38BDF8" flood-opacity="0.8" />
+    </filter>
+  </defs>
+
+  <!-- Outer Rounded Container Icon -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#rf-bg-grad)" />
+
+  <!-- Subtle Inner Border Highlight -->
+  <rect x="2.5" y="2.5" width="59" height="59" rx="15.5" stroke="#93C5FD" stroke-opacity="0.35" stroke-width="1" />
+
+  <!-- Document Card Background with Corner Fold -->
+  <g filter="url(#rf-shadow)">
+    <!-- Base Document Shape -->
+    <path d="M16 14C16 11.7909 17.7909 10 20 10H38L48 20V48C48 50.2091 46.2091 52 44 52H20C17.7909 52 16 50.2091 16 48V14Z" fill="url(#rf-doc-grad)" />
+
+    <!-- Corner Fold Flap -->
+    <path d="M38 10V18C38 19.1046 38.8954 20 40 20H48L38 10Z" fill="#CBD5E1" />
+  </g>
+
+  <!-- Document Content Lines -->
+  <!-- Header Avatar / Badge -->
+  <circle cx="23" cy="22" r="3.5" fill="#3B82F6" />
+  
+  <!-- Header Title Lines -->
+  <rect x="29" y="19" width="13" height="2.5" rx="1.25" fill="#1E293B" />
+  <rect x="29" y="23.5" width="9" height="1.8" rx="0.9" fill="#64748B" />
+
+  <!-- Divider Rule -->
+  <line x1="21" y1="29" x2="43" y2="29" stroke="#E2E8F0" stroke-width="1.5" stroke-linecap="round" />
+
+  <!-- Resume Section Bullet Lines -->
+  <rect x="21" y="33" width="22" height="2.2" rx="1.1" fill="#3B82F6" fill-opacity="0.8" />
+  <rect x="21" y="37.5" width="18" height="2" rx="1" fill="#94A3B8" />
+  <rect x="21" y="41.5" width="20" height="2" rx="1" fill="#94A3B8" />
+  <rect x="21" y="45.5" width="14" height="2" rx="1" fill="#CBD5E1" />
+
+  <!-- AI Magic Sparkle Top Right Accent -->
+  <g filter="url(#rf-glow)">
+    <!-- 4-Point AI Sparkle Star -->
+    <path d="M47 5C47.8 11.2 50.8 14.2 57 15C50.8 15.8 47.8 18.8 47 25C46.2 18.8 43.2 15.8 37 15C43.2 14.2 46.2 11.2 47 5Z" fill="url(#rf-sparkle-grad)" />
+    
+    <!-- Mini Secondary Sparkle -->
+    <circle cx="56" cy="8" r="1.5" fill="#FDE047" />
+  </g>
+</svg>
