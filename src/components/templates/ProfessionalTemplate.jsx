@@ -90,12 +90,23 @@ export default function ProfessionalTemplate() {
       <header className="border-b-2 border-slate-800 pb-6">
 
         <h1 className="text-4xl font-black uppercase tracking-wide text-slate-900">
-          {personalInfo.fullName || "Your Name"}
+          {personalInfo.fullName ? (
+            personalInfo.fullName
+          ) : (
+            <span className="text-slate-400 font-medium italic print:hidden">
+              Full Name
+            </span>
+          )}
         </h1>
 
         <p className="mt-2 text-lg font-semibold text-slate-600">
-          {personalInfo.jobTitle ||
-            "Professional Title"}
+          {personalInfo.jobTitle ? (
+            personalInfo.jobTitle
+          ) : (
+            <span className="text-slate-400 font-normal italic print:hidden">
+              Professional Title
+            </span>
+          )}
         </p>
 
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">

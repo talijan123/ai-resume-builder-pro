@@ -20,11 +20,23 @@ export default function ModernTemplate({ previewData = null }) {
             {/* Header */}
             <header className="border-b-4 pb-6" style={{ borderColor: themeColor }}>
                 <h1 className="text-4xl font-black text-slate-900">
-                    {personalInfo.fullName || "Your Name"}
+                    {personalInfo.fullName ? (
+                        personalInfo.fullName
+                    ) : (
+                        <span className="text-slate-400 font-medium italic print:hidden">
+                            Full Name
+                        </span>
+                    )}
                 </h1>
 
                 <p className="mt-2 text-xl font-semibold" style={{ color: themeColor }}>
-                    {personalInfo.jobTitle || "Professional Title"}
+                    {personalInfo.jobTitle ? (
+                        personalInfo.jobTitle
+                    ) : (
+                        <span className="text-slate-400 font-normal italic print:hidden">
+                            Professional Title
+                        </span>
+                    )}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">

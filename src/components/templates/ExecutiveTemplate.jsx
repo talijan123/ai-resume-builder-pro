@@ -80,12 +80,23 @@ export default function ExecutiveTemplate() {
       <header className="border-b-4 border-slate-900 px-12 py-10">
 
         <h1 className="text-4xl font-black uppercase tracking-[0.08em] text-slate-950">
-          {personalInfo.fullName || "Your Name"}
+          {personalInfo.fullName ? (
+            personalInfo.fullName
+          ) : (
+            <span className="text-slate-400 font-medium italic print:hidden">
+              Full Name
+            </span>
+          )}
         </h1>
 
         <p className="mt-2 text-lg font-semibold uppercase tracking-[0.15em] text-slate-500">
-          {personalInfo.jobTitle ||
-            "Executive Professional"}
+          {personalInfo.jobTitle ? (
+            personalInfo.jobTitle
+          ) : (
+            <span className="text-slate-400 font-normal italic print:hidden">
+              Executive Professional
+            </span>
+          )}
         </p>
 
         <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600">

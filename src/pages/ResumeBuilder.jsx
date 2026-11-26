@@ -548,94 +548,224 @@ export default function ResumeBuilder() {
   }
 
   /* ==========================================
-     AI FILL ACTIVE SECTION
+     AI FILL ACTIVE SECTION FROM MY PROFILE
   ========================================== */
 
   function handleAiFillActiveSection() {
+    function notifyEmptyProfile(sectionLabel) {
+      const message = "No saved data found in My Profile for this section — add it in My Profile or use AI Rewrite to generate it";
+      setGenerationMessage(message);
+      toast.info(message, {
+        duration: 3500,
+        action: {
+          label: "AI Studio",
+          onClick: () => setShowAiToolsModal(true),
+        },
+      });
+    }
+
     switch (activeSection) {
-      case "personal":
-        updatePersonalInfo("fullName", resumeData?.personalInfo?.fullName || "John Doe");
-        updatePersonalInfo("jobTitle", resumeData?.personalInfo?.jobTitle || "Senior Full-Stack Engineer");
-        updatePersonalInfo("email", resumeData?.personalInfo?.email || "john.doe@example.com");
-        updatePersonalInfo("phone", resumeData?.personalInfo?.phone || "+1 (555) 019-2834");
-        updatePersonalInfo("location", resumeData?.personalInfo?.location || "San Francisco, CA");
-        updatePersonalInfo("website", resumeData?.personalInfo?.website || "https://johndoe.dev");
-        updatePersonalInfo("linkedin", resumeData?.personalInfo?.linkedin || "linkedin.com/in/johndoe");
-        updatePersonalInfo("github", resumeData?.personalInfo?.github || "github.com/johndoe");
-        setGenerationMessage("Personal information filled with sample draft.");
-        break;
-      case "summary":
-        updatePersonalInfo(
-          "summary",
-          "Passionate and results-driven Senior Full-Stack Engineer with 6+ years of experience designing scalable web architectures, microservices, and high-performance cloud applications. Adept at driving cross-functional team success and accelerating product delivery."
+      case "personal": {
+        const p = profileData?.profile || {};
+        const c = profileData?.contact || {};
+        const hasPersonalData = Boolean(
+          (p.fullName && p.fullName.trim()) ||
+          (p.professionalTitle && p.professionalTitle.trim()) ||
+          (c.email && c.email.trim()) ||
+          (user?.email && user.email.trim()) ||
+          (c.phone && c.phone.trim()) ||
+          (p.location && p.location.trim()) ||
+          (c.website && c.website.trim()) ||
+          (c.linkedin && c.linkedin.trim()) ||
+          (c.github && c.github.trim()) ||
+          (p.photo && p.photo.trim())
         );
-        setGenerationMessage("Professional summary filled with tailored draft.");
+
+        if (hasPersonalData) {
+          if (p.fullName) updatePersonalInfo("fullName", p.fullName);
+          if (p.professionalTitle) updatePersonalInfo("jobTitle", p.professionalTitle);
+          if (c.email || user?.email) updatePersonalInfo("email", c.email || user?.email);
+          if (c.phone) updatePersonalInfo("phone", c.phone);
+          if (p.location) updatePersonalInfo("location", p.location);
+          if (c.website) updatePersonalInfo("website", c.website);
+          if (c.linkedin) updatePersonalInfo("linkedin", c.linkedin);
+          if (c.github) updatePersonalInfo("github", c.github);
+          if (p.photo) updatePersonalInfo("photo", p.photo);
+          setGenerationMessage("Personal information filled from your My Profile data.");
+        } else {
+          notifyEmptyProfile("personal");
+        }
         break;
-      case "experience":
-        addExperience({
-          company: "TechCorp Global",
-          jobTitle: "Senior Full-Stack Developer",
-          employmentType: "Full-time",
-          location: "San Francisco, CA",
-          startDate: "March 2021",
-          endDate: "Present",
-          currentlyWorking: true,
-          description: "• Architected high-throughput microservices handling 250k+ daily API requests.\n• Reduced page load times by 45% by migrating legacy code to modern React and optimized Edge rendering.\n• Mentored 8 junior and mid-level developers in testing best practices and CI/CD pipelines.",
-        });
-        setGenerationMessage("Sample work experience added to your resume.");
+      }
+
+      case "summary": {
+        const summaryText = profileData?.profile?.summary?.trim();
+        if (summaryText) {
+          updatePersonalInfo("summary", summaryText);
+          setGenerationMessage("Professional summary filled from your My Profile data.");
+        } else {
+          notifyEmptyProfile("summary");
+        }
         break;
-      case "education":
-        addEducation({
-          school: "University of California, Berkeley",
-          degree: "Bachelor of Science",
-          field: "Computer Science",
-          location: "Berkeley, CA",
-          startDate: "September 2016",
-          endDate: "June 2020",
-          currentlyStudying: false,
-          grade: "3.85 GPA",
-          description: "• Graduated Magna Cum Laude with honors.\n• Relevant Coursework: Data Structures & Algorithms, Distributed Computing, Database Systems.",
-        });
-        setGenerationMessage("Sample education credential added to your resume.");
+      }
+
+      case "experience": {
+        const expList = Array.isArray(profileData?.experience)
+          ? profileData.experience.filter((e) => e && (e.company || e.position || e.jobTitle || e.description))
+          : [];
+
+        if (expList.length > 0) {
+          const formatted = expList.map((item) => ({
+            id: item.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+            company: item.company || "",
+            jobTitle: item.jobTitle || item.position || "",
+            employmentType: item.employmentType || "Full-time",
+            location: item.location || "",
+            startDate: item.startDate || "",
+            endDate: item.endDate || "",
+            currentlyWorking: Boolean(item.currentlyWorking),
+            description: item.description || "",
+          }));
+          setResumeData((prev) => ({
+            ...prev,
+            experience: formatted,
+          }));
+          setGenerationMessage(`${formatted.length} work experience entr${formatted.length > 1 ? "ies" : "y"} filled from My Profile.`);
+        } else {
+          notifyEmptyProfile("experience");
+        }
         break;
-      case "skills":
-        [
-          { name: "React / Next.js", level: "Expert" },
-          { name: "Node.js & Express", level: "Advanced" },
-          { name: "TypeScript", level: "Advanced" },
-          { name: "PostgreSQL & Supabase", level: "Advanced" },
-          { name: "Docker & AWS", level: "Intermediate" },
-        ].forEach((s) => addSkill(s));
-        setGenerationMessage("Key technical skills populated.");
+      }
+
+      case "education": {
+        const eduList = Array.isArray(profileData?.education)
+          ? profileData.education.filter((e) => e && (e.school || e.institution || e.degree || e.field))
+          : [];
+
+        if (eduList.length > 0) {
+          const formatted = eduList.map((item) => ({
+            id: item.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+            school: item.school || item.institution || "",
+            degree: item.degree || "",
+            field: item.field || "",
+            location: item.location || "",
+            startDate: item.startDate || "",
+            endDate: item.endDate || "",
+            currentlyStudying: Boolean(item.currentlyStudying),
+            grade: item.grade || "",
+            description: item.description || "",
+          }));
+          setResumeData((prev) => ({
+            ...prev,
+            education: formatted,
+          }));
+          setGenerationMessage(`${formatted.length} education credential${formatted.length > 1 ? "s" : ""} filled from My Profile.`);
+        } else {
+          notifyEmptyProfile("education");
+        }
         break;
-      case "projects":
-        addProject({
-          title: "AI-Powered Automation Engine",
-          role: "Lead Creator",
-          technologies: "React, Node.js, Gemini API, Tailwind CSS",
-          liveLink: "https://demo.example.com",
-          githubLink: "https://github.com/example/engine",
-          startDate: "Jan 2024",
-          endDate: "Present",
-          description: "• Engineered autonomous workflow orchestration platform with 99.9% uptime.\n• Integrated real-time generative AI pipeline saving enterprise users over 15 hours per week.",
-        });
-        setGenerationMessage("Standout portfolio project added.");
+      }
+
+      case "skills": {
+        const skillsList = Array.isArray(profileData?.skills)
+          ? profileData.skills.filter((s) => s && (typeof s === "string" ? s.trim() : s.name || s.skill))
+          : [];
+
+        if (skillsList.length > 0) {
+          const formatted = skillsList.map((item) => {
+            if (typeof item === "string") {
+              return {
+                id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+                name: item.trim(),
+                level: "Intermediate",
+              };
+            }
+            return {
+              id: item.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+              name: item.name || item.skill || "",
+              level: item.level || "Intermediate",
+            };
+          });
+          setResumeData((prev) => ({
+            ...prev,
+            skills: formatted,
+          }));
+          setGenerationMessage(`${formatted.length} skill${formatted.length > 1 ? "s" : ""} filled from My Profile.`);
+        } else {
+          notifyEmptyProfile("skills");
+        }
         break;
-      case "certifications":
-        addCertification({
-          name: "AWS Certified Solutions Architect – Associate",
-          issuer: "Amazon Web Services (AWS)",
-          issueDate: "2023",
-          expiryDate: "2026",
-          neverExpires: false,
-          credentialId: "AWS-PSA-948201",
-          credentialUrl: "https://aws.amazon.com/verification",
-          description: "Demonstrated expertise in architecting secure, robust, and cost-effective cloud infrastructures.",
-        });
-        setGenerationMessage("Verified certification credential added.");
+      }
+
+      case "projects": {
+        const projectsList = Array.isArray(profileData?.projects)
+          ? profileData.projects.filter((p) => p && (p.title || p.name || p.description))
+          : [];
+
+        if (projectsList.length > 0) {
+          const formatted = projectsList.map((p) => ({
+            id: p.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+            title: p.title || p.name || "",
+            role: p.role || "",
+            technologies: p.technologies || "",
+            liveLink: p.liveLink || "",
+            githubLink: p.githubLink || "",
+            startDate: p.startDate || "",
+            endDate: p.endDate || "",
+            description: p.description || "",
+          }));
+          setResumeData((prev) => ({
+            ...prev,
+            projects: formatted,
+          }));
+          setGenerationMessage(`${formatted.length} project${formatted.length > 1 ? "s" : ""} filled from My Profile.`);
+        } else {
+          notifyEmptyProfile("projects");
+        }
         break;
+      }
+
+      case "certifications": {
+        const certsList = Array.isArray(profileData?.certifications)
+          ? profileData.certifications.filter((c) => c && (c.name || c.title || c.issuer))
+          : [];
+
+        if (certsList.length > 0) {
+          const formatted = certsList.map((c) => ({
+            id: c.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+            name: c.name || c.title || "",
+            issuer: c.issuer || "",
+            issueDate: c.issueDate || "",
+            expiryDate: c.expiryDate || "",
+            neverExpires: Boolean(c.neverExpires),
+            credentialId: c.credentialId || "",
+            credentialUrl: c.credentialUrl || "",
+            description: c.description || "",
+          }));
+          setResumeData((prev) => ({
+            ...prev,
+            certifications: formatted,
+          }));
+          setGenerationMessage(`${formatted.length} certification${formatted.length > 1 ? "s" : ""} filled from My Profile.`);
+        } else {
+          notifyEmptyProfile("certifications");
+        }
+        break;
+      }
+
+      case "cover-letter": {
+        const summaryText = profileData?.profile?.summary?.trim();
+        if (summaryText) {
+          updatePersonalInfo("summary", summaryText);
+          setGenerationMessage("Cover letter intro populated from your profile summary.");
+        } else {
+          notifyEmptyProfile("cover-letter");
+        }
+        break;
+      }
+
       default:
-        setShowAiPanel(true);
+        notifyEmptyProfile(activeSection);
         break;
     }
   }
@@ -823,6 +953,8 @@ export default function ResumeBuilder() {
         if (mounted) {
           if (!hasInitializedRef.current) {
             hasInitializedRef.current = true;
+            const p = profileData?.profile || {};
+            const c = profileData?.contact || {};
             setResumeData({
               ...emptyResume,
 
@@ -830,6 +962,16 @@ export default function ResumeBuilder() {
 
               personalInfo: {
                 ...emptyResume.personalInfo,
+                fullName: p.fullName || "",
+                jobTitle: p.professionalTitle || "",
+                email: c.email || user?.email || "",
+                phone: c.phone || "",
+                location: p.location || "",
+                website: c.website || "",
+                linkedin: c.linkedin || "",
+                github: c.github || "",
+                photo: p.photo || "",
+                summary: p.summary || "",
               },
 
               experience: [],
@@ -978,6 +1120,43 @@ export default function ResumeBuilder() {
     setResumeData,
     navigate,
   ]);
+
+  /* ==========================================
+     SYNC PROFILE DATA FOR NEW RESUMES
+  ========================================== */
+
+  useEffect(() => {
+    if (!id && profileData && !loading) {
+      setResumeData((prev) => {
+        const p = profileData.profile || {};
+        const c = profileData.contact || {};
+        const isUntouched =
+          !prev.personalInfo.fullName &&
+          !prev.personalInfo.email &&
+          !prev.personalInfo.jobTitle;
+
+        if (isUntouched && (p.fullName || c.email || user?.email)) {
+          return {
+            ...prev,
+            personalInfo: {
+              ...prev.personalInfo,
+              fullName: p.fullName || "",
+              jobTitle: p.professionalTitle || "",
+              email: c.email || user?.email || "",
+              phone: c.phone || "",
+              location: p.location || "",
+              website: c.website || "",
+              linkedin: c.linkedin || "",
+              github: c.github || "",
+              photo: p.photo || "",
+              summary: p.summary || "",
+            },
+          };
+        }
+        return prev;
+      });
+    }
+  }, [id, profileData, user, loading, setResumeData]);
 
   /* ==========================================
      INCREMENT DOWNLOAD COUNT
@@ -1369,12 +1548,15 @@ export default function ResumeBuilder() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.96 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className={`fixed right-6 top-24 z-50 flex max-w-sm items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold shadow-xl backdrop-blur-md print:hidden pointer-events-auto ${
+            className={`fixed right-6 top-24 z-50 flex max-w-md items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold shadow-xl backdrop-blur-md print:hidden pointer-events-auto ${
               generationMessage.includes("applied") ||
               generationMessage.includes("ready") ||
               generationMessage.includes("completed") ||
-              generationMessage.includes("successfully")
+              generationMessage.includes("successfully") ||
+              generationMessage.includes("filled from")
                 ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/95 dark:bg-emerald-950/90 text-emerald-800 dark:text-emerald-200 shadow-emerald-500/10"
+                : generationMessage.includes("No saved data found")
+                ? "border-amber-200 dark:border-amber-800 bg-amber-50/95 dark:bg-amber-950/90 text-amber-900 dark:text-amber-100 shadow-amber-500/10"
                 : generationMessage.includes("credit") ||
                   generationMessage.includes("remaining") ||
                   generationMessage.includes("Checking")
@@ -1383,22 +1565,49 @@ export default function ResumeBuilder() {
             }`}
             role="status"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-start gap-2.5">
               <HiSparkles
                 size={16}
-                className={
+                className={`mt-0.5 shrink-0 ${
                   generationMessage.includes("applied") ||
                   generationMessage.includes("ready") ||
-                  generationMessage.includes("completed")
-                    ? "text-emerald-600 dark:text-emerald-400 shrink-0"
+                  generationMessage.includes("completed") ||
+                  generationMessage.includes("filled from")
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : generationMessage.includes("No saved data found")
+                    ? "text-amber-600 dark:text-amber-400"
                     : generationMessage.includes("credit") ||
                       generationMessage.includes("remaining") ||
                       generationMessage.includes("Checking")
-                    ? "text-blue-600 dark:text-blue-400 shrink-0"
-                    : "text-red-600 dark:text-red-400 shrink-0"
-                }
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
               />
-              <span className="leading-snug">{generationMessage}</span>
+              <div className="flex flex-col gap-1">
+                <span className="leading-snug">{generationMessage}</span>
+                {generationMessage.includes("No saved data found") && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/profile")}
+                      className="text-xs font-bold underline hover:opacity-80 cursor-pointer"
+                    >
+                      Open My Profile →
+                    </button>
+                    <span className="text-xs opacity-40">|</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGenerationMessage("");
+                        setShowAiToolsModal(true);
+                      }}
+                      className="text-xs font-bold underline hover:opacity-80 cursor-pointer"
+                    >
+                      Open AI Studio ✨
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <button

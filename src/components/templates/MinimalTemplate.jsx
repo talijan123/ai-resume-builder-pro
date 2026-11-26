@@ -80,11 +80,23 @@ export default function MinimalTemplate() {
       <header className="border-b border-slate-200 pb-8">
 
         <h1 className="text-4xl font-bold tracking-tight text-slate-950">
-          {personalInfo.fullName || "Your Name"}
+          {personalInfo.fullName ? (
+            personalInfo.fullName
+          ) : (
+            <span className="text-slate-400 font-medium italic print:hidden">
+              Full Name
+            </span>
+          )}
         </h1>
 
         <p className="mt-2 text-lg text-slate-500">
-          {personalInfo.jobTitle || "Professional"}
+          {personalInfo.jobTitle ? (
+            personalInfo.jobTitle
+          ) : (
+            <span className="text-slate-400 font-normal italic print:hidden">
+              Professional Title
+            </span>
+          )}
         </p>
 
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">

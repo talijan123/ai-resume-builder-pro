@@ -82,11 +82,23 @@ export default function CreativeTemplate() {
 
           <div>
             <h1 className="text-4xl font-black tracking-tight">
-              {personalInfo.fullName || "Your Name"}
+              {personalInfo.fullName ? (
+                personalInfo.fullName
+              ) : (
+                <span className="text-white/60 font-medium italic print:hidden">
+                  Full Name
+                </span>
+              )}
             </h1>
 
             <p className="mt-2 text-xl font-medium text-white/90">
-              {personalInfo.jobTitle || "Professional"}
+              {personalInfo.jobTitle ? (
+                personalInfo.jobTitle
+              ) : (
+                <span className="text-white/60 font-normal italic print:hidden">
+                  Professional Title
+                </span>
+              )}
             </p>
           </div>
 

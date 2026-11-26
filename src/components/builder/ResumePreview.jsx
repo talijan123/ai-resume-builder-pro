@@ -16,6 +16,7 @@ import {
   HiArrowDownTray,
   HiSwatch,
   HiChevronDown,
+  HiDocumentText,
 } from "react-icons/hi2";
 
 import {
@@ -76,6 +77,13 @@ const ResumePreview = forwardRef(
 
     const displayTemplateName =
       templateName.charAt(0).toUpperCase() + templateName.slice(1).replace("-", " ");
+
+    const isResumeEmpty =
+      !resumeData?.personalInfo?.fullName?.trim() &&
+      !resumeData?.personalInfo?.jobTitle?.trim() &&
+      (!resumeData?.experience || resumeData.experience.length === 0) &&
+      (!resumeData?.education || resumeData.education.length === 0) &&
+      (!resumeData?.skills || resumeData.skills.length === 0);
 
     // Zoom and responsive scaling state
     const [scale, setScale] = useState(0.8);
@@ -471,6 +479,7 @@ const ResumePreview = forwardRef(
                   id="resume-preview"
                   data-print-content="resume"
                   className="
+                    relative
                     w-[794px]
                     min-h-[1123px]
                     rounded-md
@@ -490,6 +499,22 @@ const ResumePreview = forwardRef(
                   "
                 >
                   <SelectedTemplate />
+
+                  {isResumeEmpty && (
+                    <div className="absolute inset-0 flex items-center justify-center p-8 pointer-events-none print:hidden">
+                      <div className="max-w-sm rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 text-center shadow-xl pointer-events-auto">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/50 text-[#ff3366]">
+                          <HiDocumentText size={24} />
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                          Your Resume Preview
+                        </h4>
+                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                          Start editing sections on the left, click <strong className="text-slate-700 dark:text-slate-200">Fill Section</strong> to pull from My Profile, or launch <strong className="text-[#ff3366]">AI Studio</strong> for a full draft.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

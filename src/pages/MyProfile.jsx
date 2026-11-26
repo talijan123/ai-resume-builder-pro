@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { HiPlus, HiTrash, HiXMark } from "react-icons/hi2";
 
 import { useProfile } from "../context/ProfileContext";
 
@@ -25,9 +26,18 @@ export default function MyProfile() {
     resetProfile,
     uploadProfilePhoto,
     removeProfilePhoto,
+    addSkill,
+    removeSkill,
+    addEducation,
+    updateEducation,
+    removeEducation,
+    addExperience,
+    updateExperience,
+    removeExperience,
   } = useProfile();
 
   const [saved, setSaved] = useState(false);
+  const [newSkillInput, setNewSkillInput] = useState("");
 
   const [photoPreview, setPhotoPreview] = useState("");
 
@@ -45,6 +55,57 @@ export default function MyProfile() {
 
   const contact =
     profileData?.contact || {};
+
+  const skills =
+    profileData?.skills || [];
+
+  const education =
+    profileData?.education || [];
+
+  const experience =
+    profileData?.experience || [];
+
+  const handleAddSkill = (e) => {
+    e?.preventDefault();
+    if (newSkillInput.trim()) {
+      addSkill(newSkillInput.trim());
+      setNewSkillInput("");
+      setSaved(false);
+    }
+  };
+
+  const handleRemoveSkill = (skill) => {
+    removeSkill(skill);
+    setSaved(false);
+  };
+
+  const handleAddExp = () => {
+    addExperience({
+      company: "",
+      position: "",
+      location: "",
+      employmentType: "Full-time",
+      startDate: "",
+      endDate: "",
+      currentlyWorking: false,
+      description: "",
+    });
+    setSaved(false);
+  };
+
+  const handleAddEdu = () => {
+    addEducation({
+      institution: "",
+      degree: "",
+      fieldOfStudy: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      currentlyStudying: false,
+      description: "",
+    });
+    setSaved(false);
+  };
 
   /* =======================================================
      SYNC PHOTO WITH PROFILE CONTEXT
@@ -81,6 +142,10 @@ export default function MyProfile() {
       contact?.website,
       contact?.linkedin,
       contact?.github,
+
+      skills?.length > 0 ? "has_skills" : "",
+      experience?.length > 0 ? "has_experience" : "",
+      education?.length > 0 ? "has_education" : "",
     ];
 
     const completed = fields.filter(
@@ -97,7 +162,7 @@ export default function MyProfile() {
     return Math.round(
       (completed / fields.length) * 100
     );
-  }, [profile, contact]);
+  }, [profile, contact, skills, education, experience]);
 
   /* =======================================================
      PROFILE CHANGE
@@ -1082,6 +1147,473 @@ export default function MyProfile() {
                   rows={7}
                 />
               </div>
+            </section>
+
+            {/* =================================================
+                SKILLS
+            ================================================= */}
+
+            <section
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                p-6
+                shadow-sm
+              "
+            >
+              <SectionHeader
+                number="05"
+                title="Skills & Proficiencies"
+                description="Add technical, professional, and domain skills to reuse across your resumes."
+              />
+
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={newSkillInput}
+                    onChange={(e) => setNewSkillInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddSkill();
+                      }
+                    }}
+                    placeholder="e.g. React, TypeScript, Product Strategy, PostgreSQL"
+                    className="
+                      h-11
+                      flex-1
+                      rounded-xl
+                      border
+                      border-slate-200
+                      bg-white
+                      px-4
+                      text-sm
+                      text-slate-800
+                      outline-none
+                      transition
+                      placeholder:text-slate-400
+                      focus:border-blue-500
+                      focus:ring-4
+                      focus:ring-blue-100
+                    "
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSkill}
+                    className="
+                      flex
+                      items-center
+                      gap-1.5
+                      rounded-xl
+                      bg-blue-600
+                      px-5
+                      py-2.5
+                      text-sm
+                      font-bold
+                      text-white
+                      transition
+                      hover:bg-blue-700
+                      cursor-pointer
+                    "
+                  >
+                    <HiPlus size={16} />
+                    <span>Add Skill</span>
+                  </button>
+                </div>
+
+                <div className="pt-2">
+                  {skills.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">
+                      No skills added yet. Type a skill name above and click Add Skill.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((skill, index) => {
+                        const skillLabel = typeof skill === "string" ? skill : skill?.name || skill?.skill || "";
+                        return (
+                          <div
+                            key={index}
+                            className="
+                              inline-flex
+                              items-center
+                              gap-2
+                              rounded-xl
+                              border
+                              border-slate-200
+                              bg-slate-50
+                              px-3.5
+                              py-2
+                              text-xs
+                              font-bold
+                              text-slate-800
+                              shadow-xs
+                            "
+                          >
+                            <span>{skillLabel}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSkill(skillLabel)}
+                              className="text-slate-400 hover:text-red-500 transition cursor-pointer"
+                              title="Remove skill"
+                            >
+                              <HiXMark size={14} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* =================================================
+                WORK EXPERIENCE
+            ================================================= */}
+
+            <section
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                p-6
+                shadow-sm
+              "
+            >
+              <div className="flex items-center justify-between mb-2">
+                <SectionHeader
+                  number="06"
+                  title="Work Experience"
+                  description="Add past and current professional roles that can be auto-filled into your resumes."
+                />
+                <button
+                  type="button"
+                  onClick={handleAddExp}
+                  className="
+                    flex
+                    items-center
+                    gap-1.5
+                    rounded-xl
+                    border
+                    border-blue-200
+                    bg-blue-50
+                    px-4
+                    py-2
+                    text-xs
+                    font-bold
+                    text-blue-600
+                    hover:bg-blue-100
+                    transition
+                    cursor-pointer
+                    shrink-0
+                  "
+                >
+                  <HiPlus size={15} />
+                  <span>Add Position</span>
+                </button>
+              </div>
+
+              {experience.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center">
+                  <p className="text-xs text-slate-400 italic mb-3">
+                    No work experience added yet to your profile.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAddExp}
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-xl
+                      bg-blue-600
+                      px-4
+                      py-2
+                      text-xs
+                      font-bold
+                      text-white
+                      hover:bg-blue-700
+                      transition
+                      cursor-pointer
+                    "
+                  >
+                    <HiPlus size={14} />
+                    <span>Add First Position</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {experience.map((exp, idx) => (
+                    <div
+                      key={exp.id || idx}
+                      className="
+                        rounded-2xl
+                        border
+                        border-slate-200
+                        bg-slate-50/60
+                        p-5
+                        space-y-4
+                        relative
+                      "
+                    >
+                      <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Position #{idx + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            removeExperience(exp.id);
+                            setSaved(false);
+                          }}
+                          className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-semibold transition cursor-pointer"
+                        >
+                          <HiTrash size={14} />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <Input
+                          label="Job Title / Position"
+                          value={exp.position || exp.jobTitle || ""}
+                          onChange={(val) => {
+                            updateExperience(exp.id, "position", val);
+                            setSaved(false);
+                          }}
+                        />
+                        <Input
+                          label="Company Name"
+                          value={exp.company || ""}
+                          onChange={(val) => {
+                            updateExperience(exp.id, "company", val);
+                            setSaved(false);
+                          }}
+                        />
+                        <Input
+                          label="Location"
+                          value={exp.location || ""}
+                          onChange={(val) => {
+                            updateExperience(exp.id, "location", val);
+                            setSaved(false);
+                          }}
+                        />
+                        <Input
+                          label="Employment Type"
+                          value={exp.employmentType || "Full-time"}
+                          onChange={(val) => {
+                            updateExperience(exp.id, "employmentType", val);
+                            setSaved(false);
+                          }}
+                        />
+                        <Input
+                          label="Start Date"
+                          value={exp.startDate || ""}
+                          onChange={(val) => {
+                            updateExperience(exp.id, "startDate", val);
+                            setSaved(false);
+                          }}
+                        />
+                        <Input
+                          label="End Date"
+                          value={exp.endDate || ""}
+                          onChange={(val) => {
+                            updateExperience(exp.id, "endDate", val);
+                            setSaved(false);
+                          }}
+                        />
+                      </div>
+
+                      <Textarea
+                        label="Description & Key Achievements"
+                        value={exp.description || ""}
+                        onChange={(val) => {
+                          updateExperience(exp.id, "description", val);
+                          setSaved(false);
+                        }}
+                        rows={3}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* =================================================
+                EDUCATION
+            ================================================= */}
+
+            <section
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                p-6
+                shadow-sm
+              "
+            >
+              <div className="flex items-center justify-between mb-2">
+                <SectionHeader
+                  number="07"
+                  title="Education"
+                  description="Add your academic credentials, degrees, and institutions."
+                />
+                <button
+                  type="button"
+                  onClick={handleAddEdu}
+                  className="
+                    flex
+                    items-center
+                    gap-1.5
+                    rounded-xl
+                    border
+                    border-blue-200
+                    bg-blue-50
+                    px-4
+                    py-2
+                    text-xs
+                    font-bold
+                    text-blue-600
+                    hover:bg-blue-100
+                    transition
+                    cursor-pointer
+                    shrink-0
+                  "
+                >
+                  <HiPlus size={15} />
+                  <span>Add Degree</span>
+                </button>
+              </div>
+
+              {education.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center">
+                  <p className="text-xs text-slate-400 italic mb-3">
+                    No education credentials added yet to your profile.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAddEdu}
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-xl
+                      bg-blue-600
+                      px-4
+                      py-2
+                      text-xs
+                      font-bold
+                      text-white
+                      hover:bg-blue-700
+                      transition
+                      cursor-pointer
+                    "
+                  >
+                    <HiPlus size={14} />
+                    <span>Add First Degree</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {education.map((edu, idx) => (
+                    <div
+                      key={edu.id || idx}
+                      className="
+                        rounded-2xl
+                        border
+                        border-slate-200
+                        bg-slate-50/60
+                        p-5
+                        space-y-4
+                        relative
+                      "
+                    >
+                      <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Education #{idx + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            removeEducation(edu.id);
+                            setSaved(false);
+                          }}
+                          className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-semibold transition cursor-pointer"
+                        >
+                          <HiTrash size={14} />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <Input
+                          label="Institution / University Name"
+                          value={edu.institution || edu.school || ""}
+                          onChange={(val) => {
+                            updateEducation(edu.id, "institution", val);
+                            setSaved(false);
+                          }}
+                        />
+                        <Input
+                          label="Degree"
+                          value={edu.degree || ""}
+                          onChange={(val) => {
+                            updateEducation(edu.id, "degree", val);
+                            setSaved(false);
+                          }}
+                        />
+                        <Input
+                          label="Field of Study / Major"
+                          value={edu.fieldOfStudy || edu.field || ""}
+                          onChange={(val) => {
+                            updateEducation(edu.id, "fieldOfStudy", val);
+                            setSaved(false);
+                          }}
+                        />
+                        <Input
+                          label="Location"
+                          value={edu.location || ""}
+                          onChange={(val) => {
+                            updateEducation(edu.id, "location", val);
+                            setSaved(false);
+                          }}
+                        />
+                        <Input
+                          label="Start Date"
+                          value={edu.startDate || ""}
+                          onChange={(val) => {
+                            updateEducation(edu.id, "startDate", val);
+                            setSaved(false);
+                          }}
+                        />
+                        <Input
+                          label="End Date"
+                          value={edu.endDate || ""}
+                          onChange={(val) => {
+                            updateEducation(edu.id, "endDate", val);
+                            setSaved(false);
+                          }}
+                        />
+                      </div>
+
+                      <Textarea
+                        label="Description & Highlights"
+                        value={edu.description || ""}
+                        onChange={(val) => {
+                          updateEducation(edu.id, "description", val);
+                          setSaved(false);
+                        }}
+                        rows={3}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* =================================================

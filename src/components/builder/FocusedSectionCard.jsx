@@ -277,7 +277,7 @@ export default function FocusedSectionCard({ onPreviewResume }) {
               name="fullName"
               value={personal.fullName || ""}
               onChange={(e) => updatePersonalInfo("fullName", e.target.value)}
-              placeholder="e.g. John Doe"
+              placeholder="e.g. Alex Morgan"
               className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 px-3.5 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#ff3366] focus:ring-2 focus:ring-[#ff3366]/20 outline-none transition"
             />
           </div>
@@ -305,7 +305,7 @@ export default function FocusedSectionCard({ onPreviewResume }) {
               name="email"
               value={personal.email || ""}
               onChange={(e) => updatePersonalInfo("email", e.target.value)}
-              placeholder="e.g. john@example.com"
+              placeholder="e.g. alex.morgan@email.com"
               className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 px-3.5 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#ff3366] focus:ring-2 focus:ring-[#ff3366]/20 outline-none transition"
             />
           </div>
@@ -347,7 +347,7 @@ export default function FocusedSectionCard({ onPreviewResume }) {
               name="website"
               value={personal.website || ""}
               onChange={(e) => updatePersonalInfo("website", e.target.value)}
-              placeholder="e.g. https://johndoe.dev"
+              placeholder="e.g. https://portfolio.dev"
               className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 px-3.5 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#ff3366] focus:ring-2 focus:ring-[#ff3366]/20 outline-none transition"
             />
           </div>
@@ -361,7 +361,7 @@ export default function FocusedSectionCard({ onPreviewResume }) {
               name="linkedin"
               value={personal.linkedin || ""}
               onChange={(e) => updatePersonalInfo("linkedin", e.target.value)}
-              placeholder="e.g. linkedin.com/in/johndoe"
+              placeholder="e.g. linkedin.com/in/username"
               className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 px-3.5 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#ff3366] focus:ring-2 focus:ring-[#ff3366]/20 outline-none transition"
             />
           </div>
@@ -375,7 +375,7 @@ export default function FocusedSectionCard({ onPreviewResume }) {
               name="github"
               value={personal.github || ""}
               onChange={(e) => updatePersonalInfo("github", e.target.value)}
-              placeholder="e.g. github.com/johndoe"
+              placeholder="e.g. github.com/username"
               className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 px-3.5 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#ff3366] focus:ring-2 focus:ring-[#ff3366]/20 outline-none transition"
             />
           </div>
@@ -567,20 +567,26 @@ export default function FocusedSectionCard({ onPreviewResume }) {
       <div className="space-y-4">
         {/* Entry Tabs / Switcher Pills */}
         <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-          {experiences.map((exp, idx) => (
-            <button
-              key={exp.id || idx}
-              type="button"
-              onClick={() => setActiveItemIndex(idx)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeItemIndex === idx
-                  ? "bg-[#ff3366] text-white shadow-sm"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              {exp.company || exp.jobTitle || `Position ${idx + 1}`}
-            </button>
-          ))}
+          {experiences.length === 0 ? (
+            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ff3366]/10 text-[#ff3366] border border-[#ff3366]/30">
+              Position 1 (New Entry)
+            </span>
+          ) : (
+            experiences.map((exp, idx) => (
+              <button
+                key={exp.id || idx}
+                type="button"
+                onClick={() => setActiveItemIndex(idx)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeItemIndex === idx
+                    ? "bg-[#ff3366] text-white shadow-sm"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                }`}
+              >
+                {exp.company || exp.jobTitle || `Position ${idx + 1}`}
+              </button>
+            ))
+          )}
 
           <button
             type="button"
@@ -866,20 +872,26 @@ export default function FocusedSectionCard({ onPreviewResume }) {
       <div className="space-y-4">
         {/* Entry Tabs */}
         <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-          {educations.map((edu, idx) => (
-            <button
-              key={edu.id || idx}
-              type="button"
-              onClick={() => setActiveItemIndex(idx)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeItemIndex === idx
-                  ? "bg-[#ff3366] text-white shadow-sm"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              {edu.school || edu.degree || `Degree ${idx + 1}`}
-            </button>
-          ))}
+          {educations.length === 0 ? (
+            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ff3366]/10 text-[#ff3366] border border-[#ff3366]/30">
+              Degree 1 (New Entry)
+            </span>
+          ) : (
+            educations.map((edu, idx) => (
+              <button
+                key={edu.id || idx}
+                type="button"
+                onClick={() => setActiveItemIndex(idx)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeItemIndex === idx
+                    ? "bg-[#ff3366] text-white shadow-sm"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                }`}
+              >
+                {edu.school || edu.degree || `Degree ${idx + 1}`}
+              </button>
+            ))
+          )}
 
           <button
             type="button"
@@ -900,7 +912,7 @@ export default function FocusedSectionCard({ onPreviewResume }) {
               type="text"
               value={currentEdu.school || ""}
               onChange={(e) => handleUpdateCurrentEdu("school", e.target.value)}
-              placeholder="e.g. Stanford University, CA"
+              placeholder="e.g. Harvard University / MIT"
               className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 px-3.5 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#ff3366] focus:ring-2 focus:ring-[#ff3366]/20 outline-none transition"
             />
           </div>
@@ -939,7 +951,7 @@ export default function FocusedSectionCard({ onPreviewResume }) {
               type="text"
               value={currentEdu.location || ""}
               onChange={(e) => handleUpdateCurrentEdu("location", e.target.value)}
-              placeholder="e.g. Stanford, United States"
+              placeholder="e.g. Boston, United States"
               className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 px-3.5 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#ff3366] focus:ring-2 focus:ring-[#ff3366]/20 outline-none transition"
             />
           </div>
@@ -1247,20 +1259,26 @@ export default function FocusedSectionCard({ onPreviewResume }) {
       <div className="space-y-4">
         {/* Entry Tabs */}
         <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-          {projects.map((proj, idx) => (
-            <button
-              key={proj.id || idx}
-              type="button"
-              onClick={() => setActiveItemIndex(idx)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeItemIndex === idx
-                  ? "bg-[#ff3366] text-white shadow-sm"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              {proj.title || `Project ${idx + 1}`}
-            </button>
-          ))}
+          {projects.length === 0 ? (
+            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ff3366]/10 text-[#ff3366] border border-[#ff3366]/30">
+              Project 1 (New Entry)
+            </span>
+          ) : (
+            projects.map((proj, idx) => (
+              <button
+                key={proj.id || idx}
+                type="button"
+                onClick={() => setActiveItemIndex(idx)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeItemIndex === idx
+                    ? "bg-[#ff3366] text-white shadow-sm"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                }`}
+              >
+                {proj.title || `Project ${idx + 1}`}
+              </button>
+            ))
+          )}
 
           <button
             type="button"
@@ -1445,20 +1463,26 @@ export default function FocusedSectionCard({ onPreviewResume }) {
       <div className="space-y-4">
         {/* Entry Tabs */}
         <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-          {certifications.map((cert, idx) => (
-            <button
-              key={cert.id || idx}
-              type="button"
-              onClick={() => setActiveItemIndex(idx)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeItemIndex === idx
-                  ? "bg-[#ff3366] text-white shadow-sm"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              {cert.name || `Certificate ${idx + 1}`}
-            </button>
-          ))}
+          {certifications.length === 0 ? (
+            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ff3366]/10 text-[#ff3366] border border-[#ff3366]/30">
+              Certificate 1 (New Entry)
+            </span>
+          ) : (
+            certifications.map((cert, idx) => (
+              <button
+                key={cert.id || idx}
+                type="button"
+                onClick={() => setActiveItemIndex(idx)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeItemIndex === idx
+                    ? "bg-[#ff3366] text-white shadow-sm"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                }`}
+              >
+                {cert.name || `Certificate ${idx + 1}`}
+              </button>
+            ))
+          )}
 
           <button
             type="button"

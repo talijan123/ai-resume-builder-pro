@@ -98,10 +98,22 @@ export default function SidebarPhotoTemplate({ previewData = null }) {
             Resume / Curriculum Vitae
           </span>
           <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white drop-shadow-sm">
-            {fullName}
+            {personalInfo.fullName ? (
+              personalInfo.fullName
+            ) : (
+              <span className="text-white/60 font-medium italic print:hidden">
+                Full Name
+              </span>
+            )}
           </h1>
           <p className="mt-1 text-base sm:text-lg font-medium text-slate-200 tracking-wide">
-            {jobTitle}
+            {personalInfo.jobTitle ? (
+              personalInfo.jobTitle
+            ) : (
+              <span className="text-slate-400 font-normal italic print:hidden">
+                Professional Title
+              </span>
+            )}
           </p>
         </div>
 

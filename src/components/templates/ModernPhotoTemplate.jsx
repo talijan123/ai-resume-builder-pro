@@ -115,10 +115,22 @@ export default function ModernPhotoTemplate({ previewData = null }) {
           {/* Name & Title */}
           <div className="flex-1 min-w-0">
             <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white drop-shadow-sm truncate">
-              {fullName}
+              {personalInfo.fullName ? (
+                personalInfo.fullName
+              ) : (
+                <span className="text-white/60 font-medium italic print:hidden">
+                  Full Name
+                </span>
+              )}
             </h1>
             <p className="mt-1 text-base sm:text-lg font-medium text-sky-100">
-              {jobTitle}
+              {personalInfo.jobTitle ? (
+                personalInfo.jobTitle
+              ) : (
+                <span className="text-white/60 font-normal italic print:hidden">
+                  Professional Title
+                </span>
+              )}
             </p>
             {personalInfo.summary && (
               <p className="mt-2 text-xs leading-relaxed text-blue-50/90 line-clamp-2">
