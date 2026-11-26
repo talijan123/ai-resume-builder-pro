@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { HiSparkles, HiXMark } from "react-icons/hi2";
+import { HiSparkles, HiXMark, HiPhoto, HiArrowUpTray, HiTrash } from "react-icons/hi2";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useResume, templateSupportsPhoto } from "../../../context/ResumeContext";
 import { usePricing } from "../../../context/PricingContext";
 import { generateSummaries } from "../../../services/aiService";
+import { processProfileImage } from "../../../utils/imageUtils";
 
 export default function PersonalInfoForm() {
   const {
@@ -18,6 +19,38 @@ export default function PersonalInfoForm() {
   const [summaryOptions, setSummaryOptions] = useState(null);
   const [aiMessage, setAiMessage] = useState("");
   const aiMessageTimerRef = useRef(null);
+  const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
+  const photoFileInputRef = useRef(null);
+
+  async function handlePhotoFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessingPhoto(true);
+    try {
+      const { dataUrl } = await processProfileImage(file, {
+        maxDimension: 400,
+        quality: 0.85,
+      });
+      updatePersonalInfo("photo", dataUrl);
+      setAiMessage("✨ Profile photo updated and optimized (400×400px)!");
+    } catch (err) {
+      setAiMessage(err?.message || "Failed to process photo.");
+    } finally {
+      setIsProcessingPhoto(false);
+      if (photoFileInputRef.current) {
+        photoFileInputRef.current.value = "";
+      }
+    }
+  }
+
+  function handleRemovePhoto() {
+    updatePersonalInfo("photo", "");
+    if (photoFileInputRef.current) {
+      photoFileInputRef.current.value = "";
+    }
+    setAiMessage("Photo removed.");
+  }
 
   useEffect(() => {
     if (aiMessageTimerRef.current) {
@@ -224,6 +257,11 @@ export default function PersonalInfoForm() {
                         {personal.fullName ? personal.fullName.charAt(0).toUpperCase() : "?"}
                       </span>
                     )}
+                    {isProcessingPhoto && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center">
+                        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex-1 w-full space-y-3">
@@ -256,32 +294,31 @@ export default function PersonalInfoForm() {
                     />
 
                     <div className="flex flex-wrap items-center gap-3">
-                      <label className="cursor-pointer rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                        <span>Upload Image</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                updatePersonalInfo("photo", reader.result);
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
-                      </label>
+                      <input
+                        ref={photoFileInputRef}
+                        type="file"
+                        accept="image/png, image/jpeg, image/webp"
+                        className="hidden"
+                        onChange={handlePhotoFileChange}
+                      />
+                      <button
+                        type="button"
+                        disabled={isProcessingPhoto}
+                        onClick={() => photoFileInputRef.current?.click()}
+                        className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-60"
+                      >
+                        <HiArrowUpTray size={14} />
+                        <span>{personal.photo ? "Change Photo" : "Upload Photo"}</span>
+                      </button>
 
                       {personal.photo && (
                         <button
                           type="button"
-                          onClick={() => updatePersonalInfo("photo", "")}
-                          className="rounded-xl px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                          onClick={handleRemovePhoto}
+                          className="inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition cursor-pointer"
                         >
-                          Remove Photo
+                          <HiTrash size={14} />
+                          <span>Remove Photo</span>
                         </button>
                       )}
                     </div>

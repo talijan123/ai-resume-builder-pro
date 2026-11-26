@@ -9,6 +9,8 @@ import {
   HiXMark,
   HiPlus,
   HiCheck,
+  HiPhoto,
+  HiArrowUpTray,
 } from "react-icons/hi2";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -19,6 +21,7 @@ import {
   generateSummaries,
   generateCoverLetter,
 } from "../../services/aiService";
+import { processProfileImage } from "../../utils/imageUtils";
 import { SECTION_TILES } from "./SectionTileGrid";
 import { SECTION_METADATA } from "./EditorBanner";
 
@@ -94,6 +97,41 @@ export default function FocusedSectionCard({ onPreviewResume }) {
   const [statusType, setStatusType] = useState("info"); // "info" | "success" | "error"
   const [isAiLoading, setIsAiLoading] = useState(false);
   const statusTimerRef = useRef(null);
+
+  // Photo upload & processing states
+  const [showPhotoUrlInput, setShowPhotoUrlInput] = useState(false);
+  const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
+  const photoFileInputRef = useRef(null);
+
+  async function handlePhotoFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessingPhoto(true);
+    try {
+      const { dataUrl } = await processProfileImage(file, {
+        maxDimension: 400,
+        quality: 0.85,
+      });
+      updatePersonalInfo("photo", dataUrl);
+      triggerNotification("✨ Profile photo updated and optimized (400×400px)!");
+    } catch (err) {
+      triggerNotification(err?.message || "Failed to process photo.", "error");
+    } finally {
+      setIsProcessingPhoto(false);
+      if (photoFileInputRef.current) {
+        photoFileInputRef.current.value = "";
+      }
+    }
+  }
+
+  function handleRemovePhoto() {
+    updatePersonalInfo("photo", "");
+    if (photoFileInputRef.current) {
+      photoFileInputRef.current.value = "";
+    }
+    triggerNotification("Photo removed.");
+  }
 
   function triggerNotification(message, type = "success") {
     if (statusTimerRef.current) {
@@ -382,18 +420,106 @@ export default function FocusedSectionCard({ onPreviewResume }) {
         </div>
 
         {supportsPhoto && (
-          <div>
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
-              Photo URL (For Photo Template)
-            </label>
-            <input
-              type="text"
-              name="photo"
-              value={personal.photo || ""}
-              onChange={(e) => updatePersonalInfo("photo", e.target.value)}
-              placeholder="e.g. https://images.unsplash.com/photo-..."
-              className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 px-3.5 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#ff3366] focus:ring-2 focus:ring-[#ff3366]/20 outline-none transition"
-            />
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 p-4 sm:p-5 space-y-3.5 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                  Profile Photo / Avatar
+                </label>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Featured on Modern Photo & Sidebar Photo templates. Auto-cropped to 400×400px.
+                </p>
+              </div>
+
+              {/* URL toggle */}
+              <button
+                type="button"
+                onClick={() => setShowPhotoUrlInput(!showPhotoUrlInput)}
+                className="text-[11px] font-bold text-[#ff3366] hover:underline cursor-pointer"
+              >
+                {showPhotoUrlInput ? "Hide URL input" : "Or paste image URL"}
+              </button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              {/* Circular Live Thumbnail Preview */}
+              <div className="relative h-20 w-20 shrink-0 rounded-full border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center shadow-inner">
+                {personal.photo ? (
+                  <img
+                    src={personal.photo}
+                    alt="Profile thumbnail"
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-slate-400">
+                    <HiPhoto size={28} />
+                  </div>
+                )}
+                {isProcessingPhoto && (
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center">
+                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Controls */}
+              <div className="flex-1 w-full space-y-2">
+                <input
+                  ref={photoFileInputRef}
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handlePhotoFileChange}
+                  className="hidden"
+                />
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="button"
+                    disabled={isProcessingPhoto}
+                    onClick={() => photoFileInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#ff3366] to-[#ff4b2b] text-white text-xs font-bold shadow-md shadow-rose-500/20 hover:from-[#e62557] hover:to-[#e63a1f] transition cursor-pointer disabled:opacity-60"
+                  >
+                    <HiArrowUpTray size={14} />
+                    <span>{personal.photo ? "Change Photo" : "Upload Photo"}</span>
+                  </button>
+
+                  {personal.photo && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50/60 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-950/60 transition cursor-pointer"
+                    >
+                      <HiTrash size={14} />
+                      <span>Remove</span>
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                  PNG, JPG, or WEBP up to 5MB. Automatically cropped & optimized.
+                </p>
+              </div>
+            </div>
+
+            {/* Optional URL input field (collapsible) */}
+            {showPhotoUrlInput && (
+              <div className="pt-2 border-t border-slate-200/80 dark:border-slate-700/80">
+                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+                  Image Direct URL
+                </label>
+                <input
+                  type="text"
+                  name="photo"
+                  value={personal.photo || ""}
+                  onChange={(e) => updatePersonalInfo("photo", e.target.value)}
+                  placeholder="https://example.com/avatar.jpg"
+                  className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs text-slate-900 dark:text-white focus:border-[#ff3366] focus:ring-2 focus:ring-[#ff3366]/20 outline-none transition"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

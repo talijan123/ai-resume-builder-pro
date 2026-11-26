@@ -5,8 +5,10 @@ import {
   useState,
 } from "react";
 import { HiPlus, HiTrash, HiXMark } from "react-icons/hi2";
+import { toast } from "sonner";
 
 import { useProfile } from "../context/ProfileContext";
+import { processProfileImage } from "../utils/imageUtils";
 
 import DashboardHeader from "../components/layout/DashboardHeader";
 
@@ -226,42 +228,52 @@ export default function MyProfile() {
     setPhotoLoading(true);
 
     try {
-      /*
-        The actual upload is handled by
-        ProfileContext.
+      // Automatic client-side resize and compression via HTML5 Canvas (400x400 max, 0.85 quality)
+      const processed = await processProfileImage(file, {
+        maxDimension: 400,
+        quality: 0.85,
+      });
 
-        It uploads the image to:
-        profile-photos/{userId}/profile.ext
+      // Update immediate local preview and profile state with optimized Data URL
+      setPhotoPreview(processed.dataUrl);
+      updateProfile("photo", processed.dataUrl);
 
-        Then stores the public URL inside:
-        profiles.photo_url
-      */
+      // Attempt Supabase Storage upload if bucket is accessible
+      try {
+        const uploadFile = processed.blob
+          ? new File(
+              [processed.blob],
+              file.name.replace(/\.[^/.]+$/, "") + ".webp",
+              { type: processed.blob.type || "image/webp" }
+            )
+          : file;
 
-      const result =
-        await uploadProfilePhoto(file);
+        const result = await uploadProfilePhoto(uploadFile);
 
-      if (!result?.success) {
-        return;
+        if (result?.success && result.url) {
+          setPhotoPreview(result.url);
+          updateProfile("photo", result.url);
+        }
+      } catch (storageError) {
+        console.warn("Storage upload fallback to Data URL:", storageError);
       }
 
-      /*
-        ProfileContext already updates
-        profileData.profile.photo.
-      */
-
-      setPhotoPreview(
-        result.url || ""
-      );
-
       setSaved(true);
+      toast.success("Profile photo updated and optimized (400×400px)!", {
+        duration: 3500,
+      });
 
       window.setTimeout(() => {
         setSaved(false);
       }, 2500);
     } catch (uploadError) {
       console.error(
-        "Profile photo upload failed:",
+        "Profile photo processing failed:",
         uploadError
+      );
+      toast.error(
+        uploadError?.message || "Failed to process photo.",
+        { duration: 3500 }
       );
     } finally {
       setPhotoLoading(false);
@@ -917,9 +929,22 @@ export default function MyProfile() {
                       text-slate-400
                     "
                   >
-                    JPG, PNG or WebP. Maximum size: 5MB.
+                    JPG, PNG or WebP up to 5MB. Automatically cropped to 400×400px.
                   </p>
                 </div>
+              </div>
+
+              <div className="mt-5 pt-4 border-t border-slate-100">
+                <Input
+                  label="Or Image Direct URL"
+                  value={profile.photo || ""}
+                  onChange={(val) => {
+                    handleProfileChange("photo", val);
+                    setPhotoPreview(val);
+                    setSaved(false);
+                  }}
+                  placeholder="https://example.com/avatar.jpg"
+                />
               </div>
             </section>
 
