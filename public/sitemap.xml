@@ -8,74 +8,109 @@
   <!-- Core Landing Page -->
   <url>
     <loc>https://ai-resume-builder-pro-five.vercel.app/</loc>
-    <lastmod>2026-08-29</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Templates Catalog -->
   <url>
     <loc>https://ai-resume-builder-pro-five.vercel.app/templates</loc>
-    <lastmod>2026-08-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
 
   <!-- Career Blog & Knowledge Hub -->
   <url>
     <loc>https://ai-resume-builder-pro-five.vercel.app/blog</loc>
-    <lastmod>2026-08-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
 
-  <!-- Blog Articles -->
+  <!-- High-Intent SEO Career Guides & Articles -->
+  <url>
+    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/how-to-pass-ats-resume-screening-2026</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/free-ats-resume-keyword-scanner</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/software-engineer-resume-guide-2026</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/fresh-graduate-resume-no-experience</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/best-resume-formats-2026</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/how-to-write-ai-cover-letter</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/top-50-action-verbs-resume-bullet-points</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/bioinformatics-tech-graduate-cv-guide</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
   <url>
     <loc>https://ai-resume-builder-pro-five.vercel.app/blog/ai-resume-builder</loc>
-    <lastmod>2026-08-24</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/ats-optimizer</loc>
-    <lastmod>2026-08-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/cover-letter-ai</loc>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://ai-resume-builder-pro-five.vercel.app/blog/photo-templates-guide</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ai-resume-builder-pro-five.vercel.app/blog/action-verbs-impact</loc>
-    <lastmod>2026-08-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://ai-resume-builder-pro-five.vercel.app/blog/career-change-resume</loc>
-    <lastmod>2026-08-05</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
 
   <!-- Support & Contact -->
   <url>
     <loc>https://ai-resume-builder-pro-five.vercel.app/contact</loc>
-    <lastmod>2026-08-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -83,14 +118,14 @@
   <!-- Legal & Trust Pages -->
   <url>
     <loc>https://ai-resume-builder-pro-five.vercel.app/privacy</loc>
-    <lastmod>2026-08-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
     <loc>https://ai-resume-builder-pro-five.vercel.app/terms</loc>
-    <lastmod>2026-08-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

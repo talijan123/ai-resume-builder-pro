@@ -16,6 +16,81 @@ import SEO from "../components/common/SEO";
 import { blogPosts } from "../data/blogPosts";
 import { useAuth } from "../context/AuthContext";
 
+/**
+ * Lightweight inline markdown parser for bold, italics, code, and links
+ */
+function renderFormattedInline(text) {
+  if (!text) return null;
+
+  // Split on [label](url), **bold**, `code`, or *italic*
+  const pattern = new RegExp("(\\[[^\\]]+\\]\\([^)]+\\)|\\*\\*[^*]+\\*\\*|`[^`]+`|\\*[^*]+\\*)", "g");
+  const parts = text.split(pattern);
+
+  return parts.map((part, i) => {
+    if (!part) return null;
+
+    // Check link: [label](href)
+    const linkMatch = part.match(new RegExp("^\\[([^\\]]+)\\]\\(([^)]+)\\)$"));
+    if (linkMatch) {
+      const [, label, href] = linkMatch;
+      const isInternal = href.startsWith("/") || href.startsWith("#");
+      if (isInternal) {
+        return (
+          <Link
+            key={i}
+            to={href}
+            className="text-blue-600 dark:text-blue-400 font-semibold underline underline-offset-4 hover:text-blue-500 dark:hover:text-blue-300 transition"
+          >
+            {label}
+          </Link>
+        );
+      }
+      return (
+        <a
+          key={i}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 dark:text-blue-400 font-semibold underline underline-offset-4 hover:text-blue-500 dark:hover:text-blue-300 transition"
+        >
+          {label}
+        </a>
+      );
+    }
+
+    // Check bold: **text**
+    const boldMatch = part.match(new RegExp("^\\*\\*([^*]+)\\*\\*$"));
+    if (boldMatch) {
+      return (
+        <strong key={i} className="font-bold text-slate-900 dark:text-white">
+          {boldMatch[1]}
+        </strong>
+      );
+    }
+
+    // Check code: `code`
+    const codeMatch = part.match(new RegExp("^`([^`]+)`$"));
+    if (codeMatch) {
+      return (
+        <code
+          key={i}
+          className="rounded bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 text-xs font-mono font-semibold text-blue-600 dark:text-blue-400"
+        >
+          {codeMatch[1]}
+        </code>
+      );
+    }
+
+    // Check italic: *text*
+    const italicMatch = part.match(new RegExp("^\\*([^*]+)\\*$"));
+    if (italicMatch) {
+      return <em key={i}>{italicMatch[1]}</em>;
+    }
+
+    return part;
+  });
+}
+
 export default function BlogPost() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -55,6 +130,10 @@ export default function BlogPost() {
     }
   }
 
+  const publishedIso = post?.publishedAt
+    ? new Date(post.publishedAt).toISOString()
+    : "2026-11-26T00:00:00.000Z";
+
   const articleSchema = post
     ? {
         "@context": "https://schema.org",
@@ -66,8 +145,8 @@ export default function BlogPost() {
         "headline": post.title,
         "description": post.excerpt,
         "image": [post.coverImage],
-        "datePublished": "2026-08-20T08:00:00+00:00",
-        "dateModified": "2026-08-29T08:00:00+00:00",
+        "datePublished": publishedIso,
+        "dateModified": "2026-11-26T12:00:00+00:00",
         "author": {
           "@type": "Person",
           "name": post.author?.name || "Career Strategist",
@@ -251,13 +330,24 @@ export default function BlogPost() {
                   );
                 }
 
+                if (trimmed.startsWith("#### ")) {
+                  return (
+                    <h4
+                      key={idx}
+                      className="text-lg font-bold text-slate-900 dark:text-white mt-6 mb-2"
+                    >
+                      {trimmed.replace("#### ", "")}
+                    </h4>
+                  );
+                }
+
                 if (trimmed.startsWith("> ")) {
                   return (
                     <blockquote
                       key={idx}
                       className="my-6 rounded-2xl border-l-4 border-blue-500 bg-blue-50/60 dark:bg-slate-900/90 p-5 italic text-slate-800 dark:text-slate-200 shadow-sm"
                     >
-                      {trimmed.replace(/^>\s*/gm, "")}
+                      {renderFormattedInline(trimmed.replace(/^>\s*/gm, ""))}
                     </blockquote>
                   );
                 }
@@ -270,7 +360,7 @@ export default function BlogPost() {
                         <li key={i} className="flex items-start gap-2.5">
                           <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600 dark:bg-blue-500" />
                           <span className="text-slate-700 dark:text-slate-300">
-                            {item.replace(/^-\s*|^\d+\.\s*/, "")}
+                            {renderFormattedInline(item.replace(/^-\s*|^\d+\.\s*/, ""))}
                           </span>
                         </li>
                       ))}
@@ -284,7 +374,7 @@ export default function BlogPost() {
 
                 return (
                   <p key={idx} className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                    {trimmed}
+                    {renderFormattedInline(trimmed)}
                   </p>
                 );
               })}
@@ -317,7 +407,7 @@ export default function BlogPost() {
               Create an ATS-Optimized Resume in 5 Minutes
             </h3>
             <p className="mt-3 text-sm sm:text-base text-slate-300 max-w-xl mx-auto">
-              Put these strategies into practice with ResumeForge AI's guided builder, ATS scanner, and modern templates.
+              Put these strategies into practice with ResumeForge AI&apos;s guided builder, ATS scanner, and modern templates.
             </p>
             <button
               type="button"

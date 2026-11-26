@@ -23,6 +23,7 @@ const categories = [
   "ATS Secrets",
   "Career Advice",
   "Design & Templates",
+  "Tech & Engineering",
 ];
 
 export default function Blog() {

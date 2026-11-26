@@ -112,6 +112,15 @@ export default function SEO({
       existingScript.remove();
     }
 
+    // 8. Optional Google Analytics 4 Pageview Event
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      window.gtag("event", "page_view", {
+        page_title: title,
+        page_location: currentUrl,
+        page_path: location.pathname,
+      });
+    }
+
     return () => {
       // Clean up dynamic schema when unmounting if appropriate
       const script = document.getElementById(scriptId);
