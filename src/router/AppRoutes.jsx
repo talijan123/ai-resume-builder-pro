@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -39,6 +40,34 @@ import { CoverLetterProvider } from "../context/CoverLetterContext";
 
 function AnimatedRoutes() {
   const location = useLocation();
+
+  useEffect(() => {
+    // Slight delay so child components (like SEO) have updated document.title
+    const timer = setTimeout(() => {
+      if (typeof window !== "undefined") {
+        window.dataLayer = window.dataLayer || [];
+        const pageTitle = document.title || "ResumeForge AI";
+        const pagePath = location.pathname + location.search + location.hash;
+
+        window.dataLayer.push({
+          event: "page_view",
+          page_path: pagePath,
+          page_title: pageTitle,
+          page_location: window.location.href,
+        });
+
+        if (typeof window.gtag === "function") {
+          window.gtag("event", "page_view", {
+            page_path: pagePath,
+            page_title: pageTitle,
+            page_location: window.location.href,
+          });
+        }
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [location]);
 
   return (
     <>
